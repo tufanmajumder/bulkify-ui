@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
-import '../models/user_model.dart';
+﻿import 'package:get/get.dart';
+import 'package:admin_app/models/user_model.dart';
 
 class UserController extends GetxController {
   // Reactive list of all users

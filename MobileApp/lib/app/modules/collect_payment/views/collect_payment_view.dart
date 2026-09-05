@@ -1,10 +1,11 @@
+﻿import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/collect_payment_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/collect_payment/controllers/collect_payment_controller.dart';
 
 class CollectPaymentView extends GetView<CollectPaymentController> {
   const CollectPaymentView({super.key});
@@ -15,8 +16,6 @@ class CollectPaymentView extends GetView<CollectPaymentController> {
     const Color textPrimary = Color(0xFF18181B);
     const Color textSecondary = Color(0xFF71717A);
     const Color buttonRedBg = Color(0xFFD84338);
-    const Color buttonGreyBg = Color(0xFFF2F3F7);
-    const Color iconCircleBg = Color(0xFFFDE8E8);
 
     final Widget mainContent = Column(
       children: [
@@ -26,7 +25,14 @@ class CollectPaymentView extends GetView<CollectPaymentController> {
           child: Row(
             children: [
               GestureDetector(
-                onTap: () => Get.back(),
+                onTap: () async {
+                  final shouldLeave = await _showLeaveTransactionDialog(
+                    context,
+                  );
+                  if (shouldLeave) {
+                    Get.back();
+                  }
+                },
                 child: Container(
                   width: 42.r,
                   height: 42.r,
@@ -52,7 +58,7 @@ class CollectPaymentView extends GetView<CollectPaymentController> {
               ),
               SizedBox(width: 14.w),
               WidgetManager.customText(
-                text: "Collect payment",
+                text: "Collect Payment",
                 fontSize: 19.sp,
                 fontWeight: FontWeight.w800,
                 color: textPrimary,
@@ -72,9 +78,75 @@ class CollectPaymentView extends GetView<CollectPaymentController> {
                 constraints: const BoxConstraints(maxWidth: 550),
                 child: Column(
                   children: [
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 4.h),
 
-                    // Main White Card
+                    // 1. Store Name & Order Number Header Card (matches top of both screens in image)
+                    Obx(
+                      () => Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 12.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFDF2F0),
+                          borderRadius: BorderRadius.circular(18.r),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44.r,
+                              height: 44.r,
+                              decoration: BoxDecoration(
+                                color: buttonRedBg,
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.storefront_rounded,
+                                  color: Colors.white,
+                                  size: 22.r,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 14.w),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                WidgetManager.customText(
+                                  text: controller.storeName.value.isNotEmpty
+                                      ? controller.storeName.value
+                                      : "Fresh Mart",
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w800,
+                                  color: textPrimary,
+                                ),
+                                SizedBox(height: 2.h),
+                                WidgetManager.customText(
+                                  text:
+                                      controller.orderId.value.startsWith(
+                                            'Order',
+                                          ) ||
+                                          controller.orderId.value.startsWith(
+                                            '#',
+                                          )
+                                      ? controller.orderId.value
+                                      : "Order #${controller.orderId.value}",
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: textSecondary,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // 2. Main White Card
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -90,175 +162,126 @@ class CollectPaymentView extends GetView<CollectPaymentController> {
                       ),
                       padding: EdgeInsets.symmetric(
                         horizontal: 24.w,
-                        vertical: 28.h,
+                        vertical: 32.h,
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // 1. Amount to collect Label
+                          // QR Code Container / Regenerate QR Container
+                          Obx(() {
+                            final bool isExpired = controller.isTimerExpired;
+                            return Container(
+                              width: 260.r,
+                              height: 260.r,
+                              padding: EdgeInsets.all(16.r),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24.r),
+                                border: Border.all(
+                                  color: const Color(0xFFF0F0F3),
+                                  width: 1.5.w,
+                                ),
+                              ),
+                              child: isExpired
+                                  ? Center(
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: controller.regenerateQr,
+                                          borderRadius: BorderRadius.circular(
+                                            22.r,
+                                          ),
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 24.w,
+                                              vertical: 13.h,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: buttonRedBg,
+                                              borderRadius:
+                                                  BorderRadius.circular(22.r),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: buttonRedBg.withValues(
+                                                    alpha: 0.3,
+                                                  ),
+                                                  blurRadius: 12.r,
+                                                  offset: Offset(0, 4.h),
+                                                ),
+                                              ],
+                                            ),
+                                            child: WidgetManager.customText(
+                                              text: "Regenerate QR",
+                                              fontSize: 15.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : CustomPaint(painter: _QrCodePainter()),
+                            );
+                          }),
+
+                          // Waiting for payment section (Disappears when timer is 00:00)
+                          Obx(() {
+                            if (controller.isTimerExpired) {
+                              return SizedBox(height: 28.h);
+                            }
+                            return Column(
+                              children: [
+                                SizedBox(height: 24.h),
+                                WidgetManager.customText(
+                                  text:
+                                      "Waiting for payment · ${controller.formattedTimer}",
+                                  fontSize: 14.5.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: textSecondary,
+                                ),
+                                SizedBox(height: 24.h),
+                              ],
+                            );
+                          }),
+
+                          // Amount to collect section
                           WidgetManager.customText(
                             text: "Amount to collect",
-                            fontSize: 13.sp,
+                            fontSize: 13.5.sp,
                             fontWeight: FontWeight.w500,
                             color: textSecondary,
                           ),
 
                           SizedBox(height: 4.h),
 
-                          // 2. Amount Display
                           Obx(
                             () => WidgetManager.customText(
                               text:
-                                  "₹${controller.orderValue.value.toStringAsFixed(2)}",
-                              fontSize: 26.sp,
+                                  "₹ ${controller.orderValue.value.toStringAsFixed(2)}",
+                              fontSize: 28.sp,
                               fontWeight: FontWeight.w900,
-                              color: textPrimary,
+                              color: ColorManager.simpleGreen,
                               letterSpacing: -0.5,
-                            ),
-                          ),
-
-                          SizedBox(height: 22.h),
-
-                          // 3. QR Code Container
-                          Container(
-                            width: 210.r,
-                            height: 210.r,
-                            padding: EdgeInsets.all(14.r),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color: const Color(0xFFF0F0F3),
-                                width: 1.5.w,
-                              ),
-                            ),
-                            child: CustomPaint(painter: _QrCodePainter()),
-                          ),
-
-                          SizedBox(height: 18.h),
-
-                          // 4. UPI ID
-                          Obx(
-                            () => WidgetManager.customText(
-                              text: controller.upiId.value,
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
-                              color: textSecondary,
-                            ),
-                          ),
-
-                          SizedBox(height: 14.h),
-
-                          // 5. Store Name & Order Number Badge
-                          Obx(
-                            () => Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 14.w,
-                                vertical: 8.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: iconCircleBg,
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.storefront_rounded,
-                                    color: buttonRedBg,
-                                    size: 18.r,
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  WidgetManager.customText(
-                                    text:
-                                        "${controller.storeName.value} · Order #${controller.orderId.value}",
-                                    fontSize: 13.5.sp,
-                                    fontWeight: FontWeight.w800,
-                                    color: textPrimary,
-                                  ),
-                                ],
-                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                    SizedBox(height: 24.h),
-
-                    // 1. I've received the payment Button (Red Pill)
-                    Obx(
-                      () => Container(
-                        width: double.infinity,
-                        height: 52.h,
-                        decoration: BoxDecoration(
-                          color: buttonRedBg,
-                          borderRadius: BorderRadius.circular(26.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: buttonRedBg.withValues(alpha: 0.3),
-                              blurRadius: 14.r,
-                              offset: Offset(0, 5.h),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: controller.isProcessing.value
-                                ? null
-                                : controller.onReceivedPayment,
-                            borderRadius: BorderRadius.circular(26.r),
-                            child: Center(
-                              child: controller.isProcessing.value
-                                  ? SizedBox(
-                                      width: 22.r,
-                                      height: 22.r,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : WidgetManager.customText(
-                                      text: "I’ve received the payment",
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
                     SizedBox(height: 12.h),
-
-                    // 2. Customer already paid online Button (Grey Pill)
-                    Container(
-                      width: double.infinity,
-                      height: 50.h,
-                      decoration: BoxDecoration(
-                        color: buttonGreyBg,
-                        borderRadius: BorderRadius.circular(25.r),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: controller.onAlreadyPaidOnline,
-                          borderRadius: BorderRadius.circular(25.r),
-                          child: Center(
-                            child: WidgetManager.customText(
-                              text: "Customer already paid online",
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w700,
-                              color: textPrimary,
-                            ),
+                    GestureDetector(
+                      onTap: controller.onGetDeliveryCode,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        child: Text(
+                          "success",
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            color: ColorManager.simpleGreen,
                           ),
                         ),
                       ),
                     ),
-
-                    SizedBox(height: 24.h),
                   ],
                 ),
               ),
@@ -268,20 +291,82 @@ class CollectPaymentView extends GetView<CollectPaymentController> {
       ],
     );
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: kIsWeb
-            ? Center(
-                child: SizedBox(
-                  width: 550,
-                  height: double.infinity,
-                  child: mainContent,
-                ),
-              )
-            : mainContent,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldLeave = await _showLeaveTransactionDialog(context);
+        if (shouldLeave) {
+          Get.back();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        body: SafeArea(
+          child: kIsWeb
+              ? Center(
+                  child: SizedBox(
+                    width: 550,
+                    height: double.infinity,
+                    child: mainContent,
+                  ),
+                )
+              : mainContent,
+        ),
       ),
     );
+  }
+
+  /// Confirmation dialog before leaving payment transaction
+  Future<bool> _showLeaveTransactionDialog(BuildContext context) async {
+    final bool? shouldLeave = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        contentPadding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 12.h),
+        content: WidgetManager.customText(
+          text: "Do you want to leave the transaction?",
+          fontSize: 15.sp,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF18181B),
+        ),
+        actionsPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: WidgetManager.customText(
+              text: "No",
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF71717A),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD84338),
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: WidgetManager.customText(
+              text: "Yes",
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+    return shouldLeave ?? false;
   }
 }
 

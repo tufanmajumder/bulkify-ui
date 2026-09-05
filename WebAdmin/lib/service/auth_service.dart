@@ -1,13 +1,13 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:admin_app/models/login_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
-import '../utils/api_manager.dart';
-import '../utils/string_manager.dart';
-import '../utils/widget_manager.dart';
+import 'package:admin_app/utils/api_manager.dart';
+import 'package:admin_app/utils/string_manager.dart';
+import 'package:admin_app/utils/widget_manager.dart';
 
 class AuthService extends GetxService {
   static String authToken = "";

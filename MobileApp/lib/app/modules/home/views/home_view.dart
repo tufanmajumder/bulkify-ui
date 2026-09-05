@@ -1,15 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../data/utils/color_manager.dart';
-import '../../../data/utils/widget_manager.dart';
-import '../../earnings/views/earnings_view.dart';
-import '../../orders/views/orders_view.dart';
-import '../../profile/views/profile_view.dart';
-import '../controllers/home_controller.dart';
+import 'package:bulkify/app/data/utils/color_manager.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/earnings/views/earnings_view.dart';
+import 'package:bulkify/app/modules/orders/views/orders_view.dart';
+import 'package:bulkify/app/modules/profile/views/profile_view.dart';
+import 'package:bulkify/app/modules/home/controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -94,7 +93,6 @@ class HomeView extends GetView<HomeController> {
   Widget _buildHomeTab(BuildContext context) {
     return SingleChildScrollView(
       physics: ClampingScrollPhysics(),
-      //physics: const BouncingScrollPhysics(),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       child: Align(
         alignment: Alignment.topCenter,
@@ -141,42 +139,52 @@ class HomeView extends GetView<HomeController> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(4.r),
-                  decoration: BoxDecoration(
-                    color: ColorManager.red.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(4.r),
+                    decoration: BoxDecoration(
+                      color: ColorManager.red.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(timeIcon, size: 13.r, color: ColorManager.red),
                   ),
-                  child: Icon(timeIcon, size: 13.r, color: ColorManager.red),
-                ),
-                SizedBox(width: 6.w),
-                Obx(
-                  () => WidgetManager.customText(
-                    text: controller.greeting.value,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w500,
-                    color: textSecondary,
+                  SizedBox(width: 6.w),
+                  Obx(
+                    () => WidgetManager.customText(
+                      text: controller.greeting.value,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                      color: textSecondary,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 3.h),
-            Obx(
-              () => WidgetManager.customText(
-                text: controller.userName.value,
-                fontSize: 26.sp,
-                fontWeight: FontWeight.w900,
-                color: textPrimary,
-                letterSpacing: -0.5,
+                  SizedBox(width: 8.w),
+                  GestureDetector(
+                    child: const Icon(Icons.info_outline),
+                    onTap: () => controller.showDeviceInfoDialog(Get.context!),
+                  ),
+                ],
               ),
-            ),
-          ],
+              SizedBox(height: 3.h),
+              Obx(
+                () => WidgetManager.customText(
+                  text: controller.userName.value,
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w500,
+                  color: textPrimary,
+                  letterSpacing: -0.5,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
+        SizedBox(width: 12.w),
 
         // Solid Red Profile Avatar with Status Indicator Dot
         Stack(
@@ -259,7 +267,7 @@ class HomeView extends GetView<HomeController> {
               child: Obx(
                 () => _buildOverviewCard(
                   value: controller.onlineTime.value,
-                  label: "Online time",
+                  label: "Online Time",
                 ),
               ),
             ),
@@ -472,33 +480,28 @@ class HomeView extends GetView<HomeController> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 WidgetManager.customText(
-                  text: "Available orders",
+                  text: "Available Orders",
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w800,
                   color: textPrimary,
                 ),
-                isOnline
-                    ? Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 18.r,
-                        color: const Color(0xFF808390),
-                      )
-                    : Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 5.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: pillBg,
-                          borderRadius: BorderRadius.circular(14.r),
-                        ),
-                        child: WidgetManager.customText(
-                          text: "Offline",
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
-                          color: redText,
-                        ),
-                      ),
+                if (!isOnline)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 5.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: pillBg,
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    child: WidgetManager.customText(
+                      text: "Offline",
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: redText,
+                    ),
+                  ),
               ],
             ),
 
@@ -613,8 +616,8 @@ class HomeView extends GetView<HomeController> {
           children: [
             // Left Store Icon in Light Red Circle (matching image)
             Container(
-              width: 44.r,
-              height: 44.r,
+              width: 40.r,
+              height: 40.r,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: Color(0xFFFDEAE8),
@@ -622,7 +625,7 @@ class HomeView extends GetView<HomeController> {
               child: Center(
                 child: Icon(
                   Icons.storefront_rounded,
-                  size: 22.r,
+                  size: 18.r,
                   color: redColor,
                 ),
               ),
@@ -649,16 +652,17 @@ class HomeView extends GetView<HomeController> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      SizedBox(width: 8.w),
-                      WidgetManager.customText(
-                        text: payout,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                      ),
+                      //SizedBox(width: 8.w),
                     ],
                   ),
 
+                  SizedBox(height: 4.h),
+                  WidgetManager.customText(
+                    text: payout,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: ColorManager.simpleGreen,
+                  ),
                   SizedBox(height: 4.h),
 
                   // Drop-off Location Row (matching image)
@@ -668,9 +672,9 @@ class HomeView extends GetView<HomeController> {
                       Padding(
                         padding: EdgeInsets.only(top: 2.h),
                         child: Icon(
-                          Icons.location_on_rounded,
+                          Icons.location_on_outlined,
                           size: 14.r,
-                          color: const Color(0xFF109B5B),
+                          color: textSecondary,
                         ),
                       ),
                       SizedBox(width: 6.w),
@@ -681,16 +685,9 @@ class HomeView extends GetView<HomeController> {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: "Drop-off: ",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12.5.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: textSecondary,
-                                ),
-                              ),
-                              TextSpan(
                                 text: cleanDropoff,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
                                   fontSize: 12.5.sp,
                                   fontWeight: FontWeight.w500,
                                   color: textSecondary,
@@ -699,6 +696,31 @@ class HomeView extends GetView<HomeController> {
                             ],
                           ),
                         ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 6.h),
+
+                  // Distance Row (matching image)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 14.r,
+                        color: textSecondary,
+                      ),
+                      SizedBox(width: 6.w),
+                      WidgetManager.customText(
+                        text: (distance.isNotEmpty && distance != '0')
+                            ? distance
+                            : (eta.contains('km')
+                                  ? eta.split('·').first.trim()
+                                  : '3.2 km'),
+                        fontSize: 12.5.sp,
+                        fontWeight: FontWeight.w500,
+                        color: textSecondary,
                       ),
                     ],
                   ),
@@ -722,12 +744,11 @@ class HomeView extends GetView<HomeController> {
                     controller.availableOrders.removeWhere(
                       (o) => o['restaurantName'] == restaurantName,
                     );
-                    Get.snackbar(
-                      'Order Rejected',
-                      'Order from $restaurantName has been rejected.',
+                    WidgetManager.showSnackBar(
+                      message: 'Order From $restaurantName Has Been Rejected.',
                       snackPosition: SnackPosition.TOP,
                       backgroundColor: Colors.grey.shade900,
-                      colorText: Colors.white,
+                      textColor: Colors.white,
                       duration: const Duration(seconds: 2),
                     );
                   },
@@ -815,8 +836,12 @@ class HomeView extends GetView<HomeController> {
           unselectedItemColor: unselectedColor,
           selectedFontSize: 12.sp,
           unselectedFontSize: 12.sp,
-          selectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w700),
-          unselectedLabelStyle: GoogleFonts.poppins(
+          selectedLabelStyle: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w700,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontFamily: 'Poppins',
             fontWeight: FontWeight.w500,
           ),
           elevation: 0,

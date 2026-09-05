@@ -1,11 +1,12 @@
+﻿import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../../../widgets/customer_details_card.dart';
-import '../controllers/navigate_to_deliver_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/widgets/customer_details_card.dart';
+import 'package:bulkify/app/modules/navigate_to_deliver/controllers/navigate_to_deliver_controller.dart';
 
 class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
   const NavigateToDeliverView({super.key});
@@ -15,11 +16,8 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
     const Color bgColor = Color(0xFFF7F8FA);
     const Color textPrimary = Color(0xFF18181B);
     const Color textSecondary = Color(0xFF71717A);
-    const Color textCaption = Color(0xFFA0A0B0);
-    const Color circleBg = Color(0xFFF4F4F6);
-    const Color dividerColor = Color(0xFFF0F0F3);
-    const Color buttonGreyBg = Color(0xFFF2F3F7);
     const Color buttonBlueBg = Color(0xFF3B82F6);
+    const Color buttonGreenBg = Color(0xFF16A34A);
     const Color buttonRedBg = Color(0xFFD84338);
 
     final Widget mainContent = Column(
@@ -82,6 +80,7 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
                     // Customer & Delivery Address Card
                     Obx(
                       () => CustomerDetailsCard(
+                        orderId: controller.orderId.value,
                         customerName: controller.customerName.value,
                         dropOffAddress: controller.deliveryAddress.value,
                         onTapAddress: controller.onOpenGoogleMaps,
@@ -97,17 +96,17 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           WidgetManager.customText(
-                            text: "Order value",
+                            text: "Order Value",
                             fontSize: 13.5.sp,
                             fontWeight: FontWeight.w500,
                             color: textSecondary,
                           ),
                           WidgetManager.customText(
                             text:
-                                "₹${controller.orderValue.value.toStringAsFixed(2)}",
+                                "₹ ${controller.orderValue.value.toStringAsFixed(2)}",
                             fontSize: 24.sp,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFF111111),
+                            color: ColorManager.simpleGreen,
                             letterSpacing: -0.5,
                           ),
                         ],
@@ -116,13 +115,20 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
 
                     SizedBox(height: 24.h),
 
-                    // 1. Call Customer Button (Grey Pill)
+                    // 1. Call Customer Button (Blue Pill)
                     Container(
                       width: double.infinity,
                       height: 50.h,
                       decoration: BoxDecoration(
-                        color: buttonGreyBg,
+                        color: buttonBlueBg,
                         borderRadius: BorderRadius.circular(25.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: buttonBlueBg.withValues(alpha: 0.3),
+                            blurRadius: 12.r,
+                            offset: Offset(0, 4.h),
+                          ),
+                        ],
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -135,14 +141,14 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
                               Icon(
                                 Icons.call_outlined,
                                 size: 20.r,
-                                color: textPrimary,
+                                color: Colors.white,
                               ),
                               SizedBox(width: 8.w),
                               WidgetManager.customText(
-                                text: "Call customer",
+                                text: "Call Customer",
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w700,
-                                color: textPrimary,
+                                color: Colors.white,
                               ),
                             ],
                           ),
@@ -152,16 +158,16 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
 
                     SizedBox(height: 12.h),
 
-                    // 2. Open Google Maps Button (Blue Pill)
+                    // 2. Open Google Maps Button (Green Pill)
                     Container(
                       width: double.infinity,
                       height: 50.h,
                       decoration: BoxDecoration(
-                        color: buttonBlueBg,
+                        color: ColorManager.strongdarkGreen,
                         borderRadius: BorderRadius.circular(25.r),
                         boxShadow: [
                           BoxShadow(
-                            color: buttonBlueBg.withValues(alpha: 0.3),
+                            color: buttonGreenBg.withValues(alpha: 0.3),
                             blurRadius: 12.r,
                             offset: Offset(0, 4.h),
                           ),
@@ -217,7 +223,7 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
                           borderRadius: BorderRadius.circular(26.r),
                           child: Center(
                             child: WidgetManager.customText(
-                              text: "Arrived at delivery location",
+                              text: "Arrived At Delivery Location",
                               fontSize: 15.5.sp,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,

@@ -1,6 +1,6 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
-import '../../../routes/app_pages.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
 
 class DeliveryFailedReasonController extends GetxController {
   final RxString customerName = 'Aditya Shah'.obs;

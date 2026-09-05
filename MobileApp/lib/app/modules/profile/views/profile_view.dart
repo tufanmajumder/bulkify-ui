@@ -1,13 +1,14 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/color_manager.dart';
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/profile_controller.dart';
+import 'package:bulkify/app/data/utils/color_manager.dart';
+import 'package:bulkify/app/data/utils/string_manager.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/profile/controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
   const ProfileView({super.key});
@@ -61,7 +62,7 @@ class ProfileView extends GetView<ProfileController> {
 
                   SizedBox(height: 18.h),
 
-                  // 2. User Profile Summary Header Card
+                  // // 2. User Profile Summary Header Card
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(
@@ -129,7 +130,7 @@ class ProfileView extends GetView<ProfileController> {
                               Obx(
                                 () => WidgetManager.customText(
                                   text:
-                                      "${controller.role.value} · ID #${controller.partnerId.value}",
+                                      "${StringManager.defaultRole} · ID #${controller.partnerId.value}",
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.w400,
                                   color: textSecondary,
@@ -200,7 +201,7 @@ class ProfileView extends GetView<ProfileController> {
                             () => Column(
                               children: [
                                 _buildDetailRow(
-                                  "Vehicle type",
+                                  "Vehicle Type",
                                   controller.vehicleType.value,
                                 ),
                                 Divider(
@@ -209,7 +210,7 @@ class ProfileView extends GetView<ProfileController> {
                                   thickness: 1.h,
                                 ),
                                 _buildDetailRow(
-                                  "Vehicle name",
+                                  "Vehicle Name",
                                   controller.vehicleName.value,
                                 ),
                                 Divider(
@@ -218,7 +219,7 @@ class ProfileView extends GetView<ProfileController> {
                                   thickness: 1.h,
                                 ),
                                 _buildDetailRow(
-                                  "Registration number",
+                                  "Registration Number",
                                   controller.registrationNumber.value,
                                 ),
                               ],
@@ -271,7 +272,7 @@ class ProfileView extends GetView<ProfileController> {
                         iconColor: textPrimary,
                         collapsedIconColor: textSecondary,
                         title: WidgetManager.customText(
-                          text: "Emergency contact",
+                          text: "Emergency Contact",
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w800,
                           color: textPrimary,
@@ -305,7 +306,7 @@ class ProfileView extends GetView<ProfileController> {
                                   thickness: 1.h,
                                 ),
                                 _buildDetailRow(
-                                  "Phone number",
+                                  "Phone Number",
                                   controller.emergencyPhone.value,
                                 ),
                               ],
@@ -410,7 +411,7 @@ class ProfileView extends GetView<ProfileController> {
                           ),
                           SizedBox(width: 8.w),
                           WidgetManager.customText(
-                            text: "Sign out",
+                            text: "Sign Out",
                             fontSize: 14.5.sp,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
@@ -437,8 +438,6 @@ class ProfileView extends GetView<ProfileController> {
     }
     return content;
   }
-
-
 
   /// Detail Label-Value Pair Row Widget
   Widget _buildDetailRow(String label, String value) {

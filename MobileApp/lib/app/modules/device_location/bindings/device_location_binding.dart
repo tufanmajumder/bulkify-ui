@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
-import '../controllers/device_location_controller.dart';
+﻿import 'package:get/get.dart';
+import 'package:bulkify/app/modules/device_location/controllers/device_location_controller.dart';
 
 class DeviceLocationBinding extends Bindings {
   @override

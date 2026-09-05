@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
-import '../controllers/map_webview_controller.dart';
+﻿import 'package:get/get.dart';
+import 'package:bulkify/app/modules/map_webview/controllers/map_webview_controller.dart';
 
 class MapWebviewBinding extends Bindings {
   @override

@@ -1,12 +1,12 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/order_model.dart';
-import '../service/auth_service.dart';
-import '../utils/api_manager.dart';
+import 'package:admin_app/models/order_model.dart';
+import 'package:admin_app/service/auth_service.dart';
+import 'package:admin_app/utils/api_manager.dart';
 
 class OrderService extends GetxService {
   final Dio dio = Dio(

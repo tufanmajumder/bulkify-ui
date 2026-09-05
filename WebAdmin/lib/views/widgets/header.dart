@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../utils/responsive.dart';
-import '../user_profile_screen.dart';
+import 'package:admin_app/utils/responsive.dart';
+import 'package:admin_app/views/user_profile_screen.dart';
 
 class Header extends StatelessWidget {
   const Header({super.key});

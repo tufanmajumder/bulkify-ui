@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../models/order_model.dart';
-import '../service/auth_service.dart';
-import '../service/order_service.dart';
+import 'package:admin_app/models/order_model.dart';
+import 'package:admin_app/service/auth_service.dart';
+import 'package:admin_app/service/order_service.dart';
 
 class OrderController extends GetxController {
   final OrderService _orderService = Get.put(OrderService());

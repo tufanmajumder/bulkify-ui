@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/delivery_failed_summary_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/delivery_failed_summary/controllers/delivery_failed_summary_controller.dart';
 
 class DeliveryFailedSummaryView
     extends GetView<DeliveryFailedSummaryController> {

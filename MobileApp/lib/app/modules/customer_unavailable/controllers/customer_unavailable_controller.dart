@@ -1,7 +1,8 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../routes/app_pages.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
 
 class CustomerUnavailableController extends GetxController {
   final RxString customerName = 'Aditya Shah'.obs;
@@ -41,19 +42,17 @@ class CustomerUnavailableController extends GetxController {
         await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
       }
     } catch (_) {
-      Get.snackbar(
-        "Calling Customer",
-        "Dialing ${customerName.value} (${customerPhone.value})...",
-        snackPosition: SnackPosition.BOTTOM,
+      WidgetManager.showSnackBar(
+        message: "Dialing ${customerName.value} (${customerPhone.value})...",
+        snackPosition: SnackPosition.TOP,
       );
     }
   }
 
   void onWaitFiveMinutesAndRetry() {
-    Get.snackbar(
-      "Retry Delivery",
-      "Timer set for 5 minutes. Please retry reaching ${customerName.value}.",
-      snackPosition: SnackPosition.BOTTOM,
+    WidgetManager.showSnackBar(
+      message: "Timer Set For 5 Minutes. Please Retry Reaching ${customerName.value}.",
+      snackPosition: SnackPosition.TOP,
       duration: const Duration(seconds: 3),
     );
     Get.back();

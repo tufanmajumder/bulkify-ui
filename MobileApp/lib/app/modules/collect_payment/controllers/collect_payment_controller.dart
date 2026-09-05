@@ -1,16 +1,22 @@
+﻿import 'dart:async';
 import 'package:get/get.dart';
 
-import '../../../routes/app_pages.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
 
 class CollectPaymentController extends GetxController {
-  final RxDouble orderValue = 165.00.obs;
-  final RxString orderId = '01'.obs;
-  final RxString storeName = 'Burger Bistro'.obs;
-  final RxString upiId = 'johndoe@okhdfc'.obs;
+  final RxDouble orderValue = 145.00.obs;
+  final RxString orderId = 'O103491'.obs;
+  final RxString storeName = 'Fresh Mart'.obs;
+  final RxString upiId = ''.obs;
   final RxString customerName = 'Priya Nair'.obs;
 
   final RxString deliveryOption = 'Handed to customer'.obs;
   final RxBool isProcessing = false.obs;
+
+  // Countdown Timer (1 min 42 sec = 102 sec)
+  static const int initialTimerSeconds = 102;
+  final RxInt remainingSeconds = initialTimerSeconds.obs;
+  Timer? _timer;
 
   @override
   void onInit() {
@@ -36,36 +42,53 @@ class CollectPaymentController extends GetxController {
         deliveryOption.value = data['deliveryOption'].toString();
       }
     }
+    startTimer();
   }
 
-  Future<void> onReceivedPayment() async {
+  void startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (remainingSeconds.value > 0) {
+        remainingSeconds.value--;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void regenerateQr() {
+    remainingSeconds.value = initialTimerSeconds;
+    startTimer();
+  }
+
+  bool get isTimerExpired => remainingSeconds.value == 0;
+
+  String get formattedTimer {
+    final minutes = (remainingSeconds.value ~/ 60).toString().padLeft(2, '0');
+    final seconds = (remainingSeconds.value % 60).toString().padLeft(2, '0');
+    return "$minutes:$seconds";
+  }
+
+  @override
+  void onClose() {
+    _timer?.cancel();
+    super.onClose();
+  }
+
+  Future<void> onGetDeliveryCode() async {
     isProcessing.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
     isProcessing.value = false;
 
-    Get.offAllNamed(
-      Routes.DELIVERY_SUCCESS,
+    Get.toNamed(
+      Routes.CONFIRM_DELIVERY,
       arguments: {
+        'customerName': customerName.value,
         'storeName': storeName.value,
-        'deliveryOption': deliveryOption.value,
         'orderValue': orderValue.value,
-        'paymentType': 'Cash/UPI collected on delivery',
-      },
-    );
-  }
-
-  Future<void> onAlreadyPaidOnline() async {
-    isProcessing.value = true;
-    await Future.delayed(const Duration(milliseconds: 300));
-    isProcessing.value = false;
-
-    Get.offAllNamed(
-      Routes.DELIVERY_SUCCESS,
-      arguments: {
-        'storeName': storeName.value,
-        'deliveryOption': deliveryOption.value,
-        'orderValue': orderValue.value,
-        'paymentType': 'Paid online',
+        'orderId': orderId.value,
+        'paymentId': '710644',
+        'utr': '554776421',
       },
     );
   }

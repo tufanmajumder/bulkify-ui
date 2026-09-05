@@ -71,8 +71,7 @@ class _IdleDetectorWidgetState extends State<IdleDetectorWidget>
   void _showIdleSnackbar() {
     print("show idle app.......");
     WidgetManager.showSnackBar(
-      title: 'Idle Alert',
-      message: 'You have been inactive for more than 8 minutes.',
+      message: 'You Have Been Inactive For More Than 8 Minutes.',
       snackPosition: SnackPosition.TOP,
       backgroundColor: const Color(0xFF28283C),
       textColor: Colors.white,

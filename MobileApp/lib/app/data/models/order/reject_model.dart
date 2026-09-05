@@ -80,6 +80,7 @@ class Item {
   dynamic restaurantName;
   dynamic deliveryAddress;
   dynamic amount;
+  dynamic orderstatus;
   dynamic status;
   dynamic deliveryMethod;
 
@@ -88,6 +89,7 @@ class Item {
     this.restaurantName,
     this.deliveryAddress,
     this.amount,
+    this.orderstatus,
     this.status,
     this.deliveryMethod,
   });
@@ -97,6 +99,7 @@ class Item {
     restaurantName: json["restaurantname"],
     deliveryAddress: json["deliveryaddress"],
     amount: json["amount"],
+    orderstatus: json["orderstatus"],
     status: json["status"],
     deliveryMethod: json["deliverymethod"] ?? json["delivermethod"],
   );
@@ -106,6 +109,7 @@ class Item {
     "restaurantname": restaurantName,
     "deliveryaddress": deliveryAddress,
     "amount": amount,
+    "orderstatus": orderstatus,
     "status": status,
     "deliverymethod": deliveryMethod,
   };

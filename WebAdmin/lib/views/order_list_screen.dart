@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/order_controller.dart';
-import '../utils/responsive.dart';
+import 'package:admin_app/controllers/order_controller.dart';
+import 'package:admin_app/utils/responsive.dart';
 import 'widgets/header.dart';
 import 'widgets/sidebar.dart';
 

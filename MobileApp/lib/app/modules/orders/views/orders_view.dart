@@ -1,11 +1,12 @@
+﻿import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../../../routes/app_pages.dart';
-import '../controllers/orders_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
+import 'package:bulkify/app/modules/orders/controllers/orders_controller.dart';
 
 class OrdersView extends GetView<OrdersController> {
   const OrdersView({super.key});
@@ -259,7 +260,7 @@ class OrdersView extends GetView<OrdersController> {
     Color avatarBg;
     Widget avatarIcon;
 
-    if (statusType == 'delivered') {
+    if (statusType == 'completed' || statusType == 'delivered') {
       avatarBg = const Color(0xFFE8F6ED);
       avatarIcon = Icon(
         Icons.check_rounded,
@@ -276,9 +277,11 @@ class OrdersView extends GetView<OrdersController> {
     } else {
       avatarBg = const Color(0xFFFEF4E8);
       avatarIcon = Icon(
-        iconType == 'bike'
-            ? Icons.two_wheeler_rounded
-            : Icons.local_shipping_outlined,
+        // iconType == 'bike'
+        //     ? Icons.two_wheeler_rounded
+        order['orderstatus'].toString() == "Picked up"
+            ? Icons.local_shipping_outlined
+            : Icons.check,
         size: 20.r,
         color: const Color(0xFFD97706),
       );
@@ -303,7 +306,7 @@ class OrdersView extends GetView<OrdersController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Left Avatar Icon Box
                 Container(
@@ -336,28 +339,107 @@ class OrdersView extends GetView<OrdersController> {
                         fontWeight: FontWeight.w400,
                         color: textSecondary,
                       ),
-                      // Status Badge Pill section removed
+                      if (statusType == 'active' &&
+                          order['orderstatus'] != null &&
+                          order['orderstatus']
+                              .toString()
+                              .trim()
+                              .isNotEmpty) ...[
+                        SizedBox(height: 4.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 3.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                order['orderstatus'].toString() == "Picked up"
+                                ? const Color(0xFF3B82F6).withValues(alpha: 0.1)
+                                : const Color(0xFFFEF4E8),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: WidgetManager.customText(
+                            text: order['orderstatus'].toString(),
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                order['orderstatus'].toString() == "Picked up"
+                                ? const Color(0xFF3B82F6)
+                                : const Color(0xFFD97706),
+                          ),
+                        ),
+                      ] else if (statusType == 'completed' ||
+                          statusType == 'delivered') ...[
+                        SizedBox(height: 4.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 3.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F6ED),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: WidgetManager.customText(
+                            text:
+                                (order['statusText'] != null &&
+                                    order['statusText']
+                                        .toString()
+                                        .trim()
+                                        .isNotEmpty)
+                                ? order['statusText'].toString()
+                                : "Delivered",
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF109B5B),
+                          ),
+                        ),
+                      ] else if (statusType == 'rejected') ...[
+                        SizedBox(height: 4.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 3.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF2F3F7),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: WidgetManager.customText(
+                            text:
+                                (order['statusText'] != null &&
+                                    order['statusText']
+                                        .toString()
+                                        .trim()
+                                        .isNotEmpty)
+                                ? order['statusText'].toString()
+                                : "Rejected",
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF71717A),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
 
                 SizedBox(width: 8.w),
 
-                // Price & Chevron Right Arrow
+                // Price & Chevron Icon
                 Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     WidgetManager.customText(
-                      text: "₹${amount.toStringAsFixed(2)}",
+                      text: "₹ ${amount.toStringAsFixed(2)}",
                       fontSize: 15.5.sp,
                       fontWeight: FontWeight.w800,
-                      color: textPrimary,
+                      color: ColorManager.simpleGreen,
                     ),
                     SizedBox(width: 4.w),
                     Icon(
                       Icons.chevron_right_rounded,
                       size: 20.r,
-                      color: const Color(0xFFA0A0B0),
+                      color: const Color(0xFFA1A1AA),
                     ),
                   ],
                 ),
@@ -425,12 +507,12 @@ class OrdersView extends GetView<OrdersController> {
           margin: EdgeInsets.only(top: 16.h),
           padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
           decoration: BoxDecoration(
-            color: Colors.lightBlueAccent,
+            color: Color(0xFF3B82F6),
             borderRadius: BorderRadius.circular(12.r),
           ),
           child: Center(
             child: WidgetManager.customText(
-              text: "All data fetched",
+              text: "All Data Fetched",
               fontSize: 14.sp,
               fontWeight: FontWeight.w700,
               color: Colors.white,

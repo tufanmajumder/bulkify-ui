@@ -1,10 +1,10 @@
-import 'package:device_info_plus/device_info_plus.dart';
+﻿import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../models/login_model.dart';
-import '../service/auth_service.dart';
-import '../utils/widget_manager.dart';
+import 'package:admin_app/models/login_model.dart';
+import 'package:admin_app/service/auth_service.dart';
+import 'package:admin_app/utils/widget_manager.dart';
 
 class LoginController extends GetxController {
   final AuthService _authService = Get.put(AuthService());

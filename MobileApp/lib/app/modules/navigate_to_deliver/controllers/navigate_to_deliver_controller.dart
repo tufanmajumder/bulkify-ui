@@ -1,13 +1,15 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../routes/app_pages.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
 
 class NavigateToDeliverController extends GetxController {
-  final RxString customerName = 'Priya Nair'.obs;
+  final RxString orderId = 'O103490'.obs;
+  final RxString customerName = 'Aditya Shah'.obs;
   final RxString deliveryAddress =
-      'B-12, Lakeview Residency, 5th Avenue, Bengaluru 560034'.obs;
-  final RxDouble orderValue = 145.00.obs;
+      'Flat 402, Oakwood Heights, Main Street, Bengaluru 560038'.obs;
+  final RxDouble orderValue = 2049.00.obs;
   final RxString customerPhone = '+91 98123 45670'.obs;
 
   @override
@@ -15,6 +17,9 @@ class NavigateToDeliverController extends GetxController {
     super.onInit();
     if (Get.arguments != null && Get.arguments is Map<String, dynamic>) {
       final data = Get.arguments as Map<String, dynamic>;
+      if (data['orderId'] != null) {
+        orderId.value = data['orderId'].toString();
+      }
       if (data['customerName'] != null) {
         customerName.value = data['customerName'];
       }
@@ -45,10 +50,9 @@ class NavigateToDeliverController extends GetxController {
         await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
       }
     } catch (_) {
-      Get.snackbar(
-        "Calling Customer",
-        "Dialing ${customerName.value} (${customerPhone.value})...",
-        snackPosition: SnackPosition.BOTTOM,
+      WidgetManager.showSnackBar(
+        message: "Dialing ${customerName.value} (${customerPhone.value})...",
+        snackPosition: SnackPosition.TOP,
       );
     }
   }
@@ -81,10 +85,9 @@ class NavigateToDeliverController extends GetxController {
         }
         await launchUrl(webMapsUri, mode: LaunchMode.externalApplication);
       } catch (e) {
-        Get.snackbar(
-          "Maps Error",
-          "Could not open maps application: $e",
-          snackPosition: SnackPosition.BOTTOM,
+        WidgetManager.showSnackBar(
+          message: "Could Not Open Maps Application: $e",
+          snackPosition: SnackPosition.TOP,
         );
       }
     } else {
@@ -99,10 +102,9 @@ class NavigateToDeliverController extends GetxController {
           await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
         }
       } catch (e) {
-        Get.snackbar(
-          "Maps Error",
-          "Could not open Google Maps: $e",
-          snackPosition: SnackPosition.BOTTOM,
+        WidgetManager.showSnackBar(
+          message: "Could Not Open Google Maps: $e",
+          snackPosition: SnackPosition.TOP,
         );
       }
     }
@@ -110,7 +112,7 @@ class NavigateToDeliverController extends GetxController {
 
   void onArrivedAtLocation() {
     Get.toNamed(
-      Routes.DELIVERY_OTP,
+      Routes.COLLECT_PAYMENT,
       arguments: {
         'customerName': customerName.value,
         'customerPhone': customerPhone.value,

@@ -1,3 +1,7 @@
+// To parse this JSON data, do
+//
+//     final summaryModel = summaryModelFromJson(jsonString);
+
 import 'dart:convert';
 
 SummaryModel summaryModelFromJson(String str) =>
@@ -13,11 +17,11 @@ class SummaryModel {
   dynamic data;
 
   SummaryModel({
-    this.success,
-    this.message,
-    this.code,
-    this.encrypted,
-    this.data,
+    required this.success,
+    required this.message,
+    required this.code,
+    required this.encrypted,
+    required this.data,
   });
 
   factory SummaryModel.fromJson(Map<String, dynamic> json) => SummaryModel(
@@ -25,9 +29,11 @@ class SummaryModel {
     message: json["message"],
     code: json["code"],
     encrypted: json["encrypted"],
-    data: json["data"] != null && json["data"] is Map<String, dynamic>
-        ? Data.fromJson(json["data"])
-        : null,
+    data: json["data"] == null
+        ? null
+        : (json["data"] is Map<String, dynamic>
+            ? Data.fromJson(json["data"])
+            : json["data"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -35,57 +41,55 @@ class SummaryModel {
     "message": message,
     "code": code,
     "encrypted": encrypted,
-    "data": data?.toJson(),
+    "data": data is Data ? (data as Data).toJson() : data,
   };
 }
 
 class Data {
-  dynamic earnings;
-  dynamic completedorders;
-  dynamic onlinetimeminutes;
-  dynamic distancecoveredkm;
+  dynamic onlinestatus;
+  dynamic summary;
 
-  Data({
-    this.earnings,
-    this.completedorders,
-    this.onlinetimeminutes,
-    this.distancecoveredkm,
-  });
+  Data({required this.onlinestatus, required this.summary});
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    earnings:
-        json["earnings"] != null && json["earnings"] is Map<String, dynamic>
-        ? Earnings.fromJson(json["earnings"])
-        : null,
-    completedorders: json["completedorders"],
-    onlinetimeminutes: json["onlinetimeminutes"],
-    distancecoveredkm: json["distancecoveredkm"],
+    onlinestatus: json["onlinestatus"],
+    summary: json["summary"] == null
+        ? null
+        : (json["summary"] is Map<String, dynamic>
+            ? Summary.fromJson(json["summary"])
+            : json["summary"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "earnings": earnings?.toJson(),
-    "completedorders": completedorders,
-    "onlinetimeminutes": onlinetimeminutes,
-    "distancecoveredkm": distancecoveredkm,
+    "onlinestatus": onlinestatus,
+    "summary": summary is Summary ? (summary as Summary).toJson() : summary,
   };
 }
 
-class Earnings {
-  dynamic amount;
-  dynamic currency;
-  dynamic symbol;
+class Summary {
+  dynamic earnings;
+  dynamic completedorders;
+  dynamic onlinetimeseconds;
+  dynamic distance;
 
-  Earnings({this.amount, this.currency, this.symbol});
+  Summary({
+    required this.earnings,
+    required this.completedorders,
+    required this.onlinetimeseconds,
+    required this.distance,
+  });
 
-  factory Earnings.fromJson(Map<String, dynamic> json) => Earnings(
-    amount: json["amount"],
-    currency: json["currency"],
-    symbol: json["symbol"],
+  factory Summary.fromJson(Map<String, dynamic> json) => Summary(
+    earnings: json["earnings"],
+    completedorders: json["completedorders"],
+    onlinetimeseconds: json["onlinetimeseconds"],
+    distance: json["distance"],
   );
 
   Map<String, dynamic> toJson() => {
-    "amount": amount,
-    "currency": currency,
-    "symbol": symbol,
+    "earnings": earnings,
+    "completedorders": completedorders,
+    "onlinetimeseconds": onlinetimeseconds,
+    "distance": distance,
   };
 }

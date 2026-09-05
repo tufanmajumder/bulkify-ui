@@ -1,3 +1,4 @@
+﻿import 'dart:convert';
 import 'dart:io';
 
 import 'package:bulkify/app/data/models/auth_models/login_model.dart';
@@ -11,7 +12,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../utils/api_manager.dart';
+import 'package:bulkify/app/data/utils/api_manager.dart';
 
 class AuthService extends GetConnect implements GetxService {
   final Dio dio = Dio(
@@ -154,9 +155,8 @@ class AuthService extends GetConnect implements GetxService {
     };
 
     if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = token.startsWith('Bearer ')
-          ? token
-          : 'Bearer $token';
+      final cleanToken = token.replaceAll('Bearer ', '').trim();
+      headers['Authorization'] = 'Bearer $cleanToken';
     }
 
     print("url in getConnect...${ApiManager.baseUrl}$url");
@@ -305,10 +305,7 @@ class AuthService extends GetConnect implements GetxService {
     print("headers in getSummary...$headers");
 
     try {
-      final response = await dio.get(
-        url,
-        options: Options(headers: headers),
-      );
+      final response = await dio.get(url, options: Options(headers: headers));
       print("getSummary status...${response.statusCode}");
       print("getSummary data...${response.data}");
 
@@ -345,5 +342,99 @@ class AuthService extends GetConnect implements GetxService {
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
+  }
+
+  // updateOnlineStatusService
+  Future<Map<String, dynamic>?> updateOnlineStatus({
+    required bool isOnline,
+    String? sessionId,
+  }) async {
+    final String url = ApiManager.onlinestatus;
+    String? token = sessionId;
+    if (token == null || token.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('sessionId');
+    }
+
+    final headers = <String, dynamic>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      final cleanToken = token.replaceAll('Bearer ', '').trim();
+      headers['Authorization'] = 'Bearer $cleanToken';
+    }
+
+    final Map<String, dynamic> body = {"isonline": isOnline};
+
+    print("url in updateOnlineStatus...${ApiManager.baseUrl}$url");
+    print("token in updateOnlineStatus...$token");
+    print("headers in updateOnlineStatus...$headers");
+    print("body in updateOnlineStatus...$body");
+
+    try {
+      final response = await dio.post(
+        url,
+        data: body,
+        options: Options(headers: headers),
+      );
+      print("updateOnlineStatus status...${response.statusCode}");
+      print("updateOnlineStatus data...${response.data}");
+
+      if (response.data != null) {
+        if (response.data is Map<String, dynamic>) {
+          return response.data as Map<String, dynamic>;
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      print(
+        "DioException updateOnlineStatus status: ${e.response?.statusCode}",
+      );
+      print("DioException updateOnlineStatus data: ${e.response?.data}");
+
+      if (e.response?.data != null &&
+          e.response!.data is Map<String, dynamic>) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+
+      if (e.type == DioExceptionType.connectionError ||
+          e.error is SocketException) {
+        WidgetManager.showAlertSnackBar(StringManager.unableToReachInternet, 3);
+      } else {
+        WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      }
+      return null;
+    } catch (e, stackTrace) {
+      print("General exception in updateOnlineStatus: $e");
+      print("StackTrace: $stackTrace");
+      WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      return null;
+    }
+  }
+
+  convertData(String phone, String deviceId, String model, String brand) {
+    // 1. Define your source Map
+    final Map<String, dynamic> deviceData = {
+      "devicetype": phone,
+      "deviceid": deviceId,
+      "model": model,
+      "brand": brand,
+    };
+
+    // 2. Format the Map into a pretty-printed JSON string with 2 spaces
+    const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+    final String prettyJsonString = encoder.convert(deviceData);
+
+    // 3. Convert the string to bytes (UTF-8)
+    final List<int> jsonBytes = utf8.encode(prettyJsonString);
+
+    // 4. Encode the bytes to Base64
+    final String base64Result = base64.encode(jsonBytes);
+
+    print(base64Result);
+    return base64Result;
+    // Output: ewogICJkZXZpY2V0eXBlIjogIlBob25lIiwKICAiZGV2aWNlaWQiOiAiQlA0QS4yNTEyMDUuMDA2IiwKICAibW9kZWwiOiAiU00tTTA3NUYiLAogICJicmFuZCI6ICJzYW1zdW5nIgp9
   }
 }

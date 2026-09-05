@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../data/models/order/reject_model.dart';
-import '../../../data/service/auth_service.dart';
+import 'package:bulkify/app/data/service/auth_service.dart';
+import 'package:bulkify/app/data/models/order/reject_model.dart';
 
 class OrdersController extends GetxController {
   final AuthService _authService = AuthService();
@@ -116,6 +116,7 @@ class OrdersController extends GetxController {
               'storeName': item.restaurantName?.toString() ?? '',
               'address': item.deliveryAddress?.toString() ?? '',
               'amount': double.tryParse(item.amount?.toString() ?? '0') ?? 0.0,
+              'orderstatus': item.orderstatus?.toString(),
               'statusText': item.status?.toString() ?? 'Active',
               'statusType': 'active',
               'deliveryMethod': item.deliveryMethod?.toString() ?? '',

@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-
 import 'app/data/utils/app_theme.dart';
-import 'app/data/utils/idle_detector_widget.dart';
 import 'app/routes/app_pages.dart';
 
 void main() async {
@@ -33,16 +31,14 @@ class MyApp extends StatelessWidget {
           designSize: designSize,
           minTextAdapt: true,
           splitScreenMode: false,
+          ensureScreenSize: true,
           builder: (context, child) {
-            return IdleDetectorWidget(
-              idleDuration: const Duration(minutes: 5),
-              child: GetMaterialApp(
-                debugShowCheckedModeBanner: false,
-                title: "Bulkify",
-                theme: AppTheme.lightTheme,
-                initialRoute: AppPages.INITIAL,
-                getPages: AppPages.routes,
-              ),
+            return GetMaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: "Bulkify",
+              theme: AppTheme.lightTheme,
+              initialRoute: AppPages.INITIAL,
+              getPages: AppPages.routes,
             );
           },
         );

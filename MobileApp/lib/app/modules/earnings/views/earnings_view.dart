@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/earnings_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/earnings/controllers/earnings_controller.dart';
 
 class EarningsView extends GetView<EarningsController> {
   const EarningsView({super.key});
@@ -60,7 +60,7 @@ class EarningsView extends GetView<EarningsController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       WidgetManager.customText(
-                        text: "Today's earnings",
+                        text: "Today's Earnings",
                         fontSize: 13.5.sp,
                         fontWeight: FontWeight.w500,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -77,7 +77,7 @@ class EarningsView extends GetView<EarningsController> {
                       SizedBox(height: 8.h),
                       WidgetManager.customText(
                         text:
-                            "From ${controller.totalOrders.value} completed deliveries",
+                            "From ${controller.totalOrders.value} Completed Deliveries",
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w500,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -120,7 +120,7 @@ class EarningsView extends GetView<EarningsController> {
                   child: Column(
                     children: [
                       _buildBreakdownItem(
-                        "Base fare",
+                        "Base Fare",
                         controller.baseFare.value,
                       ),
                       Divider(
@@ -129,7 +129,7 @@ class EarningsView extends GetView<EarningsController> {
                         thickness: 1.h,
                       ),
                       _buildBreakdownItem(
-                        "Distance bonus",
+                        "Distance Bonus",
                         controller.distanceBonus.value,
                       ),
                       Divider(
@@ -138,7 +138,7 @@ class EarningsView extends GetView<EarningsController> {
                         thickness: 1.h,
                       ),
                       _buildBreakdownItem(
-                        "Peak hour bonus",
+                        "Peak Hour Bonus",
                         controller.peakHourBonus.value,
                       ),
                       Divider(
@@ -156,7 +156,7 @@ class EarningsView extends GetView<EarningsController> {
 
               // 4. This Week Section
               WidgetManager.customText(
-                text: "This week",
+                text: "This Week",
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w900,
                 color: textPrimary,
@@ -197,7 +197,7 @@ class EarningsView extends GetView<EarningsController> {
                             ),
                             SizedBox(height: 4.h),
                             WidgetManager.customText(
-                              text: "Total earned",
+                              text: "Total Earned",
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w500,
                               color: textSecondary,

@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/user_controller.dart';
-import '../../models/user_model.dart';
-import '../../utils/responsive.dart';
+import 'package:admin_app/controllers/user_controller.dart';
+import 'package:admin_app/models/user_model.dart';
+import 'package:admin_app/utils/responsive.dart';
 
 class UsersTable extends StatelessWidget {
   const UsersTable({super.key});

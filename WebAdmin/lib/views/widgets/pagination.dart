@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/user_controller.dart';
-import '../../utils/responsive.dart';
+import 'package:admin_app/controllers/user_controller.dart';
+import 'package:admin_app/utils/responsive.dart';
 
 class PaginationControls extends StatelessWidget {
   const PaginationControls({super.key});

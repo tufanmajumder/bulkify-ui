@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../order_list_screen.dart';
-import '../users_screen.dart';
+import 'package:admin_app/views/order_list_screen.dart';
+import 'package:admin_app/views/users_screen.dart';
 
 class Sidebar extends StatefulWidget {
   final bool isDrawer;

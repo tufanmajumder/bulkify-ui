@@ -1,11 +1,11 @@
-import 'package:bulkify/app/data/models/auth_models/login_model.dart';
+﻿import 'package:bulkify/app/data/models/auth_models/login_model.dart';
 import 'package:bulkify/app/data/service/auth_service.dart';
 import 'package:bulkify/app/data/utils/string_manager.dart';
 import 'package:bulkify/app/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../data/utils/widget_manager.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
 
 class LoginController extends GetxController {
   final phoneController = TextEditingController();
@@ -13,7 +13,7 @@ class LoginController extends GetxController {
 
   final RxString selectedCountryCode = '+91'.obs;
   final RxList<String> countryCodes = ['+91', '+1', '+44', '+971', '+65'].obs;
-  final RxBool isAgreedToTerms = true.obs;
+  final RxBool isAgreedToTerms = false.obs;
   final RxBool isPhoneValid = false.obs;
   final RxBool isLoading = false.obs;
 
@@ -121,7 +121,6 @@ class LoginController extends GetxController {
 
     if (!isAgreedToTerms.value) {
       WidgetManager.showSnackBar(
-        title: StringManager.termsAndConditionsTitle,
         message: StringManager.acceptTermsMessage,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orangeAccent,
@@ -135,7 +134,6 @@ class LoginController extends GetxController {
     final validationError = getPhoneValidationError(rawPhone);
     if (validationError != null) {
       WidgetManager.showSnackBar(
-        title: StringManager.invalidNumberTitle,
         message: validationError,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,
@@ -163,7 +161,6 @@ class LoginController extends GetxController {
         final String message =
             response?.message?.toString() ?? StringManager.failedInitiateLogin;
         WidgetManager.showSnackBar(
-          title: StringManager.requestFailed,
           message: message,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent,
@@ -174,7 +171,6 @@ class LoginController extends GetxController {
       }
     } catch (e) {
       WidgetManager.showSnackBar(
-        title: StringManager.error,
         message: StringManager.unexpectedError,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,

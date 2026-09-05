@@ -1,10 +1,11 @@
+﻿import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/confirm_delivery_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/confirm_delivery/controllers/confirm_delivery_controller.dart';
 
 class ConfirmDeliveryView extends GetView<ConfirmDeliveryController> {
   const ConfirmDeliveryView({super.key});
@@ -13,262 +14,163 @@ class ConfirmDeliveryView extends GetView<ConfirmDeliveryController> {
   Widget build(BuildContext context) {
     const Color bgColor = Color(0xFFF7F8FA);
     const Color textPrimary = Color(0xFF18181B);
-    const Color redAccent = Color(0xFFD84338);
-    const Color selectedCardBg = Color(0xFFFDE8E8);
-    const Color unselectedBadgeBg = Color(0xFFF4F4F6);
-    const Color unselectedBadgeIconColor = Color(0xFF71717A);
-    const Color unselectedRadioBorder = Color(0xFFE4E4E7);
+    const Color textSecondary = Color(0xFF71717A);
+    const Color textCaption = Color(0xFFA0A0B0);
+    const Color greenCircleBg = Color(0xFF10B981);
+    const Color buttonRedBg = Color(0xFFD84338);
 
     final Widget mainContent = Column(
       children: [
-        // Top Custom AppBar (Back Button & Title)
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  width: 42.r,
-                  height: 42.r,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10.r,
-                        offset: Offset(0, 2.h),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.chevron_left_rounded,
-                      color: textPrimary,
-                      size: 24.r,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 14.w),
-              WidgetManager.customText(
-                text: "Confirm delivery",
-                fontSize: 19.sp,
-                fontWeight: FontWeight.w800,
-                color: textPrimary,
-              ),
-            ],
-          ),
-        ),
-
-        // Scrollable Body Content
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 550),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 32.h),
 
-                    // Section Heading Title
-                    WidgetManager.customText(
-                      text: "How was the order delivered?",
-                      fontSize: 17.5.sp,
-                      fontWeight: FontWeight.w800,
-                      color: textPrimary,
-                    ),
-
-                    SizedBox(height: 18.h),
-
-                    // Delivery Options List
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: controller.deliveryOptions.length,
-                      separatorBuilder: (context, index) =>
-                          SizedBox(height: 14.h),
-                      itemBuilder: (context, index) {
-                        final option = controller.deliveryOptions[index];
-                        final String title = option['title'];
-                        final String iconType = option['icon'];
-
-                        IconData iconData;
-                        switch (iconType) {
-                          case 'location':
-                            iconData = Icons.place_rounded;
-                            break;
-                          case 'door':
-                            iconData = Icons.door_front_door_outlined;
-                            break;
-                          case 'security':
-                            iconData = Icons.shield_outlined;
-                            break;
-                          case 'unavailable':
-                            iconData = Icons.cancel_outlined;
-                            break;
-                          default:
-                            iconData = Icons.place_rounded;
-                        }
-
-                        return Obx(() {
-                          final bool isSelected =
-                              controller.selectedOptionIndex.value == index;
-
-                          return GestureDetector(
-                            onTap: () => controller.selectOption(index),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 14.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected ? selectedCardBg : Colors.white,
-                                borderRadius: BorderRadius.circular(20.r),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? redAccent
-                                      : Colors.transparent,
-                                  width: 1.6.w,
-                                ),
-                                boxShadow: isSelected
-                                    ? []
-                                    : [
-                                        BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.025),
-                                          blurRadius: 10.r,
-                                          offset: Offset(0, 3.h),
-                                        ),
-                                      ],
-                              ),
-                              child: Row(
-                                children: [
-                                  // Left Icon Badge
-                                  Container(
-                                    width: 44.r,
-                                    height: 44.r,
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? redAccent
-                                          : unselectedBadgeBg,
-                                      borderRadius: BorderRadius.circular(14.r),
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        iconData,
-                                        size: 22.r,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : unselectedBadgeIconColor,
-                                      ),
-                                    ),
-                                  ),
-
-                                  SizedBox(width: 14.w),
-
-                                  // Option Title
-                                  Expanded(
-                                    child: WidgetManager.customText(
-                                      text: title,
-                                      fontSize: 14.5.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: textPrimary,
-                                    ),
-                                  ),
-
-                                  SizedBox(width: 8.w),
-
-                                  // Right Radio Indicator
-                                  Container(
-                                    width: 22.r,
-                                    height: 22.r,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? redAccent
-                                            : unselectedRadioBorder,
-                                        width: 2.w,
-                                      ),
-                                    ),
-                                    child: isSelected
-                                        ? Center(
-                                            child: Container(
-                                              width: 10.r,
-                                              height: 10.r,
-                                              decoration: const BoxDecoration(
-                                                color: redAccent,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                          )
-                                        : null,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        });
-                      },
-                    ),
-
-                    SizedBox(height: 28.h),
-
-                    // Confirm Delivery Button (Red Pill)
-                    Obx(
-                      () => Container(
-                        width: double.infinity,
-                        height: 52.h,
-                        decoration: BoxDecoration(
-                          color: redAccent,
-                          borderRadius: BorderRadius.circular(26.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: redAccent.withValues(alpha: 0.3),
-                              blurRadius: 14.r,
-                              offset: Offset(0, 5.h),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: controller.isSubmitting.value
-                                ? null
-                                : controller.onConfirmDelivery,
-                            borderRadius: BorderRadius.circular(26.r),
-                            child: Center(
-                              child: controller.isSubmitting.value
-                                  ? SizedBox(
-                                      width: 22.r,
-                                      height: 22.r,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : WidgetManager.customText(
-                                      text: "Confirm delivery",
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                    ),
-                            ),
-                          ),
+                    // 1. Success Green Circle Check Icon
+                    Container(
+                      width: 100.r,
+                      height: 100.r,
+                      decoration: const BoxDecoration(
+                        color: greenCircleBg,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 54.r,
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 28.h),
+
+                    // 2. Payment Successful Title
+                    WidgetManager.customText(
+                      text: "Payment Successful",
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w900,
+                      color: textPrimary,
+                      letterSpacing: -0.5,
+                    ),
+
+                    SizedBox(height: 10.h),
+
+                    // 3. Subtitles (Order #, Payment ID #, UTR #)
+                    Obx(
+                      () => Column(
+                        children: [
+                          WidgetManager.customText(
+                            text: "Order #${controller.orderId.value}",
+                            fontSize: 13.5.sp,
+                            fontWeight: FontWeight.w600,
+                            color: textSecondary,
+                          ),
+                          SizedBox(height: 4.h),
+                          WidgetManager.customText(
+                            text: "Payment ID #${controller.paymentId.value}",
+                            fontSize: 13.5.sp,
+                            fontWeight: FontWeight.w600,
+                            color: textSecondary,
+                          ),
+                          SizedBox(height: 4.h),
+                          WidgetManager.customText(
+                            text: "UTR #${controller.utr.value}",
+                            fontSize: 13.5.sp,
+                            fontWeight: FontWeight.w600,
+                            color: textSecondary,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 28.h),
+
+                    // 4. Big Green Amount Text
+                    Obx(
+                      () => WidgetManager.customText(
+                        text:
+                            "₹${controller.orderValue.value.toStringAsFixed(2)}",
+                        fontSize: 32.sp,
+                        fontWeight: FontWeight.w900,
+                        color: ColorManager.simpleGreen,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+
+                    SizedBox(height: 6.h),
+
+                    // 5. Thank you! Caption
+                    WidgetManager.customText(
+                      text: "Thank you!",
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                      color: textCaption,
+                    ),
                   ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // 6. Send Delivery Code Red Button pinned at the bottom
+        Padding(
+          padding: EdgeInsets.only(
+            left: 24.w,
+            right: 24.w,
+            bottom: 24.h,
+            top: 12.h,
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 550),
+            child: Obx(
+              () => Container(
+                width: double.infinity,
+                height: 52.h,
+                decoration: BoxDecoration(
+                  color: buttonRedBg,
+                  borderRadius: BorderRadius.circular(26.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: buttonRedBg.withValues(alpha: 0.3),
+                      blurRadius: 14.r,
+                      offset: Offset(0, 5.h),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: controller.isSubmitting.value
+                        ? null
+                        : controller.onSendDeliveryCode,
+                    borderRadius: BorderRadius.circular(26.r),
+                    child: Center(
+                      child: controller.isSubmitting.value
+                          ? SizedBox(
+                              width: 22.r,
+                              height: 22.r,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
+                            )
+                          : WidgetManager.customText(
+                              text: "Send Delivery Code",
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                    ),
+                  ),
                 ),
               ),
             ),

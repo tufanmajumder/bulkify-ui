@@ -1,33 +1,16 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
-import '../../../routes/app_pages.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
 
 class ConfirmDeliveryController extends GetxController {
   final RxString customerName = 'Priya Nair'.obs;
-  final RxDouble orderValue = 165.00.obs;
-  final RxString orderId = '01'.obs;
+  final RxDouble orderValue = 2049.00.obs;
+  final RxString orderId = 'O103490'.obs;
+  final RxString paymentId = '710644'.obs;
+  final RxString utr = '554776421'.obs;
   final RxString storeName = 'Burger Bistro'.obs;
-  final RxInt selectedOptionIndex = 0.obs; // Default to 'Handed to customer'
+  final RxString paymentType = 'Cash/UPI collected on delivery'.obs;
   final RxBool isSubmitting = false.obs;
-
-  final List<Map<String, dynamic>> deliveryOptions = [
-    {
-      'title': 'Handed to customer',
-      'icon': 'location',
-    },
-    {
-      'title': 'Left at door',
-      'icon': 'door',
-    },
-    {
-      'title': 'Handed to security/reception',
-      'icon': 'security',
-    },
-    {
-      'title': 'Customer unavailable',
-      'icon': 'unavailable',
-    },
-  ];
 
   @override
   void onInit() {
@@ -43,42 +26,35 @@ class ConfirmDeliveryController extends GetxController {
       if (data['orderId'] != null) {
         orderId.value = data['orderId'].toString();
       }
+      if (data['paymentId'] != null) {
+        paymentId.value = data['paymentId'].toString();
+      }
+      if (data['utr'] != null) {
+        utr.value = data['utr'].toString();
+      }
       if (data['storeName'] != null) {
         storeName.value = data['storeName'].toString();
+      }
+      if (data['paymentType'] != null) {
+        paymentType.value = data['paymentType'].toString();
       }
     }
   }
 
-  void selectOption(int index) {
-    selectedOptionIndex.value = index;
-  }
-
-  Future<void> onConfirmDelivery() async {
+  Future<void> onSendDeliveryCode() async {
     isSubmitting.value = true;
     await Future.delayed(const Duration(milliseconds: 300));
     isSubmitting.value = false;
 
-    if (selectedOptionIndex.value != 3) {
-      Get.toNamed(
-        Routes.COLLECT_PAYMENT,
-        arguments: {
-          'customerName': customerName.value,
-          'orderValue': orderValue.value,
-          'orderId': orderId.value,
-          'storeName': storeName.value,
-          'deliveryOption': deliveryOptions[selectedOptionIndex.value]['title'],
-        },
-      );
-    } else {
-      Get.toNamed(
-        Routes.CUSTOMER_UNAVAILABLE,
-        arguments: {
-          'customerName': customerName.value,
-          'customerPhone': '+91 98123 45670',
-          'orderId': orderId.value,
-          'storeName': storeName.value,
-        },
-      );
-    }
+    Get.toNamed(
+      Routes.DELIVERY_OTP,
+      arguments: {
+        'customerName': customerName.value,
+        'orderValue': orderValue.value,
+        'orderId': orderId.value,
+        'storeName': storeName.value,
+        'paymentType': paymentType.value,
+      },
+    );
   }
 }

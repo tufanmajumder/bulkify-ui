@@ -14,11 +14,11 @@ class ProfileViewModel {
   dynamic data;
 
   ProfileViewModel({
-    this.success,
-    this.message,
-    this.code,
-    this.encrypted,
-    this.data,
+    required this.success,
+    required this.message,
+    required this.code,
+    required this.encrypted,
+    required this.data,
   });
 
   factory ProfileViewModel.fromJson(Map<String, dynamic> json) =>
@@ -27,9 +27,11 @@ class ProfileViewModel {
         message: json["message"],
         code: json["code"],
         encrypted: json["encrypted"],
-        data: json["data"] != null && json["data"] is Map<String, dynamic>
-            ? Data.fromJson(json["data"])
-            : null,
+        data: json["data"] == null
+            ? null
+            : (json["data"] is Map<String, dynamic>
+                ? Data.fromJson(json["data"])
+                : json["data"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -37,105 +39,136 @@ class ProfileViewModel {
     "message": message,
     "code": code,
     "encrypted": encrypted,
-    "data": data?.toJson(),
+    "data": data is Data ? (data as Data).toJson() : data,
   };
 }
 
 class Data {
   dynamic profile;
-  dynamic vehicle;
-  dynamic emergencyContact;
-  dynamic upi;
+  dynamic details;
 
-  Data({this.profile, this.vehicle, this.emergencyContact, this.upi});
+  Data({required this.profile, required this.details});
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-    profile: json["profile"] != null && json["profile"] is Map<String, dynamic>
-        ? Profile.fromJson(json["profile"])
-        : null,
-    vehicle: json["vehicle"] != null && json["vehicle"] is Map<String, dynamic>
-        ? Vehicle.fromJson(json["vehicle"])
-        : null,
-    emergencyContact:
-        json["emergencycontact"] != null &&
-            json["emergencycontact"] is Map<String, dynamic>
-        ? EmergencyContact.fromJson(json["emergencycontact"])
-        : null,
-    upi: json["upi"] != null && json["upi"] is Map<String, dynamic>
-        ? Upi.fromJson(json["upi"])
-        : null,
+    profile: json["profile"] == null
+        ? null
+        : (json["profile"] is Map<String, dynamic>
+            ? Profile.fromJson(json["profile"])
+            : json["profile"]),
+    details: json["details"] == null
+        ? null
+        : (json["details"] is Map<String, dynamic>
+            ? Details.fromJson(json["details"])
+            : json["details"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "profile": profile?.toJson(),
-    "vehicle": vehicle?.toJson(),
-    "emergencycontact": emergencyContact?.toJson(),
-    "upi": upi?.toJson(),
+    "profile": profile is Profile ? (profile as Profile).toJson() : profile,
+    "details": details is Details ? (details as Details).toJson() : details,
   };
 }
 
-class EmergencyContact {
+class Details {
+  dynamic displayid;
+  dynamic vehicle;
+  dynamic emergencycontact;
+  dynamic upiid;
+
+  Details({
+    required this.displayid,
+    required this.vehicle,
+    required this.emergencycontact,
+    required this.upiid,
+  });
+
+  factory Details.fromJson(Map<String, dynamic> json) => Details(
+    displayid: json["displayid"],
+    vehicle: Vehicle.fromJson(json["vehicle"]),
+    emergencycontact: Emergencycontact.fromJson(json["emergencycontact"]),
+    upiid: json["upiid"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "displayid": displayid,
+    "vehicle": vehicle.toJson(),
+    "emergencycontact": emergencycontact.toJson(),
+    "upiid": upiid,
+  };
+}
+
+class Emergencycontact {
   dynamic name;
   dynamic relation;
-  dynamic phoneNumber;
+  dynamic phone;
 
-  EmergencyContact({this.name, this.relation, this.phoneNumber});
+  Emergencycontact({
+    required this.name,
+    required this.relation,
+    required this.phone,
+  });
 
-  factory EmergencyContact.fromJson(Map<String, dynamic> json) =>
-      EmergencyContact(
+  factory Emergencycontact.fromJson(Map<String, dynamic> json) =>
+      Emergencycontact(
         name: json["name"],
         relation: json["relation"],
-        phoneNumber: json["phonenumber"],
+        phone: json["phone"],
       );
 
   Map<String, dynamic> toJson() => {
     "name": name,
     "relation": relation,
-    "phonenumber": phoneNumber,
+    "phone": phone,
+  };
+}
+
+class Vehicle {
+  dynamic type;
+  dynamic name;
+  dynamic registrationnumber;
+
+  Vehicle({
+    required this.type,
+    required this.name,
+    required this.registrationnumber,
+  });
+
+  factory Vehicle.fromJson(Map<String, dynamic> json) => Vehicle(
+    type: json["type"],
+    name: json["name"],
+    registrationnumber: json["registrationnumber"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "type": type,
+    "name": name,
+    "registrationnumber": registrationnumber,
   };
 }
 
 class Profile {
-  dynamic name;
-  dynamic deliveryPartnerId;
+  dynamic contactname;
+  dynamic surname;
+  dynamic registeredmobile;
+  dynamic registeredemail;
 
-  Profile({this.name, this.deliveryPartnerId});
+  Profile({
+    required this.contactname,
+    required this.surname,
+    required this.registeredmobile,
+    required this.registeredemail,
+  });
 
-  factory Profile.fromJson(Map<String, dynamic> json) =>
-      Profile(name: json["name"], deliveryPartnerId: json["deliverypartnerid"]);
-
-  Map<String, dynamic> toJson() => {
-    "name": name,
-    "deliverypartnerid": deliveryPartnerId,
-  };
-}
-
-class Upi {
-  dynamic upiId;
-
-  Upi({this.upiId});
-
-  factory Upi.fromJson(Map<String, dynamic> json) => Upi(upiId: json["upiid"]);
-
-  Map<String, dynamic> toJson() => {"upiid": upiId};
-}
-
-class Vehicle {
-  dynamic vehicleType;
-  dynamic vehicleName;
-  dynamic registrationNumber;
-
-  Vehicle({this.vehicleType, this.vehicleName, this.registrationNumber});
-
-  factory Vehicle.fromJson(Map<String, dynamic> json) => Vehicle(
-    vehicleType: json["vehicletype"],
-    vehicleName: json["vehiclename"],
-    registrationNumber: json["registrationnumber"],
+  factory Profile.fromJson(Map<String, dynamic> json) => Profile(
+    contactname: json["contactname"],
+    surname: json["surname"],
+    registeredmobile: json["registeredmobile"],
+    registeredemail: json["registeredemail"],
   );
 
   Map<String, dynamic> toJson() => {
-    "vehicletype": vehicleType,
-    "vehiclename": vehicleName,
-    "registrationnumber": registrationNumber,
+    "contactname": contactname,
+    "surname": surname,
+    "registeredmobile": registeredmobile,
+    "registeredemail": registeredemail,
   };
 }

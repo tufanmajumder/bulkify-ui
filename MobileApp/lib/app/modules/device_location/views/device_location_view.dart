@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/color_manager.dart';
-import '../../../data/utils/string_manager.dart';
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/device_location_controller.dart';
+import 'package:bulkify/app/data/utils/color_manager.dart';
+import 'package:bulkify/app/data/utils/string_manager.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/device_location/controllers/device_location_controller.dart';
 
 class DeviceLocationView extends GetView<DeviceLocationController> {
   const DeviceLocationView({super.key});

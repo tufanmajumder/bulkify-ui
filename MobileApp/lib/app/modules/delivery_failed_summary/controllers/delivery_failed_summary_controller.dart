@@ -1,6 +1,6 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
-import '../../../routes/app_pages.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
 
 class DeliveryFailedSummaryController extends GetxController {
   final RxString storeName = 'Burger Bistro'.obs;

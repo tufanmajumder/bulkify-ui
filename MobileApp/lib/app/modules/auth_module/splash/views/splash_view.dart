@@ -1,9 +1,9 @@
-import 'package:bulkify/app/data/utils/asset_manager.dart';
+﻿import 'package:bulkify/app/data/utils/asset_manager.dart';
 import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../controllers/splash_controller.dart';
+import 'package:bulkify/app/modules/auth_module/splash/controllers/splash_controller.dart';
 
 class SplashView extends GetView<SplashController> {
   const SplashView({super.key});

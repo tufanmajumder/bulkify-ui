@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:location/location.dart';
-import '../../../data/utils/widget_manager.dart';
-import '../../../routes/app_pages.dart';
-import '../../home/controllers/home_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
+import 'package:bulkify/app/modules/home/controllers/home_controller.dart';
 
 class DeviceLocationController extends GetxController {
   dynamic orderArgument;
@@ -30,8 +30,7 @@ class DeviceLocationController extends GetxController {
           serviceEnabled = await _location.requestService();
           if (!serviceEnabled) {
             WidgetManager.showSnackBar(
-              title: 'Location Service Disabled',
-              message: 'Please enable Location (GPS) in your device settings.',
+              message: 'Please Enable Location (GPS) In Your Device Settings.',
               snackPosition: SnackPosition.TOP,
             );
             return;
@@ -44,8 +43,7 @@ class DeviceLocationController extends GetxController {
           permissionGranted = await _location.requestPermission();
           if (permissionGranted != PermissionStatus.granted) {
             WidgetManager.showSnackBar(
-              title: 'Permission Denied',
-              message: 'Location permission is required to find nearby orders.',
+              message: 'Location Permission Is Required To Find Nearby Orders.',
               snackPosition: SnackPosition.TOP,
             );
             return;
@@ -85,8 +83,7 @@ class DeviceLocationController extends GetxController {
       }
 
       WidgetManager.showSnackBar(
-        title: 'Location Enabled',
-        message: 'Real-time location acquired successfully!',
+        message: 'Real-Time Location Acquired Successfully!',
         snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 2),
       );
@@ -100,8 +97,7 @@ class DeviceLocationController extends GetxController {
     } catch (e) {
       print("Real-time location error: $e");
       WidgetManager.showSnackBar(
-        title: 'Location Error',
-        message: 'Failed to access location: $e',
+        message: 'Failed To Access Location: $e',
         snackPosition: SnackPosition.TOP,
       );
     } finally {

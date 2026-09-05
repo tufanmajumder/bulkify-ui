@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../data/utils/widget_manager.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
 
 class OrderItemsCard extends StatelessWidget {
   final List<Map<String, dynamic>> items;
@@ -31,7 +31,7 @@ class OrderItemsCard extends StatelessWidget {
               color: textPrimary,
             ),
             WidgetManager.customText(
-              text: "$totalCount items",
+              text: "$totalCount Items",
               fontSize: 15.sp,
               fontWeight: FontWeight.w700,
               color: textSecondary,
@@ -113,7 +113,7 @@ class OrderItemsCard extends StatelessWidget {
                   // Item Price
                   if (price.isNotEmpty)
                     WidgetManager.customText(
-                      text: price.startsWith('₹') ? price : '₹$price',
+                      text: price.startsWith('₹') ? price : '₹ $price',
                       fontSize: 15.5.sp,
                       fontWeight: FontWeight.w800,
                       color: textPrimary,

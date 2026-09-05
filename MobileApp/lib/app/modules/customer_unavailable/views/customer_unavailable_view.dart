@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/customer_unavailable_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/customer_unavailable/controllers/customer_unavailable_controller.dart';
 
 class CustomerUnavailableView extends GetView<CustomerUnavailableController> {
   const CustomerUnavailableView({super.key});
@@ -15,6 +15,7 @@ class CustomerUnavailableView extends GetView<CustomerUnavailableController> {
     const Color textPrimary = Color(0xFF18181B);
     const Color textSecondary = Color(0xFF71717A);
     const Color buttonGreyBg = Color(0xFFF2F3F7);
+    const Color buttonBlueBg = Color(0xFF3B82F6);
     const Color warningCircleBg = Color(0xFFFFF3E0);
     const Color warningIconColor = Color(0xFFE67E22);
 
@@ -145,13 +146,20 @@ class CustomerUnavailableView extends GetView<CustomerUnavailableController> {
 
                     SizedBox(height: 24.h),
 
-                    // 1. Call customer Button (Grey Pill)
+                    // 1. Call customer Button (Blue Pill)
                     Container(
                       width: double.infinity,
                       height: 50.h,
                       decoration: BoxDecoration(
-                        color: buttonGreyBg,
+                        color: buttonBlueBg,
                         borderRadius: BorderRadius.circular(25.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: buttonBlueBg.withValues(alpha: 0.3),
+                            blurRadius: 12.r,
+                            offset: Offset(0, 4.h),
+                          ),
+                        ],
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -164,14 +172,14 @@ class CustomerUnavailableView extends GetView<CustomerUnavailableController> {
                               Icon(
                                 Icons.call_outlined,
                                 size: 19.r,
-                                color: textPrimary,
+                                color: Colors.white,
                               ),
                               SizedBox(width: 8.w),
                               WidgetManager.customText(
                                 text: "Call customer",
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.w700,
-                                color: textPrimary,
+                                color: Colors.white,
                               ),
                             ],
                           ),

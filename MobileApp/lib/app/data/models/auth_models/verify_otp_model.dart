@@ -45,12 +45,15 @@ class VerifyOtpModel {
 
 class Data1 {
   dynamic sessionId;
+  dynamic expiresin;
 
-  Data1({this.sessionId});
+  Data1({required this.sessionId, required this.expiresin});
 
   factory Data1.fromJson(Map<String, dynamic> json) =>
-      Data1(sessionId: json["sessionId"]);
+      Data1(sessionId: json["sessionId"], expiresin: json["expiresin"]);
 
-  Map<String, dynamic> toJson() => {"sessionId": sessionId};
+  Map<String, dynamic> toJson() => {
+    "sessionId": sessionId,
+    "expiresin": expiresin,
+  };
 }
-

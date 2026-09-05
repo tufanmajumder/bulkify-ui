@@ -8,12 +8,12 @@ class EarningsController extends GetxController {
   final RxInt totalOrders = 4.obs;
 
   // Breakdown Data
-  final RxString baseFare = '₹1,240.00'.obs;
-  final RxString distanceBonus = '₹380.75'.obs;
-  final RxString peakHourBonus = '₹230.00'.obs;
-  final RxString tips = '₹0.00'.obs;
+  final RxString baseFare = '₹ 1,240.00'.obs;
+  final RxString distanceBonus = '₹ 380.75'.obs;
+  final RxString peakHourBonus = '₹ 230.00'.obs;
+  final RxString tips = '₹ 0.00'.obs;
 
   // Weekly Stats
-  final RxString weeklyTotal = '₹9,420'.obs;
+  final RxString weeklyTotal = '₹ 9,420'.obs;
   final RxString weeklyDeliveries = '27'.obs;
 }

@@ -1,92 +1,21 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../data/utils/asset_manager.dart';
-import '../../../../data/utils/color_manager.dart';
-import '../../../../data/utils/string_manager.dart';
-import '../../../../data/utils/widget_manager.dart';
-import '../controllers/login_controller.dart';
+import 'package:bulkify/app/data/utils/asset_manager.dart';
+import 'package:bulkify/app/data/utils/color_manager.dart';
+import 'package:bulkify/app/data/utils/string_manager.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/auth_module/login/controllers/login_controller.dart';
+import 'terms_webview_view.dart';
 
 class LoginView extends GetView<LoginController> {
   const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const Color webBgColor = Color(0xFFF8F9FC);
-
-    if (kIsWeb) {
-      return Scaffold(
-        backgroundColor: webBgColor,
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 440),
-                decoration: BoxDecoration(
-                  color: ColorManager.red,
-                  borderRadius: BorderRadius.circular(28.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 24.r,
-                      offset: Offset(0, 8.h),
-                    ),
-                  ],
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 36.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: 10.h),
-
-                    // Bulkify Logo
-                    SizedBox(
-                      width: double.infinity,
-                      height: 90.h,
-                      child: Image.asset(
-                        AssetManager.splashLogo1,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-
-                    SizedBox(height: 32.h),
-
-                    // Subtitle Instruction Text
-                    _buildSubTitleSection(),
-
-                    SizedBox(height: 28.h),
-
-                    // Phone Input Field Box
-                    _buildPhoneInputField(context),
-
-                    SizedBox(height: 40.h),
-
-                    // Terms & Conditions Checkbox
-                    _buildTermsSection(),
-
-                    SizedBox(height: 18.h),
-
-                    // Request OTP Button
-                    _buildRequestOtpButton(),
-
-                    SizedBox(height: 10.h),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Mobile layout
     return Scaffold(
       backgroundColor: ColorManager.red,
       body: SafeArea(
@@ -121,11 +50,7 @@ class LoginView extends GetView<LoginController> {
 
             // Bottom Section: Terms & Conditions + Request OTP Button
             Padding(
-              padding: EdgeInsets.only(
-                left: 24.w,
-                right: 24.w,
-                bottom: 24.h,
-              ),
+              padding: EdgeInsets.only(left: 24.w, right: 24.w, bottom: 24.h),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -177,14 +102,15 @@ class LoginView extends GetView<LoginController> {
               child: TextField(
                 controller: controller.phoneController,
                 keyboardType: TextInputType.phone,
-                maxLength: 17,
+                maxLength: 10,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d\+\-\(\)\s]')),
-                  LengthLimitingTextInputFormatter(17),
+                  FilteringTextInputFormatter.digitsOnly,
+                  _MobileNumberInputFormatter(),
                 ],
-                style: GoogleFonts.poppins(
+                style: TextStyle(
+                  fontFamily: 'Poppins',
                   fontSize: 16.5.sp,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: Colors.black,
                   letterSpacing: 1.2,
                 ),
@@ -196,7 +122,8 @@ class LoginView extends GetView<LoginController> {
                   ),
                   border: InputBorder.none,
                   hintText: StringManager.enterPhoneHint,
-                  hintStyle: GoogleFonts.poppins(
+                  hintStyle: TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 14.5.sp,
                     fontWeight: FontWeight.w400,
                     color: const Color(0xFFA5A3AE),
@@ -224,7 +151,8 @@ class LoginView extends GetView<LoginController> {
   Widget _buildRequestOtpButton() {
     return Obx(() {
       final isLoading = controller.isLoading.value;
-      final isValid = controller.isPhoneValid.value;
+      final isValid =
+          controller.isPhoneValid.value && controller.isAgreedToTerms.value;
 
       return Container(
         width: double.infinity,
@@ -262,7 +190,7 @@ class LoginView extends GetView<LoginController> {
                   : WidgetManager.customText(
                       text: StringManager.requestOtp.toUpperCase(),
                       fontSize: 15.sp,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                       color: isValid ? Colors.black : const Color(0xFF7E7E9A),
                       letterSpacing: 0.6,
                     ),
@@ -276,63 +204,127 @@ class LoginView extends GetView<LoginController> {
   /// Terms and Conditions Checkbox & Text Section
   Widget _buildTermsSection() {
     return Obx(() {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 22.r,
-            height: 22.r,
-            child: Checkbox(
-              value: controller.isAgreedToTerms.value,
-              onChanged: (val) => controller.toggleTerms(val),
-              activeColor: Colors.white,
-              checkColor: ColorManager.red,
-              fillColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return Colors.white;
-                }
-                return Colors.white.withValues(alpha: 0.2);
-              }),
-              side: BorderSide(
-                color: controller.isAgreedToTerms.value
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.8),
-                width: 1.8,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4.r),
-              ),
-            ),
-          ),
-          SizedBox(width: 10.w),
-          Flexible(
-            child: GestureDetector(
-              onTap: () =>
-                  controller.toggleTerms(!controller.isAgreedToTerms.value),
-              child: Text.rich(
-                TextSpan(
-                  text: StringManager.iAcceptAllThe,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12.5.sp,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: StringManager.termsAndConditions,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.underline,
-                        color: Colors.white,
-                      ),
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => controller.toggleTerms(!controller.isAgreedToTerms.value),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 22.r,
+                height: 22.r,
+                child: IgnorePointer(
+                  child: Checkbox(
+                    value: controller.isAgreedToTerms.value,
+                    onChanged: null,
+                    activeColor: Colors.white,
+                    checkColor: ColorManager.red,
+                    fillColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Colors.white;
+                      }
+                      return Colors.white.withValues(alpha: 0.2);
+                    }),
+                    side: BorderSide(
+                      color: controller.isAgreedToTerms.value
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.8),
+                      width: 1.8,
                     ),
-                  ],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
               ),
-            ),
+              SizedBox(width: 10.w),
+              Flexible(
+                child: Text.rich(
+                  TextSpan(
+                    text: StringManager.iAcceptAllThe,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12.5.sp,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: StringManager.termsAndConditions,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.transparent,
+                          shadows: const [
+                            Shadow(
+                              color: Colors.white,
+                              offset: Offset(0, -2.5),
+                            ),
+                          ],
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.white,
+                          decorationThickness: 1.5,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Get.to(
+                              () => const TermsWebviewView(),
+                              transition: Transition.downToUp,
+                            );
+                          },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       );
     });
+  }
+}
+
+/// Input formatter that restricts mobile number entries.
+/// - Allows typing up to 10 digits ONLY IF the first digit is 6, 7, 8, or 9.
+/// - Rejects input and triggers a snackbar alert if the number starts with any other digit.
+class _MobileNumberInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    final cleaned = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (cleaned.isEmpty) {
+      return TextEditingValue.empty;
+    }
+
+    final firstDigit = cleaned[0];
+    final isValidFirstDigit = ['6', '7', '8', '9'].contains(firstDigit);
+
+    if (!isValidFirstDigit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (Get.isSnackbarOpen != true) {
+          WidgetManager.showAlertSnackBar(StringManager.mobileMustStartWith);
+        }
+      });
+      return oldValue.text.isEmpty ? TextEditingValue.empty : oldValue;
+    }
+
+    final truncated = cleaned.length > 10 ? cleaned.substring(0, 10) : cleaned;
+    return TextEditingValue(
+      text: truncated,
+      selection: TextSelection.collapsed(offset: truncated.length),
+    );
   }
 }

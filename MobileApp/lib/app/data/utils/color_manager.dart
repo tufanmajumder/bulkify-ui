@@ -5,6 +5,7 @@ class ColorManager {
   static const red = Color(0xFFcd463e);
   static const primaryRed = Color(0xFFD44F48);
   static const iconBgRed = Color(0xFFFDEEEB);
+  static const white = Color(0xFFF5F5F5);
 
   static const primary = Color(0xFF7367F0);
   static const primaryLight = Color(0xFF8C57FF);
@@ -38,6 +39,8 @@ class ColorManager {
   // Rating Badge Colors
   static const ratingBg = Color(0xFFFFF7E6);
   static const ratingText = Color(0xFFD97706);
+  static const simpleGreen = Color(0xFF0AB449);
+  static const strongdarkGreen = Color(0xFF02392A);
 
   // Profile Avatar Color Presets
   static const avatarCoralRed = Color(0xFFD44F48);

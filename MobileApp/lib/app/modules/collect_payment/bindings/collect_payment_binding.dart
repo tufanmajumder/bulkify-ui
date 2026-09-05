@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
-import '../controllers/collect_payment_controller.dart';
+﻿import 'package:get/get.dart';
+import 'package:bulkify/app/modules/collect_payment/controllers/collect_payment_controller.dart';
 
 class CollectPaymentBinding extends Bindings {
   @override

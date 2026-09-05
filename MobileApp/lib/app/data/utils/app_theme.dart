@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'color_manager.dart';
 
 class AppTheme {
@@ -7,8 +6,7 @@ class AppTheme {
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    fontFamily: GoogleFonts.poppins().fontFamily,
-    textTheme: GoogleFonts.poppinsTextTheme(),
+    fontFamily: 'Poppins',
     scaffoldBackgroundColor: ColorManager.bgLight,
     primaryColor: ColorManager.red,
     colorScheme: const ColorScheme.light(
@@ -24,9 +22,7 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: ColorManager.cardBg,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   );
 }

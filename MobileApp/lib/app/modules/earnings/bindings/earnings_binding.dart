@@ -1,6 +1,6 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
-import '../controllers/earnings_controller.dart';
+import 'package:bulkify/app/modules/earnings/controllers/earnings_controller.dart';
 
 class EarningsBinding extends Bindings {
   @override

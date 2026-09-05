@@ -1,6 +1,6 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
-import '../../../routes/app_pages.dart';
+import 'package:bulkify/app/routes/app_pages.dart';
 
 class OrderDetailsController extends GetxController {
   // Order Details Reactive Data
@@ -11,6 +11,8 @@ class OrderDetailsController extends GetxController {
   final RxString dropOffAddress = 'Oakwood Heights, Flat 402'.obs;
   final RxDouble orderTotal = 165.00.obs;
   final RxString status = 'Accepted'.obs;
+  final RxString orderstatus = 'Accepted'.obs;
+  final RxString statusType = 'active'.obs;
 
   final RxList<Map<String, dynamic>> items = RxList<Map<String, dynamic>>(_generate50Items());
 
@@ -67,6 +69,16 @@ class OrderDetailsController extends GetxController {
       }
       if (data['items'] != null && data['items'] is List && (data['items'] as List).length >= 50) {
         items.value = List<Map<String, dynamic>>.from(data['items']);
+      }
+      if (data['statusType'] != null) {
+        statusType.value = data['statusType'].toString().toLowerCase();
+      }
+      if (data['orderstatus'] != null &&
+          data['orderstatus'].toString().trim().isNotEmpty) {
+        orderstatus.value = data['orderstatus'].toString().trim();
+      } else if (data['status'] != null &&
+          data['status'].toString().trim().isNotEmpty) {
+        orderstatus.value = data['status'].toString().trim();
       }
       if (data['status'] != null) {
         status.value = data['status'].toString();

@@ -13,7 +13,7 @@ class OtpValidationController extends GetxController {
   final AuthService _authService = AuthService();
 
   final RxString phoneNumber = ''.obs;
-  final RxInt timerSeconds = 30.obs;
+  //final RxInt timerSeconds = 30.obs;
   final RxBool isOtpValid = false.obs;
   final RxBool isLoading = false.obs;
   final RxBool isAgreedToTerms = true.obs;
@@ -28,7 +28,7 @@ class OtpValidationController extends GetxController {
       phoneNumber.value = '9876543210';
     }
 
-    startResendTimer();
+    //startResendTimer();
     otpController.addListener(_validateOtp);
   }
 
@@ -44,17 +44,17 @@ class OtpValidationController extends GetxController {
     isOtpValid.value = otpController.text.trim().length == 6;
   }
 
-  void startResendTimer() {
-    timerSeconds.value = 30;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (timerSeconds.value > 0) {
-        timerSeconds.value--;
-      } else {
-        timer.cancel();
-      }
-    });
-  }
+  // void startResendTimer() {
+  //   timerSeconds.value = 30;
+  //   _timer?.cancel();
+  //   _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+  //     if (timerSeconds.value > 0) {
+  //       timerSeconds.value--;
+  //     } else {
+  //       timer.cancel();
+  //     }
+  //   });
+  // }
 
   void toggleTerms(bool? val) {
     isAgreedToTerms.value = val ?? false;
@@ -65,7 +65,6 @@ class OtpValidationController extends GetxController {
 
     if (otp.length < 6) {
       WidgetManager.showSnackBar(
-        title: StringManager.incompleteOtpTitle,
         message: StringManager.enterCompleteOtpMessage,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,
@@ -93,11 +92,10 @@ class OtpValidationController extends GetxController {
         if (sessionId.isNotEmpty) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('sessionId', sessionId);
-          print("Saved sessionId to SharedPreferences: $sessionId");
+          debugPrint("Saved sessionId to SharedPreferences: $sessionId");
         }
 
         WidgetManager.showSnackBar(
-          title: StringManager.success,
           message:
               response.message?.toString() ?? StringManager.otpVerifiedSuccess,
           snackPosition: SnackPosition.BOTTOM,
@@ -108,11 +106,22 @@ class OtpValidationController extends GetxController {
         );
 
         Get.offAllNamed(Routes.HOME);
+      } else if (response!.code == 400 ||
+          response.code == "400" ||
+          response.success == false) {
+        final String errorMsg = response.message;
+        WidgetManager.showSnackBar(
+          message: errorMsg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          textColor: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
       } else {
         final String errorMsg =
-            response?.message?.toString() ?? StringManager.somethingWentWrong;
+            response.message?.toString() ?? StringManager.somethingWentWrong;
         WidgetManager.showSnackBar(
-          title: StringManager.error,
           message: errorMsg,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent,
@@ -123,7 +132,6 @@ class OtpValidationController extends GetxController {
       }
     } catch (e) {
       WidgetManager.showSnackBar(
-        title: StringManager.error,
         message: StringManager.unexpectedError,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,
@@ -136,19 +144,18 @@ class OtpValidationController extends GetxController {
     }
   }
 
-  void resendOtp() {
-    if (timerSeconds.value == 0) {
-      startResendTimer();
-      otpController.clear();
-      WidgetManager.showSnackBar(
-        title: StringManager.otpResentTitle,
-        message: "A new OTP has been sent to +91 ${phoneNumber.value}",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blueAccent,
-        textColor: Colors.white,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
-      );
-    }
-  }
+  // void resendOtp() {
+  //   if (timerSeconds.value == 0) {
+  //     startResendTimer();
+  //     otpController.clear();
+  //     WidgetManager.showSnackBar(
+  //       message: "A new OTP has been sent to +91 ${phoneNumber.value}",
+  //       snackPosition: SnackPosition.BOTTOM,
+  //       backgroundColor: Colors.redAccent,
+  //       textColor: Colors.white,
+  //       margin: const EdgeInsets.all(16),
+  //       borderRadius: 12,
+  //     );
+  //   }
+  // }
 }

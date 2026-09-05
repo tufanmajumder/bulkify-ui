@@ -1,11 +1,11 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../controllers/map_webview_controller.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/map_webview/controllers/map_webview_controller.dart';
 
 class MapWebviewView extends GetView<MapWebviewController> {
   const MapWebviewView({super.key});

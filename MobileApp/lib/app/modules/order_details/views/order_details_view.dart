@@ -1,11 +1,13 @@
+﻿import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../../data/utils/widget_manager.dart';
-import '../../../widgets/order_items_card.dart';
-import '../controllers/order_details_controller.dart';
+import 'package:bulkify/app/data/utils/string_manager.dart';
+import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/widgets/order_items_card.dart';
+import 'package:bulkify/app/modules/order_details/controllers/order_details_controller.dart';
 
 class OrderDetailsView extends GetView<OrderDetailsController> {
   const OrderDetailsView({super.key});
@@ -54,11 +56,13 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
               ),
               SizedBox(width: 14.w),
               Obx(
-                () => WidgetManager.customText(
-                  text: "Order #${controller.orderId.value}",
-                  fontSize: 19.sp,
-                  fontWeight: FontWeight.w800,
-                  color: textPrimary,
+                () => Expanded(
+                  child: WidgetManager.customText(
+                    text: "Order #${controller.orderId.value}",
+                    fontSize: 19.sp,
+                    fontWeight: FontWeight.w800,
+                    color: textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -119,49 +123,69 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                       ),
                       WidgetManager.customText(
                         text:
-                            "₹${controller.orderTotal.value.toStringAsFixed(2)}",
+                            "₹ ${controller.orderTotal.value.toStringAsFixed(2)}",
                         fontSize: 21.sp,
                         fontWeight: FontWeight.w900,
-                        color: textPrimary,
+                        color: ColorManager.simpleGreen,
                         letterSpacing: -0.3,
                       ),
                     ],
                   ),
                 ),
 
-                SizedBox(height: 14.h),
+                // Order Picked / Confirm Pickup Button (Hidden for Completed / Rejected tabs or when orderstatus is not 'Accepted')
+                Obx(() {
+                  final String st = controller.statusType.value.toLowerCase();
+                  final bool isFromCompletedOrRejected =
+                      st == 'completed' ||
+                      st == 'rejected' ||
+                      st == 'delivered';
 
-                // Start Order Button
-                Container(
-                  width: double.infinity,
-                  height: 52.h,
-                  decoration: BoxDecoration(
-                    color: buttonColor,
-                    borderRadius: BorderRadius.circular(26.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: buttonColor.withValues(alpha: 0.3),
-                        blurRadius: 14.r,
-                        offset: Offset(0, 5.h),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: controller.onStartOrder,
-                      borderRadius: BorderRadius.circular(26.r),
-                      child: Center(
-                        child: WidgetManager.customText(
-                          text: "Start Order",
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                  final bool isAccepted =
+                      controller.orderstatus.value.trim().toLowerCase() ==
+                      'accepted';
+
+                  if (isFromCompletedOrRejected || !isAccepted) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 14.h),
+                      Container(
+                        width: double.infinity,
+                        height: 52.h,
+                        decoration: BoxDecoration(
+                          color: buttonColor,
+                          borderRadius: BorderRadius.circular(26.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: buttonColor.withValues(alpha: 0.3),
+                              blurRadius: 14.r,
+                              offset: Offset(0, 5.h),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: controller.onStartOrder,
+                            borderRadius: BorderRadius.circular(26.r),
+                            child: Center(
+                              child: WidgetManager.customText(
+                                text: StringManager.orderPicked,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
