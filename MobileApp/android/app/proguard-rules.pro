@@ -1,0 +1,14 @@
+# Suppress warnings for missing Play Core classes referenced by Flutter Engine
+-dontwarn com.google.android.play.core.**
+
+# Flutter Wrapper
+-keep class io.flutter.app.** { *; }
+-keep class io.flutter.plugin.** { *; }
+-keep class io.flutter.util.** { *; }
+-keep class io.flutter.view.** { *; }
+-keep class io.flutter.embedding.** { *; }
+-keep class io.flutter.provider.** { *; }
+-keep class io.flutter.plugin.editing.** { *; }
+
+# Keep GetX classes
+-keep class com.getkeepsafe.** { *; }

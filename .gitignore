@@ -1,0 +1,458 @@
+# ============================================================
+# BULKIFY - .NET + Flutter Repository
+# ============================================================
+
+
+# ============================================================
+# Visual Studio / .NET
+# ============================================================
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Visual Studio
+.vs/
+
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+out/
+artifacts/
+
+# Visual Studio generated files
+Generated\ Files/
+TestResults/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Visual Studio cache / temporary files
+*.cache
+*.pdb
+*.ipdb
+*.iobj
+*.ilk
+*.obj
+*.tmp
+*.log
+*.binlog
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.rsp
+
+# ReSharper
+_ReSharper*/
+*.ReSharper
+*.DotSettings.user
+
+# Code coverage
+*.coverage
+*.coveragexml
+coverage/
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+**/[Pp]ackages/*
+
+# NuGet generated files
+*.nuget.props
+*.nuget.targets
+
+# .NET generated / temporary files
+project.lock.json
+project.fragment.lock.json
+
+# ASP.NET publish output
+publish/
+*.publish.xml
+*.publishproj
+
+# Azure publish profiles
+PublishScripts/
+
+# IMPORTANT:
+# Do not commit publish profiles because they may contain credentials.
+*.pubxml
+
+# Azure / deployment temporary files
+csx/
+*.build.csdef
+
+# Node modules (if any .NET web project uses Node)
+node_modules/
+
+# Python cache (if tooling/scripts are used)
+__pycache__/
+*.pyc
+
+# SQL Server local database files
+*.mdf
+*.ldf
+*.ndf
+
+# Local database files
+*.db
+*.db-shm
+*.db-wal
+
+
+# ============================================================
+# Flutter / Dart
+# ============================================================
+
+# Dart / Flutter generated files
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+
+# Flutter generated files
+build/
+
+# Flutter generated plugin files
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Flutter generated iOS build identifier
+**/ios/Flutter/.last_build_id
+
+# Flutter generated ephemeral files
+**/ios/Flutter/ephemeral/
+
+# Flutter generated plugin symlinks
+**/ios/.symlinks/
+
+# Flutter generated macOS plugin symlinks, if applicable
+**/macos/Flutter/ephemeral/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Flutter generated Linux files
+**/linux/flutter/ephemeral/
+
+# Flutter generated Windows files
+**/windows/flutter/ephemeral/
+
+# Flutter documentation generated files
+**/doc/api/
+
+# Flutter symbolication files
+app.*.symbols
+
+# Flutter obfuscation mapping
+app.*.map.json
+
+
+# ============================================================
+# Android / Gradle
+# ============================================================
+
+# Gradle
+.gradle/
+**/.gradle/
+
+# Android local configuration
+**/local.properties
+
+# Android generated build directories
+**/android/build/
+**/android/app/build/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+
+# Android generated files
+**/android/.cxx/
+**/android/.externalNativeBuild/
+
+# Android Studio generated files
+**/android/captures/
+
+# Android signing files
+# Do NOT commit private signing keys.
+*.jks
+*.keystore
+
+# Android generated APK/AAB files
+*.apk
+*.aab
+
+
+# ============================================================
+# iOS / Xcode
+# ============================================================
+
+# CocoaPods
+**/ios/Pods/
+
+# Xcode generated files
+**/ios/DerivedData/
+**/ios/build/
+
+# Xcode user-specific files
+**/ios/*.xcuserstate
+**/ios/xcuserdata/
+
+# Xcode workspace user data
+**/*.xcuserdatad/
+
+# Xcode temporary files
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# iOS archives / builds
+*.ipa
+*.app.dSYM.zip
+*.dSYM/
+
+
+# ============================================================
+# macOS
+# ============================================================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# macOS temporary files
+._*
+
+# Spotlight
+.Spotlight-V100
+
+# Trash
+.Trashes
+
+
+# ============================================================
+# Windows
+# ============================================================
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# Windows temporary files
+*.tmp
+
+# Windows shortcuts
+*.lnk
+
+
+# ============================================================
+# VS Code
+# ============================================================
+
+# Keep .vscode if it contains useful shared project configuration.
+# Ignore only personal/local VS Code files.
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# VS Code history
+.history/
+
+
+# ============================================================
+# JetBrains / IntelliJ / Android Studio
+# ============================================================
+
+.idea/
+
+# IntelliJ project files
+*.iml
+*.ipr
+*.iws
+
+
+# ============================================================
+# Rider
+# ============================================================
+
+.idea/
+*.sln.iml
+
+
+# ============================================================
+# Vim / Nano / Editor temporary files
+# ============================================================
+
+*.swp
+*.swo
+*~
+.#*
+\#*\#
+
+
+# ============================================================
+# Logs
+# ============================================================
+
+*.log
+logs/
+Logs/
+
+
+# ============================================================
+# Temporary / Backup files
+# ============================================================
+
+*.bak
+*.backup
+*.old
+*.orig
+*.temp
+
+
+# ============================================================
+# Environment / Secrets
+# ============================================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local development configuration
+appsettings.Local.json
+appsettings.Development.local.json
+
+# IMPORTANT:
+# Do not ignore normal appsettings.json or appsettings.Development.json
+# automatically if they contain non-sensitive project configuration.
+#
+# Store real passwords/API keys/secrets in:
+# - User Secrets
+# - Environment Variables
+# - Azure Key Vault / Secret Manager
+# - CI/CD Secret Variables
+
+
+# ============================================================
+# Certificates / Private Keys
+# ============================================================
+
+*.pfx
+*.p12
+*.key
+*.pem
+
+# If your repository intentionally contains public certificates,
+# add specific exceptions rather than committing private keys.
+
+
+# ============================================================
+# Test / Coverage / Profiling
+# ============================================================
+
+TestResults/
+test-results/
+coverage/
+*.coverage
+*.coveragexml
+
+
+# ============================================================
+# Documentation / Generated Reports
+# ============================================================
+
+# Uncomment if your project generates these automatically:
+# docs/generated/
+# reports/
+
+
+# ============================================================
+# Local Development Tools
+# ============================================================
+
+# Local history
+.localhistory/
+
+# SonarQube
+.sonar/
+
+# JetBrains Rider
+.idea/
+
+# Cake
+.tools/
+
+
+# ============================================================
+# Generated Source Files
+# ============================================================
+
+# DO NOT globally ignore *.g.dart or *.freezed.dart.
+#
+# Flutter projects often generate these files, but whether they
+# should be committed depends on your project architecture.
+#
+# If your project intentionally does NOT commit generated files,
+# add these rules:
+#
+# **/*.g.dart
+# **/*.freezed.dart
+
+
+# ============================================================
+# Local Database / Development Data
+# ============================================================
+
+# SQLite / local development databases
+*.sqlite
+*.sqlite3
+
+# Local Redis dump
+dump.rdb
+
+
+# ============================================================
+# Deployment / Infrastructure Local Files
+# ============================================================
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# Local Docker overrides
+docker-compose.override.yml
+
+
+# ============================================================
+# OS / IDE Miscellaneous
+# ============================================================
+
+*.pid
+*.seed
+*.pid.lock
+
+# Crash dumps
+*.dmp
+*.stackdump
