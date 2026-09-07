@@ -468,11 +468,7 @@ class OrderListScreen extends StatelessWidget {
                             ),
                             Expanded(
                               flex: 2,
-                              child: _buildHeaderCell(
-                                context,
-                                'AMOUNT (₹)',
-                                true,
-                              ),
+                              child: _buildHeaderCell(context, 'AMOUNT', true),
                             ),
                             Expanded(
                               flex: 2,
@@ -560,6 +556,8 @@ class OrderListScreen extends StatelessWidget {
                                 ),
                               ),
                               child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // ORDER ID (Red bold)
                                   Expanded(
@@ -602,8 +600,8 @@ class OrderListScreen extends StatelessWidget {
                                           textAlign: TextAlign.start,
                                           style: TextStyle(
                                             fontSize: fontSize,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1E293B),
+                                            fontWeight: FontWeight.w400,
+                                            color: const Color(0xFF64748B),
                                           ),
                                         ),
                                         if (displayCompany.isNotEmpty) ...[
@@ -671,17 +669,7 @@ class OrderListScreen extends StatelessWidget {
                                         itemBuilder: (context) => [
                                           const PopupMenuItem(
                                             value: 'view',
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.visibility_outlined,
-                                                  size: 16,
-                                                  color: Color(0xFF475569),
-                                                ),
-                                                SizedBox(width: 8),
-                                                Text('View Details'),
-                                              ],
-                                            ),
+                                            child: Text('View Details'),
                                           ),
                                         ],
                                       ),

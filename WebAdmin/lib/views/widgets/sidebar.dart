@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/views/order_list_screen.dart';
 import 'package:admin_app/views/users_screen.dart';
 
@@ -138,7 +139,8 @@ class _SidebarState extends State<Sidebar> {
                   label: 'Logout',
                   isSelected: false,
                   isExpanded: isExpanded,
-                  onTap: () {
+                  onTap: () async {
+                    await AuthService.clearAuthToken();
                     Get.offAllNamed('/login');
                   },
                 ),

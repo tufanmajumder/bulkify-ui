@@ -1,9 +1,11 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:admin_app/models/login_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:admin_app/utils/api_manager.dart';
 import 'package:admin_app/utils/string_manager.dart';
@@ -11,13 +13,65 @@ import 'package:admin_app/utils/widget_manager.dart';
 
 class AuthService extends GetxService {
   static String authToken = "";
+  static const String tokenKey = 'authToken';
 
-  static void setAuthToken(String token) {
+  @override
+  void onInit() {
+    super.onInit();
+    getAuthToken();
+  }
+
+  static Future<void> setAuthToken(String token) async {
     if (token.trim().isNotEmpty) {
       authToken = token.trim();
       print("================ TOKEN UPDATED ================");
       print("AuthService authToken: $authToken");
       print("===============================================");
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(tokenKey, authToken);
+        print("Token saved to SharedPreferences under '$tokenKey'");
+      } catch (e) {
+        print("Error saving token to SharedPreferences: $e");
+      }
+    }
+  }
+
+  static Future<String> getAuthToken() async {
+    if (authToken.isNotEmpty) {
+      return authToken;
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedToken =
+          prefs.getString(tokenKey) ?? prefs.getString('sessionId') ?? "";
+      if (savedToken.isNotEmpty) {
+        authToken = savedToken;
+        print(
+          "================ TOKEN LOADED FROM SHARED PREFERENCES ================",
+        );
+        print("AuthService authToken: $authToken");
+        print(
+          "======================================================================",
+        );
+      }
+    } catch (e) {
+      print("Error loading token from SharedPreferences: $e");
+    }
+    return authToken;
+  }
+
+  static Future<void> clearAuthToken() async {
+    authToken = "";
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(tokenKey);
+      await prefs.remove('sessionId');
+      print(
+        "================ TOKEN CLEARED FROM SHARED PREFERENCES ================",
+      );
+    } catch (e) {
+      print("Error clearing token from SharedPreferences: $e");
     }
   }
 
@@ -143,6 +197,7 @@ class AuthService extends GetxService {
   // verifyOtpService
   Future<LoginModel?> verifyOtp({
     required int channel,
+    String deviceinfo = '',
     required String identifier,
     required String otp,
   }) async {
@@ -153,11 +208,26 @@ class AuthService extends GetxService {
         : '+91$cleanIdentifier';
 
     final List<Map<String, dynamic>> payloadsToTry = [
-      {"channel": channel, "identifier": identifier, "otp": otp},
+      {
+        "channel": channel,
+        "deviceinfo": deviceinfo,
+        "identifier": identifier,
+        "otp": otp,
+      },
       if (identifier != cleanIdentifier)
-        {"channel": channel, "identifier": cleanIdentifier, "otp": otp},
+        {
+          "channel": channel,
+          "deviceinfo": deviceinfo,
+          "identifier": cleanIdentifier,
+          "otp": otp,
+        },
       if (identifier != withPrefixIdentifier)
-        {"channel": channel, "identifier": withPrefixIdentifier, "otp": otp},
+        {
+          "channel": channel,
+          "deviceinfo": deviceinfo,
+          "identifier": withPrefixIdentifier,
+          "otp": otp,
+        },
     ];
 
     print("target URL in verifyOtp...$targetUrl");

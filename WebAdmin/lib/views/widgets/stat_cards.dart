@@ -128,7 +128,7 @@ class StatCards extends StatelessWidget {
               ),
               Container(
                 padding: EdgeInsets.all(
-                  Responsive.w(context, 0.6).clamp(6.0, 10.0),
+                  Responsive.w(context, 0.4).clamp(4.0, 8.0),
                 ),
                 decoration: BoxDecoration(
                   color: iconBgColor,
@@ -168,7 +168,7 @@ class StatCards extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: Responsive.h(context, 0.8).clamp(4.0, 10.0)),
+          SizedBox(height: Responsive.h(context, 0.6).clamp(6.0, 8.0)),
           Text(
             subtitle,
             style: TextStyle(

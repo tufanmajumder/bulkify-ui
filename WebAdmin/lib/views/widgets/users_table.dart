@@ -156,7 +156,7 @@ class UsersTable extends StatelessWidget {
                 Text(
                   user.name,
                   style: TextStyle(
-                    color: const Color(0xFF1E293B),
+                    color: const Color(0xFF475569),
                     fontSize: Responsive.sp(context, 13.5),
                     fontWeight: FontWeight.w600,
                   ),

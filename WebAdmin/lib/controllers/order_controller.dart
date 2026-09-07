@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/order_model.dart';
 import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/service/order_service.dart';
+import 'package:admin_app/utils/widget_manager.dart';
 
 class OrderController extends GetxController {
   final OrderService _orderService = Get.put(OrderService());
@@ -32,15 +33,29 @@ class OrderController extends GetxController {
   Future<void> fetchOrders() async {
     isLoading.value = true;
     try {
+      final token = await AuthService.getAuthToken();
+      if (token.trim().isEmpty) {
+        print("Token is empty! Redirecting to login screen...");
+        await _handleTokenExpired();
+        return;
+      }
+
       print("================ FETCHING ORDERS WITH TOKEN ================");
-      print("AuthToken: ${AuthService.authToken}");
+      print("AuthToken: $token");
       print("============================================================");
 
       final result = await _orderService.getOrderListResult(
         page: currentPage.value,
         perPage: rowsPerPage.value,
-        token: AuthService.authToken,
+        token: token,
       );
+
+      if (result.isTokenExpired) {
+        print("Token is expired! Redirecting to login screen...");
+        await _handleTokenExpired();
+        return;
+      }
+
       print("================ CONTROLLER RECEIVED ==================");
       print(
         "Fetched ${result.orders.length} orders from API. HasMorePage: ${result.hasMorePage}",
@@ -58,6 +73,12 @@ class OrderController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> _handleTokenExpired() async {
+    await AuthService.clearAuthToken();
+    WidgetManager.showAlertSnackBar('Session expired. Please log in again.');
+    Get.offAllNamed('/login');
   }
 
   // Filtered Orders Getter

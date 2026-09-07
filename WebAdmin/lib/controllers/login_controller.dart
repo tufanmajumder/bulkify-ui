@@ -1,4 +1,4 @@
-﻿import 'package:device_info_plus/device_info_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -23,10 +23,18 @@ class LoginController extends GetxController {
 
   int activeChannel = 1;
   String activeIdentifier = '';
+  String deviceAllInfo = "";
 
   bool get isMobileInput => activeChannel == 1;
 
   String get getFullOtp => otpControllers.map((c) => c.text.trim()).join();
+
+  @override
+  void onInit() {
+    // TODO: implement onInit
+    super.onInit();
+    showDeviceInfo(Get.context!);
+  }
 
   void clearOtpFields() {
     for (var controller in otpControllers) {
@@ -126,7 +134,6 @@ class LoginController extends GetxController {
     String model = 'Unknown';
     String brand = 'Unknown';
     String deviceType = 'Phone';
-
     try {
       final deviceInfo = DeviceInfoPlugin();
       if (kIsWeb) {
@@ -185,7 +192,14 @@ class LoginController extends GetxController {
       model,
       brand,
     );
+    deviceAllInfo = WidgetManager().convertData(
+      deviceType,
+      deviceId,
+      model,
+      brand,
+    );
     print("Generated plain deviceinfo payload: $infoObj");
+    print("Generated plain deviceinfo payload: $deviceAllInfo");
     return infoObj;
   }
 
@@ -202,6 +216,7 @@ class LoginController extends GetxController {
     try {
       final LoginModel? response = await _authService.verifyOtp(
         channel: activeChannel,
+        deviceinfo: deviceAllInfo,
         identifier: activeIdentifier,
         otp: otp,
       );
@@ -240,7 +255,7 @@ class LoginController extends GetxController {
           print("==========================================================");
 
           if (sessionToken != null && sessionToken.trim().isNotEmpty) {
-            AuthService.setAuthToken(sessionToken);
+            await AuthService.setAuthToken(sessionToken);
           }
 
           final msg = response.message?.toString();

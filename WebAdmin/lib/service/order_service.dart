@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -36,7 +36,7 @@ class OrderService extends GetxService {
   }) async {
     final String activeToken = (token != null && token.trim().isNotEmpty)
         ? token.trim()
-        : AuthService.authToken;
+        : await AuthService.getAuthToken();
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getOrderList}";
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
@@ -239,6 +239,37 @@ class OrderService extends GetxService {
     return fetchedCount > 0 && fetchedCount >= perPage;
   }
 
+  bool isTokenExpiredResponse(int? statusCode, dynamic responseData) {
+    if (statusCode == 401 || statusCode == 403) return true;
+    if (responseData is Map) {
+      final code =
+          responseData['code'] ??
+          responseData['status'] ??
+          responseData['statusCode'];
+      if (code == 401 || code == 403 || code == '401' || code == '403') {
+        return true;
+      }
+      final msg =
+          (responseData['message'] ??
+                  responseData['error'] ??
+                  responseData['msg'] ??
+                  '')
+              .toString()
+              .toLowerCase();
+      if (msg.contains('token expired') ||
+          msg.contains('expired token') ||
+          msg.contains('unauthorized') ||
+          msg.contains('invalid token') ||
+          msg.contains('token is required') ||
+          msg.contains('unauthenticated') ||
+          msg.contains('token invalid') ||
+          msg.contains('session expired')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<OrderListResult> getOrderListResult({
     int page = 1,
     int perPage = 10,
@@ -247,7 +278,16 @@ class OrderService extends GetxService {
   }) async {
     final String activeToken = (token != null && token.trim().isNotEmpty)
         ? token.trim()
-        : AuthService.authToken;
+        : await AuthService.getAuthToken();
+
+    if (activeToken.isEmpty) {
+      print("activeToken is empty -> Token Expired or Missing");
+      return OrderListResult(
+        orders: [],
+        hasMorePage: false,
+        isTokenExpired: true,
+      );
+    }
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getOrderList}";
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
@@ -263,6 +303,8 @@ class OrderService extends GetxService {
     };
 
     dynamic responseData;
+
+    int? responseStatusCode;
 
     if (kIsWeb) {
       final List<String> urlsToTry = [
@@ -290,11 +332,15 @@ class OrderService extends GetxService {
             httpResponse = await http.get(uri, headers: requestHeaders);
           }
 
+          responseStatusCode = httpResponse.statusCode;
+
           if (httpResponse.statusCode >= 200 &&
               httpResponse.statusCode < 500 &&
               httpResponse.body.isNotEmpty) {
             responseData = jsonDecode(httpResponse.body);
-            print("Web response received from $baseUrlStr");
+            print(
+              "Web response received from $baseUrlStr (status: $responseStatusCode)",
+            );
             break;
           }
         } catch (_) {}
@@ -311,6 +357,7 @@ class OrderService extends GetxService {
             headers: requestHeaders,
           ),
         );
+        responseStatusCode = response.statusCode;
 
         if (response.data != null) {
           if (response.data is Map<String, dynamic> || response.data is List) {
@@ -320,6 +367,7 @@ class OrderService extends GetxService {
           }
         }
       } on DioException catch (e) {
+        responseStatusCode = e.response?.statusCode;
         try {
           final response = await dio.get(
             ApiManager.getOrderList,
@@ -329,6 +377,7 @@ class OrderService extends GetxService {
               headers: requestHeaders,
             ),
           );
+          responseStatusCode = response.statusCode;
           if (response.data != null) {
             if (response.data is Map<String, dynamic> ||
                 response.data is List) {
@@ -352,6 +401,15 @@ class OrderService extends GetxService {
       } catch (_) {}
     }
 
+    if (isTokenExpiredResponse(responseStatusCode, responseData)) {
+      print("Token expiration detected in OrderService!");
+      return OrderListResult(
+        orders: [],
+        hasMorePage: false,
+        isTokenExpired: true,
+      );
+    }
+
     final orders = responseData != null
         ? _parseOrders(responseData)
         : <OrderModel>[];
@@ -369,7 +427,11 @@ class OrderService extends GetxService {
     print("Raw responseData: $responseData");
     print("=====================================================");
 
-    return OrderListResult(orders: orders, hasMorePage: hasMore);
+    return OrderListResult(
+      orders: orders,
+      hasMorePage: hasMore,
+      isTokenExpired: false,
+    );
   }
 
   List<OrderModel> _parseOrders(dynamic responseData) {
@@ -426,6 +488,11 @@ class OrderService extends GetxService {
 class OrderListResult {
   final List<OrderModel> orders;
   final bool hasMorePage;
+  final bool isTokenExpired;
 
-  OrderListResult({required this.orders, required this.hasMorePage});
+  OrderListResult({
+    required this.orders,
+    required this.hasMorePage,
+    this.isTokenExpired = false,
+  });
 }
