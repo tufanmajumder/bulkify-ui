@@ -111,7 +111,10 @@ class FilterBar extends StatelessWidget {
                       side: BorderSide.none,
                       elevation: 0,
                       minimumSize: Size(0, controlHeight),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 15,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),

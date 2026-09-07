@@ -1,4 +1,4 @@
-# bulkify_admin
+# admin_app
 
 A new Flutter project.
 

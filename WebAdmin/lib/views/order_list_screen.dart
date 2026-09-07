@@ -639,7 +639,8 @@ class OrderListScreen extends StatelessWidget {
                                     flex: 2,
                                     child: _buildPaymentStatusCell(
                                       context,
-                                      order.paymentStatus,
+                                      order.paymentStatus[0].toUpperCase() +
+                                          order.paymentStatus.substring(1),
                                     ),
                                   ),
 
@@ -648,7 +649,8 @@ class OrderListScreen extends StatelessWidget {
                                     flex: 2,
                                     child: _buildOrderStatusBadge(
                                       context,
-                                      order.orderStatus,
+                                      order.orderStatus[0].toUpperCase() +
+                                          order.orderStatus.substring(1),
                                     ),
                                   ),
 

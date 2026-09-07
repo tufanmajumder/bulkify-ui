@@ -58,48 +58,48 @@ class OrderService extends GetxService {
     dynamic responseData;
 
     // 1. Web execution
-    if (kIsWeb) {
-      final List<String> urlsToTry = [
-        targetUrl,
-        "https://corsproxy.io/?$targetUrl",
-        "https://thingproxy.freeboard.io/fetch/$targetUrl",
-        "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
-      ];
+    // if (kIsWeb) {
+    //   final List<String> urlsToTry = [
+    //     targetUrl,
+    //     "https://corsproxy.io/?$targetUrl",
+    //     "https://thingproxy.freeboard.io/fetch/$targetUrl",
+    //     "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
+    //   ];
 
-      for (final baseUrlStr in urlsToTry) {
-        try {
-          print("Attempting web getOrderList via: $baseUrlStr");
+    //   for (final baseUrlStr in urlsToTry) {
+    //     try {
+    //       print("Attempting web getOrderList via: $baseUrlStr");
 
-          http.Response httpResponse = await http.post(
-            Uri.parse(baseUrlStr),
-            headers: requestHeaders,
-            body: jsonEncode(payload),
-          );
+    //       http.Response httpResponse = await http.post(
+    //         Uri.parse(baseUrlStr),
+    //         headers: requestHeaders,
+    //         body: jsonEncode(payload),
+    //       );
 
-          if (httpResponse.statusCode < 200 ||
-              httpResponse.statusCode >= 300 ||
-              httpResponse.body.isEmpty) {
-            final baseUri = Uri.parse(baseUrlStr);
-            final uri = baseUri.replace(
-              queryParameters: {...baseUri.queryParameters, ...queryParams},
-            );
-            httpResponse = await http.get(uri, headers: requestHeaders);
-          }
+    //       if (httpResponse.statusCode < 200 ||
+    //           httpResponse.statusCode >= 300 ||
+    //           httpResponse.body.isEmpty) {
+    //         final baseUri = Uri.parse(baseUrlStr);
+    //         final uri = baseUri.replace(
+    //           queryParameters: {...baseUri.queryParameters, ...queryParams},
+    //         );
+    //         httpResponse = await http.get(uri, headers: requestHeaders);
+    //       }
 
-          print("Status from $baseUrlStr: ${httpResponse.statusCode}");
-          print("Body from $baseUrlStr: ${httpResponse.body}");
+    //       print("Status from $baseUrlStr: ${httpResponse.statusCode}");
+    //       print("Body from $baseUrlStr: ${httpResponse.body}");
 
-          if (httpResponse.statusCode >= 200 &&
-              httpResponse.statusCode < 500 &&
-              httpResponse.body.isNotEmpty) {
-            responseData = jsonDecode(httpResponse.body);
-            break;
-          }
-        } catch (e) {
-          print("Request to $baseUrlStr failed: $e");
-        }
-      }
-    }
+    //       if (httpResponse.statusCode >= 200 &&
+    //           httpResponse.statusCode < 500 &&
+    //           httpResponse.body.isNotEmpty) {
+    //         responseData = jsonDecode(httpResponse.body);
+    //         break;
+    //       }
+    //     } catch (e) {
+    //       print("Request to $baseUrlStr failed: $e");
+    //     }
+    //   }
+    // }
 
     // 2. Dio execution (Mobile/Desktop/Fallback)
     if (responseData == null) {
@@ -310,7 +310,7 @@ class OrderService extends GetxService {
       final List<String> urlsToTry = [
         targetUrl,
         "https://corsproxy.io/?$targetUrl",
-        "https://thingproxy.freeboard.io/fetch/$targetUrl",
+        ".freeboard.io/fetch/$targetUrl",
         "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
       ];
 

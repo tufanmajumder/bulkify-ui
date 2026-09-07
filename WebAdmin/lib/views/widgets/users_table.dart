@@ -65,7 +65,7 @@ class UsersTable extends StatelessWidget {
                             child: _buildHeaderCell(context, 'ROLE'),
                           ),
                           Expanded(
-                            flex: 3,
+                            flex: 2,
                             child: _buildHeaderCell(context, 'LAST LOGIN'),
                           ),
                           Expanded(
@@ -206,7 +206,7 @@ class UsersTable extends StatelessWidget {
 
           // LAST LOGIN Column
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Text(
               user.lastLogin,
               style: TextStyle(
