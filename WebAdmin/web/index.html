@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <!--
@@ -19,18 +19,39 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Bulkify Admin — manage orders, users, and operations in one place.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!--
+    Content Security Policy:
+    - Allows Flutter Web engine, CanvasKit WebAssembly, and fonts from Google CDN (gstatic)
+    - connect-src allows backend API, CanvasKit CDN, and local dev websockets
+    - object-src 'none' blocks Flash/plugins
+    - base-uri 'self' prevents base-tag hijacking
+  -->
+  <meta http-equiv="Content-Security-Policy"
+    content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://www.gstatic.com;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: blob: https:;
+      font-src 'self' data: https://fonts.gstatic.com;
+      connect-src 'self' https://bulkify.dts.ind.in https://www.gstatic.com ws: http:;
+      frame-src 'none';
+      object-src 'none';
+      base-uri 'self';
+    ">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="bulkify_admin">
+  <meta name="apple-mobile-web-app-title" content="Bulkify Admin">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png" />
 
-  <title>admin_app</title>
+  <title>Bulkify Admin</title>
   <link rel="manifest" href="manifest.json">
 </head>
 

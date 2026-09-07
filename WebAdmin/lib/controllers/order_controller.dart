@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/order_model.dart';
@@ -35,14 +36,10 @@ class OrderController extends GetxController {
     try {
       final token = await AuthService.getAuthToken();
       if (token.trim().isEmpty) {
-        print("Token is empty! Redirecting to login screen...");
+        if (kDebugMode) debugPrint('[OrderController] No token — redirecting to login');
         await _handleTokenExpired();
         return;
       }
-
-      print("================ FETCHING ORDERS WITH TOKEN ================");
-      print("AuthToken: $token");
-      print("============================================================");
 
       final result = await _orderService.getOrderListResult(
         page: currentPage.value,
@@ -51,25 +48,21 @@ class OrderController extends GetxController {
       );
 
       if (result.isTokenExpired) {
-        print("Token is expired! Redirecting to login screen...");
+        if (kDebugMode) debugPrint('[OrderController] Token expired — redirecting to login');
         await _handleTokenExpired();
         return;
       }
 
-      print("================ CONTROLLER RECEIVED ==================");
-      print(
-        "Fetched ${result.orders.length} orders from API. HasMorePage: ${result.hasMorePage}",
-      );
-      for (var o in result.orders) {
-        print(
-          " -> Order ID: ${o.id}, Restaurant: ${o.customerName}, Status: ${o.orderStatus}, Amount: ${o.amount}",
+      if (kDebugMode) {
+        debugPrint(
+          '[OrderController] Fetched ${result.orders.length} orders. HasMorePage: ${result.hasMorePage}',
         );
       }
-      print("=======================================================");
+
       orders.assignAll(result.orders);
       hasMorePage.value = result.hasMorePage;
     } catch (e) {
-      print("Error fetching orders in controller: $e");
+      if (kDebugMode) debugPrint('[OrderController] Error fetching orders: $e');
     } finally {
       isLoading.value = false;
     }
