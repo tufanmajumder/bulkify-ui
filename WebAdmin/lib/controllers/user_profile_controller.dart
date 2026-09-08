@@ -3,15 +3,17 @@ import 'package:get/get.dart';
 
 class UserProfileController extends GetxController {
   // User Profile Basic & Personal Info (Reactive)
-  final RxString name = 'Chrish Teigland'.obs;
-  final RxString email = 'teigland1991@gmail.com'.obs;
-  final RxString role = 'Driver'.obs;
+  // Demo values — replace with authenticated user data from API.
+  final RxString name = 'Demo Admin'.obs;
+  final RxString email = 'admin@example.com'.obs;
+  final RxString role = 'Admin'.obs;
   final RxString status = 'Active'.obs;
-  final RxString mobile = '+91 98765 4321'.obs;
-  final RxString emergencyContact = '+91 98765 01234'.obs;
-  final RxString whatsapp = '+91 98765 01234'.obs;
-  final RxString avatarUrl =
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'.obs;
+  final RxString mobile = '+91 90000 00001'.obs;
+  final RxString emergencyContact = '+91 90000 00002'.obs;
+  final RxString whatsapp = '+91 90000 00002'.obs;
+  // Avatar: empty string renders an initials-based fallback in the UI.
+  // Do NOT use external CDN URLs — they leak requests to third parties.
+  final RxString avatarUrl = ''.obs;
   final RxString tasksDone = '1.23k'.obs;
   final RxString projectsDone = '568'.obs;
 
@@ -222,7 +224,13 @@ class UserProfileController extends GetxController {
               const SizedBox(height: 8),
               Text('Issued Date: ${inv['date']}'),
               const SizedBox(height: 8),
-              const Text('Status: Paid', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+              const Text(
+                'Status: Paid',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ),
@@ -301,6 +309,17 @@ class UserProfileController extends GetxController {
       return;
     }
 
+    if (newPass.length < 8) {
+      Get.snackbar(
+        'Error',
+        'New password must be at least 8 characters.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     if (newPass != confirmPass) {
       Get.snackbar(
         'Error',
@@ -329,7 +348,9 @@ class UserProfileController extends GetxController {
     twoFactorEnabled.value = value;
     Get.snackbar(
       '2FA Update',
-      value ? 'Two-Factor Authentication Enabled' : 'Two-Factor Authentication Disabled',
+      value
+          ? 'Two-Factor Authentication Enabled'
+          : 'Two-Factor Authentication Disabled',
       snackPosition: SnackPosition.BOTTOM,
     );
   }

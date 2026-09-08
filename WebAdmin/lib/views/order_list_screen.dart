@@ -301,43 +301,76 @@ class OrderListScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Rows Per Page Dropdown Button
-                Obx(
-                  () => PopupMenuButton<int>(
-                    onSelected: (rows) => controller.setRowsPerPage(rows),
-                    itemBuilder: (context) => [10, 20, 50].map((r) {
-                      return PopupMenuItem<int>(
-                        value: r,
-                        child: Text('$r rows per page'),
-                      );
-                    }).toList(),
-                    child: Container(
-                      height: 38,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: borderColor),
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.white,
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            '${controller.rowsPerPage.value}',
-                            style: TextStyle(
-                              fontSize: fontSize,
-                              color: const Color(0xFF475569),
-                              fontWeight: FontWeight.w500,
-                            ),
+                Row(
+                  children: [
+                    Obx(
+                      () => PopupMenuButton<int>(
+                        onSelected: (rows) => controller.setRowsPerPage(rows),
+                        itemBuilder: (context) => [10, 20, 50].map((r) {
+                          return PopupMenuItem<int>(
+                            value: r,
+                            child: Text('$r rows per page'),
+                          );
+                        }).toList(),
+                        child: Container(
+                          height: 38,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: borderColor),
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.white,
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 18,
-                            color: Color(0xFF94A3B8),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${controller.rowsPerPage.value}',
+                                style: TextStyle(
+                                  fontSize: fontSize,
+                                  color: const Color(0xFF475569),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 18,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () => controller.exportOrders(),
+                      icon: const Icon(
+                        Icons.download_outlined,
+                        size: 18,
+                        color: Color(0xFF64748B),
+                      ),
+                      label: Text(
+                        'Export',
+                        style: TextStyle(
+                          color: const Color(0xFF64748B),
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        elevation: 0,
+                        minimumSize: const Size(0, 38),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 // Search Order Input Field + Export Button
@@ -373,35 +406,6 @@ class OrderListScreen extends StatelessWidget {
                               color: Color(0xFFCF4340),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => controller.exportOrders(),
-                      icon: const Icon(
-                        Icons.download_outlined,
-                        size: 18,
-                        color: Color(0xFF64748B),
-                      ),
-                      label: Text(
-                        'Export',
-                        style: TextStyle(
-                          color: const Color(0xFF64748B),
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF1F5F9),
-                        elevation: 0,
-                        minimumSize: const Size(0, 38),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ),
@@ -559,16 +563,20 @@ class OrderListScreen extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // ORDER ID (Red bold)
+                                  // ORDER ID (Red bold - clickable)
                                   Expanded(
                                     flex: 2,
-                                    child: Text(
-                                      order.id,
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        fontSize: fontSize,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFFCF4340),
+                                    child: InkWell(
+                                      onTap: () =>
+                                          controller.viewOrderDetails(order),
+                                      child: Text(
+                                        order.id,
+                                        textAlign: TextAlign.start,
+                                        style: TextStyle(
+                                          fontSize: fontSize,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFFCF4340),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -576,13 +584,34 @@ class OrderListScreen extends StatelessWidget {
                                   // DATE & TIME
                                   Expanded(
                                     flex: 3,
-                                    child: Text(
-                                      displayDate,
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        fontSize: fontSize,
-                                        color: const Color(0xFF475569),
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          displayDate.split(" ")[0],
+                                          textAlign: TextAlign.start,
+                                          style: TextStyle(
+                                            fontSize: fontSize,
+                                            color: const Color(0xFF475569),
+                                          ),
+                                        ),
+                                        if (displayDate.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            displayDate.split(" ")[1] +
+                                                displayDate.split(" ")[2],
+                                            textAlign: TextAlign.start,
+                                            style: TextStyle(
+                                              fontSize: fontSize - 2,
+                                              fontWeight: FontWeight.w400,
+                                              color: const Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
 

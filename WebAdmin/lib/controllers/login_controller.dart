@@ -31,7 +31,6 @@ class LoginController extends GetxController {
 
   @override
   void onInit() {
-    // TODO: implement onInit
     super.onInit();
     showDeviceInfo(Get.context!);
   }
@@ -138,8 +137,8 @@ class LoginController extends GetxController {
       final deviceInfo = DeviceInfoPlugin();
       if (kIsWeb) {
         final webInfo = await deviceInfo.webBrowserInfo;
-        print("deviceInfo...${webInfo.userAgent}");
-        deviceId = webInfo.userAgent ?? 'Web Browser';
+        // Use browser name only — do not log userAgent (contains PII)
+        deviceId = 'web-browser';
         model = webInfo.browserName.name;
         final vendor = webInfo.vendor;
         brand = (vendor != null && vendor.isNotEmpty) ? vendor : 'Web Browser';
@@ -183,7 +182,8 @@ class LoginController extends GetxController {
         deviceType = 'Desktop';
       }
     } catch (e) {
-      deviceId = 'Error: $e';
+      if (kDebugMode) debugPrint('[LoginController] Device info error: $e');
+      deviceId = 'error';
     }
 
     final infoObj = _authService.convertData(
@@ -198,8 +198,6 @@ class LoginController extends GetxController {
       model,
       brand,
     );
-    print("Generated plain deviceinfo payload: $infoObj");
-    print("Generated plain deviceinfo payload: $deviceAllInfo");
     return infoObj;
   }
 
@@ -222,10 +220,6 @@ class LoginController extends GetxController {
       );
 
       if (response != null) {
-        print(
-          "verifyOtp response parsed -> success: ${response.success}, code: ${response.code}, message: ${response.message}, token: ${response.token}, data: ${response.data}",
-        );
-
         final sStr = response.success?.toString().trim().toLowerCase();
         final mStr = response.message?.toString().trim().toLowerCase() ?? '';
         final cStr = response.code?.toString().trim();
@@ -250,10 +244,6 @@ class LoginController extends GetxController {
             sessionToken = (response.data as Data1).sessionId;
           }
 
-          print("================ SESSION ID / TOKEN PRINT ================");
-          print("RECEIVED DYNAMIC SESSION ID: $sessionToken");
-          print("==========================================================");
-
           if (sessionToken != null && sessionToken.trim().isNotEmpty) {
             await AuthService.setAuthToken(sessionToken);
           }
@@ -263,7 +253,6 @@ class LoginController extends GetxController {
             WidgetManager.showSuccessSnackBar(msg);
           } else {
             WidgetManager.showSuccessSnackBar('Login successful');
-            print("cdc");
           }
           Get.offAllNamed('/orders');
         } else {

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/order_model.dart';
 import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/service/order_service.dart';
 import 'package:admin_app/utils/widget_manager.dart';
+import 'package:admin_app/views/order_details_screen.dart';
 
 class OrderController extends GetxController {
   final OrderService _orderService = Get.put(OrderService());
@@ -34,15 +36,13 @@ class OrderController extends GetxController {
     isLoading.value = true;
     try {
       final token = await AuthService.getAuthToken();
+      print("token....$token");
       if (token.trim().isEmpty) {
-        print("Token is empty! Redirecting to login screen...");
+        if (kDebugMode)
+          debugPrint('[OrderController] No token — redirecting to login');
         await _handleTokenExpired();
         return;
       }
-
-      print("================ FETCHING ORDERS WITH TOKEN ================");
-      print("AuthToken: $token");
-      print("============================================================");
 
       final result = await _orderService.getOrderListResult(
         page: currentPage.value,
@@ -51,25 +51,22 @@ class OrderController extends GetxController {
       );
 
       if (result.isTokenExpired) {
-        print("Token is expired! Redirecting to login screen...");
+        if (kDebugMode)
+          debugPrint('[OrderController] Token expired — redirecting to login');
         await _handleTokenExpired();
         return;
       }
 
-      print("================ CONTROLLER RECEIVED ==================");
-      print(
-        "Fetched ${result.orders.length} orders from API. HasMorePage: ${result.hasMorePage}",
-      );
-      for (var o in result.orders) {
-        print(
-          " -> Order ID: ${o.id}, Restaurant: ${o.customerName}, Status: ${o.orderStatus}, Amount: ${o.amount}",
+      if (kDebugMode) {
+        debugPrint(
+          '[OrderController] Fetched ${result.orders.length} orders. HasMorePage: ${result.hasMorePage}',
         );
       }
-      print("=======================================================");
+
       orders.assignAll(result.orders);
       hasMorePage.value = result.hasMorePage;
     } catch (e) {
-      print("Error fetching orders in controller: $e");
+      if (kDebugMode) debugPrint('[OrderController] Error fetching orders: $e');
     } finally {
       isLoading.value = false;
     }
@@ -199,33 +196,10 @@ class OrderController extends GetxController {
   }
 
   void viewOrderDetails(OrderModel order) {
-    Get.defaultDialog(
-      title: 'Order Details - ${order.id}',
-      titleStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Customer: ${order.customerName}'),
-            const SizedBox(height: 4),
-            Text('Email: ${order.customerEmail}'),
-            const SizedBox(height: 4),
-            Text('Date: ${order.date}'),
-            const SizedBox(height: 4),
-            Text('Payment: ${order.paymentStatus}'),
-            const SizedBox(height: 4),
-            Text('Shipment: ${order.orderStatus}'),
-            const SizedBox(height: 4),
-            Text('Amount: ${order.amount}'),
-          ],
-        ),
-      ),
-      textConfirm: 'Close',
-      confirmTextColor: Colors.white,
-      buttonColor: const Color(0xFFCF4340),
-      onConfirm: () => Get.back(),
+    Get.to(
+      () => const OrderDetailsScreen(),
+      arguments: order,
+      routeName: '/order-details',
     );
   }
 }

@@ -1,5 +1,6 @@
 class OrderModel {
   final String id;
+  final String salesorderId;
   final String date;
   final String customerName;
   final String companyName;
@@ -11,6 +12,7 @@ class OrderModel {
 
   OrderModel({
     required this.id,
+    this.salesorderId = '',
     required this.date,
     required this.customerName,
     this.companyName = '',
@@ -22,6 +24,7 @@ class OrderModel {
 
   OrderModel copyWith({
     String? id,
+    String? salesorderId,
     String? date,
     String? customerName,
     String? companyName,
@@ -32,6 +35,7 @@ class OrderModel {
   }) {
     return OrderModel(
       id: id ?? this.id,
+      salesorderId: salesorderId ?? this.salesorderId,
       date: date ?? this.date,
       customerName: customerName ?? this.customerName,
       companyName: companyName ?? this.companyName,
@@ -43,6 +47,16 @@ class OrderModel {
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    // Extract salesorder_id specifically
+    final salesIdRaw =
+        json['salesorder_id'] ??
+        json['salesorder_number'] ??
+        json['ordernumber'] ??
+        json['id'] ??
+        json['_id'] ??
+        '-';
+    final salesIdStr = salesIdRaw.toString().trim();
+
     // Extract ID ("salesorder_number", "ordernumber", "salesorder_id", "order_number")
     final idRaw =
         json['salesorder_number'] ??
@@ -125,6 +139,7 @@ class OrderModel {
 
     return OrderModel(
       id: idDisplay,
+      salesorderId: salesIdStr,
       date: dateStr,
       customerName: customerStr,
       companyName: companyStr,

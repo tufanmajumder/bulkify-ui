@@ -8,7 +8,7 @@ class WidgetManager {
   /// Formats snackbar text to sentence case where only the first letter is capitalized,
   /// preserving acronyms like OTP.
   ///
-  convertData(String phone, String deviceId, String model, String brand) {
+  String convertData(String phone, String deviceId, String model, String brand) {
     // 1. Define your source Map
     final Map<String, dynamic> deviceData = {
       "devicetype": phone,
@@ -27,9 +27,7 @@ class WidgetManager {
     // 4. Encode the bytes to Base64
     final String base64Result = base64.encode(jsonBytes);
 
-    print(base64Result);
     return base64Result;
-    // Output: ewogICJkZXZpY2V0eXBlIjogIlBob25lIiwKICAiZGV2aWNlaWQiOiAiQlA0QS4yNTEyMDUuMDA2IiwKICAibW9kZWwiOiAiU00tTTA3NUYiLAogICJicmFuZCI6ICJzYW1zdW5nIgp9
   }
 
   static String formatSnackbarText(String input) {

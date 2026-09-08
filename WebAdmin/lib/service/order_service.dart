@@ -9,6 +9,7 @@ import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/utils/api_manager.dart';
 
 class OrderService extends GetxService {
+  // Throws on 401/403 so auth failures are caught explicitly in DioException.
   final Dio dio = Dio(
     BaseOptions(
       baseUrl: ApiManager.baseUrl,
@@ -18,16 +19,13 @@ class OrderService extends GetxService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      validateStatus: (status) => status != null && status < 500,
+      validateStatus: (status) =>
+          status != null && status < 400 ||
+          (status != null && status >= 500 && status < 600),
     ),
   );
 
-  /// Calls getOrderList API endpoint using payload:
-  /// {
-  ///   "page": 1,
-  ///   "pagesize": 10,
-  ///   "status": null
-  /// }
+  /// Calls getOrderList API endpoint.
   Future<List<OrderModel>> getOrderList({
     int page = 1,
     int perPage = 10,
@@ -51,57 +49,42 @@ class OrderService extends GetxService {
       'per_page': perPage.toString(),
     };
 
-    print("Target URL in getOrderList...$targetUrl");
-    print("Headers...$requestHeaders");
-    print("Payload...$payload");
-
     dynamic responseData;
 
-    // 1. Web execution
-    // if (kIsWeb) {
-    //   final List<String> urlsToTry = [
-    //     targetUrl,
-    //     "https://corsproxy.io/?$targetUrl",
-    //     "https://thingproxy.freeboard.io/fetch/$targetUrl",
-    //     "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
-    //   ];
+    // Web: call the backend directly.
+    // NOTE: The backend must have CORS headers configured for browser requests.
+    // Public CORS proxies have been removed for security — they received full
+    // request bodies including Bearer tokens and order PII.
+    if (kIsWeb) {
+      try {
+        http.Response httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
 
-    //   for (final baseUrlStr in urlsToTry) {
-    //     try {
-    //       print("Attempting web getOrderList via: $baseUrlStr");
+        if (httpResponse.statusCode < 200 ||
+            httpResponse.statusCode >= 300 ||
+            httpResponse.body.isEmpty) {
+          final baseUri = Uri.parse(targetUrl);
+          final uri = baseUri.replace(
+            queryParameters: {...baseUri.queryParameters, ...queryParams},
+          );
+          httpResponse = await http.get(uri, headers: requestHeaders);
+        }
 
-    //       http.Response httpResponse = await http.post(
-    //         Uri.parse(baseUrlStr),
-    //         headers: requestHeaders,
-    //         body: jsonEncode(payload),
-    //       );
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Web getOrderList request failed: $e');
+        }
+      }
+    }
 
-    //       if (httpResponse.statusCode < 200 ||
-    //           httpResponse.statusCode >= 300 ||
-    //           httpResponse.body.isEmpty) {
-    //         final baseUri = Uri.parse(baseUrlStr);
-    //         final uri = baseUri.replace(
-    //           queryParameters: {...baseUri.queryParameters, ...queryParams},
-    //         );
-    //         httpResponse = await http.get(uri, headers: requestHeaders);
-    //       }
-
-    //       print("Status from $baseUrlStr: ${httpResponse.statusCode}");
-    //       print("Body from $baseUrlStr: ${httpResponse.body}");
-
-    //       if (httpResponse.statusCode >= 200 &&
-    //           httpResponse.statusCode < 500 &&
-    //           httpResponse.body.isNotEmpty) {
-    //         responseData = jsonDecode(httpResponse.body);
-    //         break;
-    //       }
-    //     } catch (e) {
-    //       print("Request to $baseUrlStr failed: $e");
-    //     }
-    //   }
-    // }
-
-    // 2. Dio execution (Mobile/Desktop/Fallback)
     if (responseData == null) {
       try {
         final response = await dio.post(
@@ -112,8 +95,6 @@ class OrderService extends GetxService {
             headers: requestHeaders,
           ),
         );
-        print("Dio getOrderList status: ${response.statusCode}");
-        print("Dio getOrderList data: ${response.data}");
 
         if (response.data != null) {
           if (response.data is Map<String, dynamic> || response.data is List) {
@@ -123,8 +104,11 @@ class OrderService extends GetxService {
           }
         }
       } on DioException catch (e) {
-        print("DioException in getOrderList status: ${e.response?.statusCode}");
-        print("DioException in getOrderList data: ${e.response?.data}");
+        if (kDebugMode) {
+          debugPrint(
+            '[OrderService] DioException in getOrderList: ${e.response?.statusCode}',
+          );
+        }
         try {
           final response = await dio.get(
             ApiManager.getOrderList,
@@ -155,22 +139,23 @@ class OrderService extends GetxService {
           }
         }
       } catch (e) {
-        print("General exception in getOrderList: $e");
+        if (kDebugMode) {
+          debugPrint('[OrderService] Unexpected error in getOrderList: $e');
+        }
       }
     }
-
-    print("================ API RESPONSE RECEIVED ================");
-    print("responseData: $responseData");
-    print("=======================================================");
 
     if (responseData != null) {
       final parsed = _parseOrders(responseData);
       final hasMore = extractHasMorePage(responseData);
-      print("Parsed ${parsed.length} OrderModel items. HasMorePage: $hasMore");
+      if (kDebugMode) {
+        debugPrint(
+          '[OrderService] Parsed ${parsed.length} orders. HasMorePage: $hasMore',
+        );
+      }
       return parsed;
     }
 
-    print("responseData was null! Returning empty list.");
     return [];
   }
 
@@ -194,7 +179,6 @@ class OrderService extends GetxService {
 
       bool? searchMap(dynamic node) {
         if (node is Map) {
-          // 1. First check keys at this map level
           for (final key in [
             'has_more_page',
             'has_more_pages',
@@ -209,9 +193,7 @@ class OrderService extends GetxService {
               if (b != null) return b;
             }
           }
-          // 2. Recursively search nested maps
           for (final entry in node.entries) {
-            // Avoid recursively walking large array collections
             if (entry.key == 'salesorders' ||
                 entry.key == 'items' ||
                 entry.key == 'orders') {
@@ -235,7 +217,6 @@ class OrderService extends GetxService {
       }
     }
 
-    // Fallback: If explicit key is missing, infer true if server returned a full page of items
     return fetchedCount > 0 && fetchedCount >= perPage;
   }
 
@@ -281,13 +262,15 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      print("activeToken is empty -> Token Expired or Missing");
+      if (kDebugMode)
+        debugPrint('[OrderService] Token missing — session expired');
       return OrderListResult(
         orders: [],
         hasMorePage: false,
         isTokenExpired: true,
       );
     }
+
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getOrderList}";
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
@@ -303,47 +286,40 @@ class OrderService extends GetxService {
     };
 
     dynamic responseData;
-
     int? responseStatusCode;
 
+    // Web: call the backend directly.
+    // NOTE: The backend must have CORS headers configured for browser requests.
+    // Public CORS proxies have been removed for security.
     if (kIsWeb) {
-      final List<String> urlsToTry = [
-        targetUrl,
-        "https://corsproxy.io/?$targetUrl",
-        ".freeboard.io/fetch/$targetUrl",
-        "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
-      ];
+      try {
+        http.Response httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
 
-      for (final baseUrlStr in urlsToTry) {
-        try {
-          http.Response httpResponse = await http.post(
-            Uri.parse(baseUrlStr),
-            headers: requestHeaders,
-            body: jsonEncode(payload),
+        if (httpResponse.statusCode < 200 ||
+            httpResponse.statusCode >= 300 ||
+            httpResponse.body.isEmpty) {
+          final baseUri = Uri.parse(targetUrl);
+          final uri = baseUri.replace(
+            queryParameters: {...baseUri.queryParameters, ...queryParams},
           );
+          httpResponse = await http.get(uri, headers: requestHeaders);
+        }
 
-          if (httpResponse.statusCode < 200 ||
-              httpResponse.statusCode >= 300 ||
-              httpResponse.body.isEmpty) {
-            final baseUri = Uri.parse(baseUrlStr);
-            final uri = baseUri.replace(
-              queryParameters: {...baseUri.queryParameters, ...queryParams},
-            );
-            httpResponse = await http.get(uri, headers: requestHeaders);
-          }
+        responseStatusCode = httpResponse.statusCode;
 
-          responseStatusCode = httpResponse.statusCode;
-
-          if (httpResponse.statusCode >= 200 &&
-              httpResponse.statusCode < 500 &&
-              httpResponse.body.isNotEmpty) {
-            responseData = jsonDecode(httpResponse.body);
-            print(
-              "Web response received from $baseUrlStr (status: $responseStatusCode)",
-            );
-            break;
-          }
-        } catch (_) {}
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Web getOrderListResult failed: $e');
+        }
       }
     }
 
@@ -368,6 +344,11 @@ class OrderService extends GetxService {
         }
       } on DioException catch (e) {
         responseStatusCode = e.response?.statusCode;
+        if (kDebugMode) {
+          debugPrint(
+            '[OrderService] DioException in getOrderListResult: $responseStatusCode',
+          );
+        }
         try {
           final response = await dio.get(
             ApiManager.getOrderList,
@@ -402,7 +383,7 @@ class OrderService extends GetxService {
     }
 
     if (isTokenExpiredResponse(responseStatusCode, responseData)) {
-      print("Token expiration detected in OrderService!");
+      if (kDebugMode) debugPrint('[OrderService] Token expiration detected');
       return OrderListResult(
         orders: [],
         hasMorePage: false,
@@ -421,11 +402,11 @@ class OrderService extends GetxService {
           )
         : false;
 
-    print("================ API RESPONSE RESULT ================");
-    print("Fetched orders count: ${orders.length}");
-    print("Extracted hasMorePage: $hasMore");
-    print("Raw responseData: $responseData");
-    print("=====================================================");
+    if (kDebugMode) {
+      debugPrint(
+        '[OrderService] Result: ${orders.length} orders, hasMorePage: $hasMore',
+      );
+    }
 
     return OrderListResult(
       orders: orders,
@@ -476,12 +457,92 @@ class OrderService extends GetxService {
           final Map<String, dynamic> mapItem = Map<String, dynamic>.from(item);
           orders.add(OrderModel.fromJson(mapItem));
         } catch (e) {
-          print("Error parsing order item: $e");
+          if (kDebugMode) debugPrint('[OrderService] Error parsing order: $e');
         }
       }
     }
 
     return orders;
+  }
+
+  /// Calls getOrderDetails API endpoint (zoho/v1/salesorder/get) with {"salesorder_id": salesorderId}
+  Future<Map<String, dynamic>?> getOrderDetails({
+    required String salesorderId,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String targetUrl =
+        "${ApiManager.baseUrl}${ApiManager.getOrderDetails}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {
+      "salesorder_id": salesorderId,
+    };
+
+    if (kDebugMode) {
+      debugPrint('[OrderService] Fetching details for salesorder_id: $salesorderId from $targetUrl');
+    }
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        if (kDebugMode) {
+          debugPrint('[OrderService] Web getOrderDetails status: ${httpResponse.statusCode}');
+        }
+
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Web getOrderDetails exception: $e');
+        }
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.getOrderDetails,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Dio getOrderDetails exception: $e');
+        }
+      }
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    }
+    return null;
   }
 }
 

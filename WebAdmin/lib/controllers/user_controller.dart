@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 import 'package:admin_app/models/user_model.dart';
 
 class UserController extends GetxController {
@@ -11,8 +11,7 @@ class UserController extends GetxController {
   final RxString selectedStatus = 'All'.obs;
 
   // Pagination states
-  final RxInt currentPage =
-      3.obs; // Page 3 selected as shown in reference image
+  final RxInt currentPage = 3.obs;
   final RxInt rowsPerPage = 10.obs;
 
   @override
@@ -22,96 +21,99 @@ class UserController extends GetxController {
   }
 
   void _loadInitialUsers() {
+    // Demo data uses clearly fictional identifiers (example.com, 90000XXXXX)
+    // to comply with data minimisation principles.
+    // Replace with a real API call when the Users API endpoint is available.
     final List<UserModel> initialData = [
       UserModel(
         id: '1',
-        name: 'Jordan Stevenson',
-        email: 'jordan@gmail.com',
+        name: 'Demo User 01',
+        email: 'user01@example.com',
         role: 'Driver',
         lastLogin: '20-08-2026 12:00 PM',
         status: 'Active',
-        mobNo: '7980123456',
+        mobNo: '9000000001',
       ),
       UserModel(
         id: '2',
-        name: 'Emily Carter',
-        email: 'emily.carter@yahoo.com',
+        name: 'Demo User 02',
+        email: 'user02@example.com',
         role: 'Pilot',
         lastLogin: '22-08-2026 03:00 PM',
         status: 'Active',
-        mobNo: '7980234567',
+        mobNo: '9000000002',
       ),
       UserModel(
         id: '3',
-        name: 'Emily Carter',
-        email: 'emily.carter@email.com',
+        name: 'Demo User 03',
+        email: 'user03@example.com',
         role: 'Scheduler',
         lastLogin: '15-09-2026 3:00 PM',
         status: 'Inactive',
-        mobNo: '9123456789',
+        mobNo: '9000000003',
       ),
       UserModel(
         id: '4',
-        name: 'Michael Johnson',
-        email: 'michael.j@gmail.com',
+        name: 'Demo User 04',
+        email: 'user04@example.com',
         role: 'Manager',
         lastLogin: '01-10-2026 9:00 AM',
         status: 'Active',
-        mobNo: '8456789012',
+        mobNo: '9000000004',
       ),
       UserModel(
         id: '5',
-        name: 'Samantha Lee',
-        email: 'samantha_lee@hotmail.com',
+        name: 'Demo User 05',
+        email: 'user05@example.com',
         role: 'Designer',
         lastLogin: '25-10-2026 1:30 PM',
         status: 'Active',
-        mobNo: '6543217890',
+        mobNo: '9000000005',
       ),
       UserModel(
         id: '6',
-        name: 'David Smith',
-        email: 'david.smith@yahoo.com',
+        name: 'Demo User 06',
+        email: 'user06@example.com',
         role: 'Developer',
         lastLogin: '05-11-2026 4:15 PM',
         status: 'Inactive',
-        mobNo: '7890123456',
+        mobNo: '9000000006',
       ),
       UserModel(
         id: '7',
-        name: 'Nina Patel',
-        email: 'nina.patel@outlook.com',
+        name: 'Demo User 07',
+        email: 'user07@example.com',
         role: 'Analyst',
         lastLogin: '10-12-2026 10:00 AM',
         status: 'Active',
-        mobNo: '2345678901',
+        mobNo: '9000000007',
       ),
       UserModel(
         id: '8',
-        name: 'Liam Brown',
-        email: 'liam.brown@live.com',
+        name: 'Demo User 08',
+        email: 'user08@example.com',
         role: 'Representative',
         lastLogin: '20-01-2027 2:45 PM',
         status: 'Active',
-        mobNo: '3456789012',
+        mobNo: '9000000008',
       ),
       UserModel(
         id: '9',
-        name: 'Sophia Davis',
-        email: 'sophia.davis@school.edu',
+        name: 'Demo User 09',
+        email: 'user09@example.com',
         role: 'Researcher',
         lastLogin: '30-01-2027 11:00 AM',
         status: 'Inactive',
-        mobNo: '4567890123',
+        mobNo: '9000000009',
       ),
       UserModel(
         id: '10',
-        name: 'Oliver Taylor',
-        email: 'oliver.taylor@gmail.com',
+        name: 'Demo User 10',
+        email: 'user10@example.com',
         role: 'Admin',
         lastLogin: '15-02-2027 10:30 AM',
         status: 'Active',
-        mobNo: '5678901234',
+        mobNo: '9000000010',
       ),
     ];
 

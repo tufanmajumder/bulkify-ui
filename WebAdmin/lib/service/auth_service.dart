@@ -15,24 +15,31 @@ class AuthService extends GetxService {
   static String authToken = "";
   static const String tokenKey = 'authToken';
 
+  // OTP retry throttle — max 3 attempts per 60-second window
+  static final List<DateTime> _otpAttemptTimestamps = [];
+  static const int _otpMaxAttempts = 3;
+  static const Duration _otpThrottleWindow = Duration(seconds: 60);
+
   @override
   void onInit() {
     super.onInit();
     getAuthToken();
   }
 
+  // ---------------------------------------------------------------------------
+  // Token Management
+  // ---------------------------------------------------------------------------
+
   static Future<void> setAuthToken(String token) async {
     if (token.trim().isNotEmpty) {
       authToken = token.trim();
-      print("================ TOKEN UPDATED ================");
-      print("AuthService authToken: $authToken");
-      print("===============================================");
+      // TODO(security): Replace SharedPreferences (localStorage on web) with
+      // HttpOnly cookie issued by the backend to prevent XSS token theft.
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(tokenKey, authToken);
-        print("Token saved to SharedPreferences under '$tokenKey'");
       } catch (e) {
-        print("Error saving token to SharedPreferences: $e");
+        if (kDebugMode) debugPrint('[AuthService] Error saving token: $e');
       }
     }
   }
@@ -47,16 +54,9 @@ class AuthService extends GetxService {
           prefs.getString(tokenKey) ?? prefs.getString('sessionId') ?? "";
       if (savedToken.isNotEmpty) {
         authToken = savedToken;
-        print(
-          "================ TOKEN LOADED FROM SHARED PREFERENCES ================",
-        );
-        print("AuthService authToken: $authToken");
-        print(
-          "======================================================================",
-        );
       }
     } catch (e) {
-      print("Error loading token from SharedPreferences: $e");
+      if (kDebugMode) debugPrint('[AuthService] Error loading token: $e');
     }
     return authToken;
   }
@@ -67,13 +67,31 @@ class AuthService extends GetxService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(tokenKey);
       await prefs.remove('sessionId');
-      print(
-        "================ TOKEN CLEARED FROM SHARED PREFERENCES ================",
-      );
     } catch (e) {
-      print("Error clearing token from SharedPreferences: $e");
+      if (kDebugMode) debugPrint('[AuthService] Error clearing token: $e');
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // OTP throttle helper
+  // ---------------------------------------------------------------------------
+
+  /// Returns true if a new OTP attempt is allowed, false if throttled.
+  static bool _checkAndRecordOtpAttempt() {
+    final now = DateTime.now();
+    _otpAttemptTimestamps.removeWhere(
+      (t) => now.difference(t) > _otpThrottleWindow,
+    );
+    if (_otpAttemptTimestamps.length >= _otpMaxAttempts) {
+      return false;
+    }
+    _otpAttemptTimestamps.add(now);
+    return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Dio instance — throws on 401/403 so catch blocks handle auth failures
+  // ---------------------------------------------------------------------------
 
   final Dio dio = Dio(
     BaseOptions(
@@ -84,11 +102,17 @@ class AuthService extends GetxService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      validateStatus: (status) => status != null && status < 500,
+      // Throw DioException for 401/403 so auth failures are handled explicitly.
+      validateStatus: (status) =>
+          status != null && status < 400 ||
+          (status != null && status >= 500 && status < 600),
     ),
   );
 
-  // loginService
+  // ---------------------------------------------------------------------------
+  // Login service
+  // ---------------------------------------------------------------------------
+
   Future<LoginModel?> login({
     required int channel,
     required String identifier,
@@ -99,45 +123,32 @@ class AuthService extends GetxService {
       "identifier": identifier,
     };
 
-    print("target URL in login...$targetUrl");
-    print("payload in login...$dataMap");
+    // Web: call the backend directly.
+    // NOTE: The backend must have CORS headers configured for this to succeed
+    // in a browser context. Public CORS proxies have been removed for security.
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode(dataMap),
+        );
 
-    // // 1. Web execution with multi-proxy fallback
-    // if (kIsWeb) {
-    //   final List<String> urlsToTry = [
-    //     targetUrl,
-    //     "https://thingproxy.freeboard.io/fetch/$targetUrl",
-    //     "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
-    //   ];
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          return loginModelFromJson(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode)
+          debugPrint('[AuthService] Web login request failed: $e');
+      }
+    }
 
-    //   for (final urlStr in urlsToTry) {
-    //     try {
-    //       print("Attempting web login via: $urlStr");
-    //       final httpResponse = await http.post(
-    //         Uri.parse(urlStr),
-    //         headers: {
-    //           'Content-Type': 'application/json',
-    //           'Accept': 'application/json',
-    //         },
-    //         body: jsonEncode(dataMap),
-    //       );
-
-    //       print("Status from $urlStr: ${httpResponse.statusCode}");
-    //       print("Body from $urlStr: ${httpResponse.body}");
-
-    //       if (httpResponse.statusCode >= 200 &&
-    //           httpResponse.statusCode < 500 &&
-    //           httpResponse.body.isNotEmpty) {
-    //         final LoginModel parsed = loginModelFromJson(httpResponse.body);
-    //         return parsed;
-    //       }
-    //     } catch (e) {
-    //       print("Request to $urlStr failed: $e");
-    //     }
-    //   }
-    // }
-
-    // 2. Dio execution (For Mobile/Desktop/Fallback)
+    // Mobile/Desktop/Fallback: use Dio.
     try {
       final response = await dio.post(
         ApiManager.loginUrl,
@@ -150,8 +161,6 @@ class AuthService extends GetxService {
           },
         ),
       );
-      print("Dio login status...${response.statusCode}");
-      print("Dio login data...${response.data}");
 
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
@@ -162,8 +171,11 @@ class AuthService extends GetxService {
       }
       return null;
     } on DioException catch (e) {
-      print("DioException in login status: ${e.response?.statusCode}");
-      print("DioException in login data: ${e.response?.data}");
+      if (kDebugMode) {
+        debugPrint(
+          '[AuthService] DioException in login: ${e.response?.statusCode}',
+        );
+      }
 
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
@@ -186,21 +198,32 @@ class AuthService extends GetxService {
 
       WidgetManager.showAlertSnackBar(errorText, 3);
       return null;
-    } catch (e, stackTrace) {
-      print("General exception in login: $e");
-      print("StackTrace: $stackTrace");
+    } catch (e) {
+      if (kDebugMode) debugPrint('[AuthService] Unexpected error in login: $e');
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
   }
 
-  // verifyOtpService
+  // ---------------------------------------------------------------------------
+  // Verify OTP service
+  // ---------------------------------------------------------------------------
+
   Future<LoginModel?> verifyOtp({
     required int channel,
     String deviceinfo = '',
     required String identifier,
     required String otp,
   }) async {
+    // Enforce client-side OTP retry throttle.
+    if (!_checkAndRecordOtpAttempt()) {
+      WidgetManager.showAlertSnackBar(
+        'Too many attempts. Please wait a moment before trying again.',
+        3,
+      );
+      return null;
+    }
+
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.verifyOtpUrl}";
     final String cleanIdentifier = identifier.replaceFirst('+91', '').trim();
     final String withPrefixIdentifier = cleanIdentifier.startsWith('+91')
@@ -230,57 +253,46 @@ class AuthService extends GetxService {
         },
     ];
 
-    print("target URL in verifyOtp...$targetUrl");
+    // Web: call the backend directly.
+    // NOTE: The backend must have CORS headers configured for browser requests.
+    if (kIsWeb) {
+      for (final payload in payloadsToTry) {
+        try {
+          final httpResponse = await http.post(
+            Uri.parse(targetUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(payload),
+          );
 
-    // if (kIsWeb) {
-    //   final List<String> urlsToTry = [
-    //     targetUrl,
-    //     "https://corsproxy.io/?$targetUrl",
-    //     "https://thingproxy.freeboard.io/fetch/$targetUrl",
-    //     "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
-    //   ];
+          if (httpResponse.statusCode >= 200 &&
+              httpResponse.statusCode < 500 &&
+              httpResponse.body.isNotEmpty) {
+            final model = loginModelFromJson(httpResponse.body);
+            final sStr = model.success?.toString().toLowerCase();
+            final cStr = model.code?.toString();
+            if (model.success == true ||
+                sStr == 'true' ||
+                sStr == '1' ||
+                sStr == 'success' ||
+                model.code == 200 ||
+                cStr == '200' ||
+                cStr == '0' ||
+                model.data != null) {
+              return model;
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('[AuthService] Web verifyOtp attempt failed: $e');
+          }
+        }
+      }
+    }
 
-    //   for (final payload in payloadsToTry) {
-    //     print("payload in verifyOtp...$payload");
-    //     for (final urlStr in urlsToTry) {
-    //       try {
-    //         print("Attempting web verifyOtp via: $urlStr");
-    //         final httpResponse = await http.post(
-    //           Uri.parse(urlStr),
-    //           headers: {
-    //             'Content-Type': 'application/json',
-    //             'Accept': 'application/json',
-    //           },
-    //           body: jsonEncode(payload),
-    //         );
-
-    //         print("Status from $urlStr: ${httpResponse.statusCode}");
-    //         print("Body from $urlStr: ${httpResponse.body}");
-
-    //         if (httpResponse.statusCode >= 200 &&
-    //             httpResponse.statusCode < 500 &&
-    //             httpResponse.body.isNotEmpty) {
-    //           final model = loginModelFromJson(httpResponse.body);
-    //           final sStr = model.success?.toString().toLowerCase();
-    //           final cStr = model.code?.toString();
-    //           if (model.success == true ||
-    //               sStr == 'true' ||
-    //               sStr == '1' ||
-    //               sStr == 'success' ||
-    //               model.code == 200 ||
-    //               cStr == '200' ||
-    //               cStr == '0' ||
-    //               model.data != null) {
-    //             return model;
-    //           }
-    //         }
-    //       } catch (e) {
-    //         print("Verify OTP request failed on $urlStr: $e");
-    //       }
-    //     }
-    //   }
-    // }
-
+    // Mobile/Desktop/Fallback: use Dio.
     try {
       final response = await dio.post(
         ApiManager.verifyOtpUrl,
@@ -303,6 +315,11 @@ class AuthService extends GetxService {
       }
       return null;
     } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AuthService] DioException in verifyOtp: ${e.response?.statusCode}',
+        );
+      }
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
           return LoginModel.fromJson(e.response!.data);
@@ -310,6 +327,9 @@ class AuthService extends GetxService {
       }
       return null;
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AuthService] Unexpected error in verifyOtp: $e');
+      }
       return null;
     }
   }
@@ -320,13 +340,11 @@ class AuthService extends GetxService {
     String model,
     String brand,
   ) {
-    final Map<String, dynamic> deviceData = {
+    return {
       "devicetype": phone,
       "deviceid": deviceId,
       "model": model,
       "brand": brand,
     };
-    print("deviceData: $deviceData");
-    return deviceData;
   }
 }
