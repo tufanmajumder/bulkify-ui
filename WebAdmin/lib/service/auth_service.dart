@@ -102,40 +102,40 @@ class AuthService extends GetxService {
     print("target URL in login...$targetUrl");
     print("payload in login...$dataMap");
 
-    // 1. Web execution with multi-proxy fallback
-    if (kIsWeb) {
-      final List<String> urlsToTry = [
-        targetUrl,
-        "https://thingproxy.freeboard.io/fetch/$targetUrl",
-        "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
-      ];
+    // // 1. Web execution with multi-proxy fallback
+    // if (kIsWeb) {
+    //   final List<String> urlsToTry = [
+    //     targetUrl,
+    //     "https://thingproxy.freeboard.io/fetch/$targetUrl",
+    //     "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
+    //   ];
 
-      for (final urlStr in urlsToTry) {
-        try {
-          print("Attempting web login via: $urlStr");
-          final httpResponse = await http.post(
-            Uri.parse(urlStr),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode(dataMap),
-          );
+    //   for (final urlStr in urlsToTry) {
+    //     try {
+    //       print("Attempting web login via: $urlStr");
+    //       final httpResponse = await http.post(
+    //         Uri.parse(urlStr),
+    //         headers: {
+    //           'Content-Type': 'application/json',
+    //           'Accept': 'application/json',
+    //         },
+    //         body: jsonEncode(dataMap),
+    //       );
 
-          print("Status from $urlStr: ${httpResponse.statusCode}");
-          print("Body from $urlStr: ${httpResponse.body}");
+    //       print("Status from $urlStr: ${httpResponse.statusCode}");
+    //       print("Body from $urlStr: ${httpResponse.body}");
 
-          if (httpResponse.statusCode >= 200 &&
-              httpResponse.statusCode < 500 &&
-              httpResponse.body.isNotEmpty) {
-            final LoginModel parsed = loginModelFromJson(httpResponse.body);
-            return parsed;
-          }
-        } catch (e) {
-          print("Request to $urlStr failed: $e");
-        }
-      }
-    }
+    //       if (httpResponse.statusCode >= 200 &&
+    //           httpResponse.statusCode < 500 &&
+    //           httpResponse.body.isNotEmpty) {
+    //         final LoginModel parsed = loginModelFromJson(httpResponse.body);
+    //         return parsed;
+    //       }
+    //     } catch (e) {
+    //       print("Request to $urlStr failed: $e");
+    //     }
+    //   }
+    // }
 
     // 2. Dio execution (For Mobile/Desktop/Fallback)
     try {
@@ -232,54 +232,54 @@ class AuthService extends GetxService {
 
     print("target URL in verifyOtp...$targetUrl");
 
-    if (kIsWeb) {
-      final List<String> urlsToTry = [
-        targetUrl,
-        "https://corsproxy.io/?$targetUrl",
-        "https://thingproxy.freeboard.io/fetch/$targetUrl",
-        "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
-      ];
+    // if (kIsWeb) {
+    //   final List<String> urlsToTry = [
+    //     targetUrl,
+    //     "https://corsproxy.io/?$targetUrl",
+    //     "https://thingproxy.freeboard.io/fetch/$targetUrl",
+    //     "https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}",
+    //   ];
 
-      for (final payload in payloadsToTry) {
-        print("payload in verifyOtp...$payload");
-        for (final urlStr in urlsToTry) {
-          try {
-            print("Attempting web verifyOtp via: $urlStr");
-            final httpResponse = await http.post(
-              Uri.parse(urlStr),
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              body: jsonEncode(payload),
-            );
+    //   for (final payload in payloadsToTry) {
+    //     print("payload in verifyOtp...$payload");
+    //     for (final urlStr in urlsToTry) {
+    //       try {
+    //         print("Attempting web verifyOtp via: $urlStr");
+    //         final httpResponse = await http.post(
+    //           Uri.parse(urlStr),
+    //           headers: {
+    //             'Content-Type': 'application/json',
+    //             'Accept': 'application/json',
+    //           },
+    //           body: jsonEncode(payload),
+    //         );
 
-            print("Status from $urlStr: ${httpResponse.statusCode}");
-            print("Body from $urlStr: ${httpResponse.body}");
+    //         print("Status from $urlStr: ${httpResponse.statusCode}");
+    //         print("Body from $urlStr: ${httpResponse.body}");
 
-            if (httpResponse.statusCode >= 200 &&
-                httpResponse.statusCode < 500 &&
-                httpResponse.body.isNotEmpty) {
-              final model = loginModelFromJson(httpResponse.body);
-              final sStr = model.success?.toString().toLowerCase();
-              final cStr = model.code?.toString();
-              if (model.success == true ||
-                  sStr == 'true' ||
-                  sStr == '1' ||
-                  sStr == 'success' ||
-                  model.code == 200 ||
-                  cStr == '200' ||
-                  cStr == '0' ||
-                  model.data != null) {
-                return model;
-              }
-            }
-          } catch (e) {
-            print("Verify OTP request failed on $urlStr: $e");
-          }
-        }
-      }
-    }
+    //         if (httpResponse.statusCode >= 200 &&
+    //             httpResponse.statusCode < 500 &&
+    //             httpResponse.body.isNotEmpty) {
+    //           final model = loginModelFromJson(httpResponse.body);
+    //           final sStr = model.success?.toString().toLowerCase();
+    //           final cStr = model.code?.toString();
+    //           if (model.success == true ||
+    //               sStr == 'true' ||
+    //               sStr == '1' ||
+    //               sStr == 'success' ||
+    //               model.code == 200 ||
+    //               cStr == '200' ||
+    //               cStr == '0' ||
+    //               model.data != null) {
+    //             return model;
+    //           }
+    //         }
+    //       } catch (e) {
+    //         print("Verify OTP request failed on $urlStr: $e");
+    //       }
+    //     }
+    //   }
+    // }
 
     try {
       final response = await dio.post(

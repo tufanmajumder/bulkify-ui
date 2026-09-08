@@ -4,6 +4,8 @@ import 'package:bulkify/app/data/service/auth_service.dart';
 import 'package:bulkify/app/data/utils/string_manager.dart';
 import 'package:bulkify/app/data/utils/widget_manager.dart';
 import 'package:bulkify/app/routes/app_pages.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +20,7 @@ class OtpValidationController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isAgreedToTerms = true.obs;
   Timer? _timer;
+  String deviceAllInfo = "";
 
   @override
   void onInit() {
@@ -27,7 +30,7 @@ class OtpValidationController extends GetxController {
     } else {
       phoneNumber.value = '9876543210';
     }
-
+    showDeviceInfo(Get.context!);
     //startResendTimer();
     otpController.addListener(_validateOtp);
   }
@@ -79,7 +82,7 @@ class OtpValidationController extends GetxController {
     try {
       final VerifyOtpModel? response = await _authService.verifyOtp(
         channel: 1,
-        deviceinfo: "",
+        deviceinfo: deviceAllInfo,
         identifier: phoneNumber.value,
         otp: otp,
       );
@@ -142,6 +145,80 @@ class OtpValidationController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  showDeviceInfo(BuildContext context) async {
+    String deviceId = 'Unknown';
+    String model = 'Unknown';
+    String brand = 'Unknown';
+    String deviceType = 'Phone';
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (kIsWeb) {
+        final webInfo = await deviceInfo.webBrowserInfo;
+        print("deviceInfo...${webInfo.userAgent}");
+        deviceId = webInfo.userAgent ?? 'Web Browser';
+        model = webInfo.browserName.name;
+        final vendor = webInfo.vendor;
+        brand = (vendor != null && vendor.isNotEmpty) ? vendor : 'Web Browser';
+        deviceType = 'Web Browser';
+      } else if (defaultTargetPlatform == TargetPlatform.android) {
+        final androidInfo = await deviceInfo.androidInfo;
+        deviceId = androidInfo.id;
+        model = androidInfo.model;
+        brand = androidInfo.brand;
+        if (context.mounted) {
+          final shortestSide = MediaQuery.of(context).size.shortestSide;
+          deviceType = shortestSide >= 600 ? 'Tablet' : 'Phone';
+        } else {
+          deviceType = 'Phone';
+        }
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        deviceId = iosInfo.identifierForVendor ?? 'Unknown iOS';
+        model = iosInfo.name.isNotEmpty ? iosInfo.name : iosInfo.model;
+        brand = 'Apple';
+        deviceType = iosInfo.model.toLowerCase().contains('ipad')
+            ? 'Tablet'
+            : 'Phone';
+      } else if (defaultTargetPlatform == TargetPlatform.windows) {
+        final windowsInfo = await deviceInfo.windowsInfo;
+        deviceId = windowsInfo.deviceId;
+        model = windowsInfo.computerName;
+        brand = 'Microsoft';
+        deviceType = 'Desktop';
+      } else if (defaultTargetPlatform == TargetPlatform.macOS) {
+        final macInfo = await deviceInfo.macOsInfo;
+        deviceId = macInfo.systemGUID ?? 'Unknown macOS';
+        model = macInfo.model;
+        brand = 'Apple';
+        deviceType = 'Desktop';
+      } else if (defaultTargetPlatform == TargetPlatform.linux) {
+        final linuxInfo = await deviceInfo.linuxInfo;
+        deviceId = linuxInfo.machineId ?? 'Unknown Linux';
+        model = linuxInfo.name;
+        brand = linuxInfo.variant ?? 'Linux';
+        deviceType = 'Desktop';
+      }
+    } catch (e) {
+      deviceId = 'Error: $e';
+    }
+
+    final infoObj = _authService.convertData(
+      deviceType,
+      deviceId,
+      model,
+      brand,
+    );
+    deviceAllInfo = WidgetManager().convertData(
+      deviceType,
+      deviceId,
+      model,
+      brand,
+    );
+    print("Generated plain deviceinfo payload: $infoObj");
+    print("Generated plain deviceinfo payload: $deviceAllInfo");
+    //return infoObj;
   }
 
   // void resendOtp() {

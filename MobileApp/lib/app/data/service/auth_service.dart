@@ -105,6 +105,7 @@ class AuthService extends GetConnect implements GetxService {
       final response = await dio.post(url, data: dataMap);
       print("verifyOtp status...${response.statusCode}");
       print("verifyOtp data...${response.data}");
+      print("verifyOtp data...$dataMap");
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
           return VerifyOtpModel.fromJson(response.data);
