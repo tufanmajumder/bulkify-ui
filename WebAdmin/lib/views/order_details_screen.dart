@@ -1,10 +1,10 @@
+import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/order_details_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
 import 'widgets/header.dart';
 import 'widgets/sidebar.dart';
-import 'package:intl/intl.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
   const OrderDetailsScreen({super.key});
@@ -135,9 +135,7 @@ class OrderDetailsScreen extends StatelessWidget {
       children: [
         _buildOrderDetailsCard(context, controller),
         SizedBox(height: spacingHeight),
-        _buildShippingAddressCard(context, controller),
-        SizedBox(height: spacingHeight),
-        _buildBillingAddressCard(context, controller),
+        _buildShippingAndBillingAddressCard(context, controller),
         SizedBox(height: spacingHeight),
         _buildPriceDetailsCard(context, controller),
         SizedBox(height: spacingHeight),
@@ -157,6 +155,13 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFE5E5E6),
+            blurRadius: 6.0,
+            spreadRadius: 2.2,
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -165,79 +170,158 @@ class OrderDetailsScreen extends StatelessWidget {
           Text(
             'Order Details',
             style: TextStyle(
+              fontFamily: 'Public-Sans',
               fontSize: Responsive.sp(context, 15),
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 16),
-          Obx(
-            () => Column(
-              children: [
-                _buildKeyValueRow(
-                  'Order No',
-                  controller.orderNo.value,
-                  isBoldValue: true,
-                ),
-                const SizedBox(height: 12),
-                _buildKeyValueRow('Date', controller.date.value),
-                const SizedBox(height: 12),
-                _buildKeyValueRow(
-                  'Time',
-                  DateFormat(
-                    'hh:mm a',
-                  ).format(DateTime.parse(controller.time.value)),
-                ),
-                const SizedBox(height: 12),
-                _buildKeyValueRow(
-                  'Customer',
-                  controller.customer.value,
-                  isBoldValue: true,
-                ),
-                const SizedBox(height: 12),
-                _buildKeyValueRow(
-                  'Company',
-                  controller.company.value,
-                  isBoldValue: true,
-                ),
-                const SizedBox(height: 12),
-                _buildKeyValueRow(
-                  'Payment',
-                  controller.paymentMethod.value,
-                  customValueWidget: Text(
-                    controller.paymentMethod.value[0].toUpperCase() +
-                        controller.paymentMethod.value.substring(1),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF10B981),
-                    ),
+          // Obx(
+          //   () =>
+          Column(
+            children: [
+              _buildKeyValueRow(
+                'Order No',
+                controller.orderNo.value,
+                isBoldValue: true,
+              ),
+              const SizedBox(height: 10),
+              DottedLine(
+                direction: Axis.horizontal,
+                alignment: WrapAlignment.center,
+                lineLength: double.infinity,
+                lineThickness: 1.0,
+                dashLength: 4.0,
+                dashColor: Colors.grey.shade300,
+                dashGapLength: 2.0,
+                dashGapColor: Colors.transparent,
+              ),
+              const SizedBox(height: 10),
+              _buildKeyValueRow(
+                'Date',
+                controller.date.value,
+                isBoldValue: true,
+              ),
+              const SizedBox(height: 10),
+              DottedLine(
+                direction: Axis.horizontal,
+                alignment: WrapAlignment.center,
+                lineLength: double.infinity,
+                lineThickness: 1.0,
+                dashLength: 4.0,
+                dashColor: Colors.grey.shade300,
+                dashGapLength: 2.0,
+                dashGapColor: Colors.transparent,
+              ),
+              const SizedBox(height: 10),
+              _buildKeyValueRow(
+                'Time',
+                controller.time.value,
+                isBoldValue: true,
+              ),
+              const SizedBox(height: 10),
+              DottedLine(
+                direction: Axis.horizontal,
+                alignment: WrapAlignment.center,
+                lineLength: double.infinity,
+                lineThickness: 1.0,
+                dashLength: 4.0,
+                dashColor: Colors.grey.shade300,
+                dashGapLength: 2.0,
+                dashGapColor: Colors.transparent,
+              ),
+              const SizedBox(height: 10),
+              _buildKeyValueRow(
+                'Customer',
+                controller.customer.value,
+                isBoldValue: false,
+              ),
+              const SizedBox(height: 10),
+              DottedLine(
+                direction: Axis.horizontal,
+                alignment: WrapAlignment.center,
+                lineLength: double.infinity,
+                lineThickness: 1.0,
+                dashLength: 4.0,
+                dashColor: Colors.grey.shade300,
+                dashGapLength: 2.0,
+                dashGapColor: Colors.transparent,
+              ),
+              const SizedBox(height: 10),
+              _buildKeyValueRow(
+                'Company',
+                controller.company.value,
+                isBoldValue: true,
+              ),
+              const SizedBox(height: 10),
+              DottedLine(
+                direction: Axis.horizontal,
+                alignment: WrapAlignment.center,
+                lineLength: double.infinity,
+                lineThickness: 1.0,
+                dashLength: 4.0,
+                dashColor: Colors.grey.shade300,
+                dashGapLength: 2.0,
+                dashGapColor: Colors.transparent,
+              ),
+              const SizedBox(height: 10),
+              _buildKeyValueRow(
+                'Payment',
+                controller.paymentMethod.value,
+                customValueWidget: Text(
+                  (controller.paymentMethod.value.trim().isEmpty ||
+                          controller.paymentMethod.value.trim() == 'null' ||
+                          controller.paymentMethod.value.trim() == '-')
+                      ? '-'
+                      : controller.paymentMethod.value[0].toUpperCase() +
+                            controller.paymentMethod.value.substring(1),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF10B981),
                   ),
                 ),
-                const SizedBox(height: 12),
-                _buildKeyValueRow(
-                  'Shipment',
-                  controller.shipmentStatus.value,
-                  customValueWidget: Text(
-                    controller.shipmentStatus.value[0].toUpperCase() +
-                        controller.shipmentStatus.value.substring(1),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFF97316),
-                    ),
+              ),
+              const SizedBox(height: 10),
+              DottedLine(
+                direction: Axis.horizontal,
+                alignment: WrapAlignment.center,
+                lineLength: double.infinity,
+                lineThickness: 1.0,
+                dashLength: 4.0,
+                dashColor: Colors.grey.shade300,
+                dashGapLength: 2.0,
+                dashGapColor: Colors.transparent,
+              ),
+              const SizedBox(height: 10),
+              _buildKeyValueRow(
+                'Shipment',
+                controller.shipmentStatus.value,
+                customValueWidget: Text(
+                  (controller.shipmentStatus.value.trim().isEmpty ||
+                          controller.shipmentStatus.value.trim() == 'null' ||
+                          controller.shipmentStatus.value.trim() == '-')
+                      ? '-'
+                      : controller.shipmentStatus.value[0].toUpperCase() +
+                            controller.shipmentStatus.value.substring(1),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFF97316),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          //),
         ],
       ),
     );
   }
 
-  // 2. Shipping Address Card
-  Widget _buildShippingAddressCard(
+  // 2. Shipping & Billing Address Card
+  Widget _buildShippingAndBillingAddressCard(
     BuildContext context,
     OrderDetailsController controller,
   ) {
@@ -248,154 +332,177 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Shipping Address',
-            style: TextStyle(
-              fontSize: Responsive.sp(context, 15),
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Obx(
-            () => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  controller.shippingName.value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  controller.shippingPhone.value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  controller.shippingAddress.value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF64748B),
-                    ),
-                    children: [
-                      const TextSpan(text: 'Pincode: '),
-                      TextSpan(
-                        text: controller.shippingPincode.value,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFE5E5E6),
+            blurRadius: 6.0,
+            spreadRadius: 2.2,
           ),
         ],
       ),
-    );
-  }
+      padding: const EdgeInsets.all(20),
+      child: Obx(
+        () => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- Shipping Address ---
+            Text(
+              'Shipping Address',
+              style: TextStyle(
+                fontFamily: 'Public-Sans',
+                fontSize: Responsive.sp(context, 15),
+                fontWeight: FontWeight.w400,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              (controller.shippingName.value.trim().isEmpty ||
+                      controller.shippingName.value.trim() == 'null')
+                  ? '-'
+                  : controller.shippingName.value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              (controller.shippingPhone.value.trim().isEmpty ||
+                      controller.shippingPhone.value.trim() == 'null')
+                  ? '-'
+                  : controller.shippingPhone.value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              (controller.shippingAddress.value.trim().isEmpty ||
+                      controller.shippingAddress.value.trim() == 'null')
+                  ? '-'
+                  : controller.shippingAddress.value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF1E293B),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 4),
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF1E293B),
+                ),
+                children: [
+                  const TextSpan(text: 'Pincode: '),
+                  TextSpan(
+                    text:
+                        (controller.shippingPincode.value.trim().isEmpty ||
+                            controller.shippingPincode.value.trim() == 'null')
+                        ? '-'
+                        : controller.shippingPincode.value,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-  // 3. Billing Address Card
-  Widget _buildBillingAddressCard(
-    BuildContext context,
-    OrderDetailsController controller,
-  ) {
-    final borderColor = const Color(0xFFE2E8F0);
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Billing Address',
-            style: TextStyle(
-              fontSize: Responsive.sp(context, 15),
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
+            const SizedBox(height: 16),
+            DottedLine(
+              direction: Axis.horizontal,
+              alignment: WrapAlignment.center,
+              lineLength: double.infinity,
+              lineThickness: 1.0,
+              dashLength: 4.0,
+              dashColor: Colors.grey.shade300,
+              dashGapLength: 2.0,
+              dashGapColor: Colors.transparent,
             ),
-          ),
-          const SizedBox(height: 14),
-          Obx(
-            () => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  controller.billingName.value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                  ),
+            const SizedBox(height: 16),
+
+            // --- Billing Address ---
+            Text(
+              'Billing Address',
+              style: TextStyle(
+                fontFamily: 'Public-Sans',
+                fontSize: Responsive.sp(context, 15),
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              (controller.billingName.value.trim().isEmpty ||
+                      controller.billingName.value.trim() == 'null')
+                  ? '-'
+                  : controller.billingName.value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              (controller.billingPhone.value.trim().isEmpty ||
+                      controller.billingPhone.value.trim() == 'null')
+                  ? '-'
+                  : controller.billingPhone.value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              (controller.billingAddress.value.trim().isEmpty ||
+                      controller.billingAddress.value.trim() == 'null')
+                  ? '-'
+                  : controller.billingAddress.value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 4),
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF64748B),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  controller.billingPhone.value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  controller.billingAddress.value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                RichText(
-                  text: TextSpan(
+                children: [
+                  const TextSpan(text: 'Pincode: '),
+                  TextSpan(
+                    text:
+                        (controller.billingPincode.value.trim().isEmpty ||
+                            controller.billingPincode.value.trim() == 'null')
+                        ? '-'
+                        : controller.billingPincode.value,
                     style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF475569),
                     ),
-                    children: [
-                      const TextSpan(text: 'Pincode: '),
-                      TextSpan(
-                        text: controller.billingPincode.value,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -411,6 +518,13 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFE5E5E6),
+            blurRadius: 6.0,
+            spreadRadius: 2.2,
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -419,9 +533,10 @@ class OrderDetailsScreen extends StatelessWidget {
           Text(
             'Price Details',
             style: TextStyle(
+              fontFamily: 'Public-Sans',
               fontSize: Responsive.sp(context, 15),
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 16),
@@ -431,64 +546,160 @@ class OrderDetailsScreen extends StatelessWidget {
                 _buildKeyValueRow(
                   'Subtotal',
                   controller.subtotal.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Shipping Fee',
                   controller.shippingFee.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Platform Fee',
                   controller.platformFee.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Bank Fee',
                   controller.bankFee.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Discount 10%',
                   controller.discountPercent.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Coupon #WELCOME10',
                   controller.couponDiscount.value,
                   isBoldValue: true,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Tax',
                   controller.tax.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'CGST',
                   controller.cgst.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'SGST',
                   controller.sgst.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12.0),
-                  child: Divider(color: Color(0xFFF1F5F9), height: 1),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
                 ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Total:',
                   controller.grandTotal.value,
-                  isBoldLabel: true,
+                  isBoldLabel: false,
                   isBoldValue: true,
                   valueFontSize: 15,
                 ),
@@ -511,6 +722,13 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFE5E5E6),
+            blurRadius: 6.0,
+            spreadRadius: 2.2,
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -519,30 +737,161 @@ class OrderDetailsScreen extends StatelessWidget {
           Text(
             'Documents',
             style: TextStyle(
+              fontFamily: 'Public-Sans',
               fontSize: Responsive.sp(context, 15),
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 16),
-          Obx(
-            () => controller.documents.isEmpty
-                ? Text("No Document Found")
-                : Column(
-                    children: controller.documents.map((doc) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              doc.title,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF64748B),
+          Obx(() {
+            final List<Widget> docRows = [];
+            final standardTypes = [
+              'Invoice',
+              'Way Bill',
+              'Credit Note',
+              'Debit Note',
+              'Delivery Challan',
+              'Quotation',
+            ];
+
+            final processedTitles = <String>{};
+
+            for (int i = 0; i < standardTypes.length; i++) {
+              final typeTitle = standardTypes[i];
+              processedTitles.add(typeTitle.toLowerCase().replaceAll(' ', ''));
+
+              DocumentModel? matchedDoc;
+              for (final doc in controller.documents) {
+                final normTitle = doc.title.toLowerCase().replaceAll(' ', '');
+                if (normTitle == typeTitle.toLowerCase().replaceAll(' ', '')) {
+                  matchedDoc = doc;
+                  break;
+                }
+              }
+
+              final docToUse = matchedDoc;
+              final hasFile =
+                  docToUse != null &&
+                  docToUse.code.trim().isNotEmpty &&
+                  docToUse.code.trim() != 'null' &&
+                  docToUse.code.trim() != '-';
+
+              if (i > 0) {
+                docRows.add(const SizedBox(height: 10));
+                docRows.add(
+                  DottedLine(
+                    direction: Axis.horizontal,
+                    alignment: WrapAlignment.center,
+                    lineLength: double.infinity,
+                    lineThickness: 1.0,
+                    dashLength: 4.0,
+                    dashColor: Colors.grey.shade300,
+                    dashGapLength: 2.0,
+                    dashGapColor: Colors.transparent,
+                  ),
+                );
+                docRows.add(const SizedBox(height: 10));
+              }
+
+              docRows.add(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      typeTitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                    hasFile
+                        ? InkWell(
+                            onTap: () => controller.downloadDocument(docToUse),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.download_outlined,
+                                    size: 14,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    docToUse.code,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            InkWell(
+                          )
+                        : const Text(
+                            '-',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                  ],
+                ),
+              );
+            }
+
+            // Append any additional documents from controller.documents not in standard types
+            for (final doc in controller.documents) {
+              final normTitle = doc.title.toLowerCase().replaceAll(' ', '');
+              if (!processedTitles.contains(normTitle)) {
+                final hasFile =
+                    doc.code.trim().isNotEmpty &&
+                    doc.code.trim() != 'null' &&
+                    doc.code.trim() != '-';
+
+                docRows.add(const SizedBox(height: 10));
+                docRows.add(
+                  DottedLine(
+                    direction: Axis.horizontal,
+                    alignment: WrapAlignment.center,
+                    lineLength: double.infinity,
+                    lineThickness: 1.0,
+                    dashLength: 4.0,
+                    dashColor: Colors.grey.shade300,
+                    dashGapLength: 2.0,
+                    dashGapColor: Colors.transparent,
+                  ),
+                );
+                docRows.add(const SizedBox(height: 10));
+
+                docRows.add(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        doc.title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      hasFile
+                          ? InkWell(
                               onTap: () => controller.downloadDocument(doc),
                               borderRadius: BorderRadius.circular(6),
                               child: Container(
@@ -577,13 +926,23 @@ class OrderDetailsScreen extends StatelessWidget {
                                   ],
                                 ),
                               ),
+                            )
+                          : const Text(
+                              '-',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF64748B),
+                              ),
                             ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                    ],
                   ),
-          ),
+                );
+              }
+            }
+
+            return Column(children: docRows);
+          }),
         ],
       ),
     );
@@ -619,6 +978,13 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFE5E5E6),
+            blurRadius: 6.0,
+            spreadRadius: 2.2,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -628,12 +994,14 @@ class OrderDetailsScreen extends StatelessWidget {
             child: Text(
               'Payments Transactions',
               style: TextStyle(
+                fontFamily: 'Public-Sans',
                 fontSize: Responsive.sp(context, 15),
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1E293B),
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
               ),
             ),
           ),
+          Divider(height: 1, color: Colors.grey.shade300),
           LayoutBuilder(
             builder: (context, constraints) {
               final double tableWidth = constraints.maxWidth < 800
@@ -651,7 +1019,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           horizontal: 20,
                           vertical: 12,
                         ),
-                        color: const Color(0xFFFAFAFA),
+                        color: Colors.white,
                         child: const Row(
                           children: [
                             Expanded(
@@ -659,8 +1027,9 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Text(
                                 'ISSUED BY',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -671,8 +1040,9 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Text(
                                 'CREATED ON',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -683,8 +1053,9 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Text(
                                 'PAYMENT ID',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -695,8 +1066,9 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Text(
                                 'RRN/UTR',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -707,8 +1079,9 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Text(
                                 'STATUS',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -719,8 +1092,9 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Text(
                                 'AMOUNT',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -732,8 +1106,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'RECEIPT',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -742,133 +1117,152 @@ class OrderDetailsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                      Divider(height: 1, color: Colors.grey.shade300),
                       // Table Rows
                       Obx(
-                        () => Column(
-                          children: controller.transactions.map((tx) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 14,
-                              ),
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(color: Color(0xFFF1F5F9)),
+                        () => controller.transactions.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text("No Transaction found!"),
                                 ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      tx.issuedBy,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF64748B),
+                              )
+                            : Column(
+                                children: controller.transactions.map((tx) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 14,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade300,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      tx.createdOn,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF64748B),
-                                        height: 1.3,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Column(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          tx.paymentId,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: Color(0xFF64748B),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            tx.issuedBy,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF64748B),
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          tx.paymentMethod,
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: Color(0xFF94A3B8),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            (tx.createdOn.trim().isEmpty ||
+                                                    tx.createdOn.trim() ==
+                                                        'null')
+                                                ? '-'
+                                                : controller.formatDateOnly(
+                                                    tx.createdOn,
+                                                  ),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF64748B),
+                                              height: 1.3,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 3,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                tx.paymentId,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                tx.paymentMethod,
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF94A3B8),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 3,
+                                          child: Text(
+                                            tx.rrnUtr,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFECFDF5),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                tx.status,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF10B981),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: _buildRupeeText(
+                                            tx.amount,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Center(
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.download_outlined,
+                                                size: 18,
+                                                color: Color(0xFF64748B),
+                                              ),
+                                              onPressed: () => controller
+                                                  .downloadReceipt(tx),
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      tx.rrnUtr,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFECFDF5),
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          tx.status,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF10B981),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      tx.amount,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Center(
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.download_outlined,
-                                          size: 18,
-                                          color: Color(0xFF64748B),
-                                        ),
-                                        onPressed: () =>
-                                            controller.downloadReceipt(tx),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                  );
+                                }).toList(),
                               ),
-                            );
-                          }).toList(),
-                        ),
                       ),
                     ],
                   ),
@@ -892,6 +1286,13 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFE5E5E6),
+            blurRadius: 6.0,
+            spreadRadius: 2.2,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,12 +1302,15 @@ class OrderDetailsScreen extends StatelessWidget {
             child: Text(
               'Order Items',
               style: TextStyle(
+                fontFamily: 'Public-Sans',
                 fontSize: Responsive.sp(context, 15),
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1E293B),
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
               ),
             ),
           ),
+          Divider(height: 1, color: Colors.grey.shade300),
+
           LayoutBuilder(
             builder: (context, constraints) {
               final double tableWidth = constraints.maxWidth < 700
@@ -924,7 +1328,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           horizontal: 20,
                           vertical: 12,
                         ),
-                        color: const Color(0xFFFAFAFA),
+                        color: Colors.white,
                         child: const Row(
                           children: [
                             Expanded(
@@ -932,8 +1336,9 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Text(
                                 'PRODUCT',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -945,8 +1350,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'PRICE',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -958,8 +1364,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'QTY',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -971,8 +1378,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'TOTAL',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                   color: Color(0xFF475569),
                                   letterSpacing: 0.5,
                                 ),
@@ -981,87 +1389,113 @@ class OrderDetailsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                      Divider(height: 1, color: Colors.grey.shade300),
                       // Product Rows
                       Obx(
-                        () => Column(
-                          children: controller.orderItems.map((item) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(color: Color(0xFFF1F5F9)),
+                        () => controller.orderItems.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text("No orders found!"),
                                 ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 5,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                              )
+                            : Column(
+                                children: controller.orderItems.map((item) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
                                       children: [
-                                        Text(
-                                          item.name,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF1E293B),
+                                        Expanded(
+                                          flex: 5,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                (item.name.trim().isEmpty ||
+                                                        item.name.trim() ==
+                                                            'null')
+                                                    ? '-'
+                                                    : item.name,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF1E293B),
+                                                ),
+                                              ),
+                                              if (item.description
+                                                      .trim()
+                                                      .isNotEmpty &&
+                                                  item.description.trim() !=
+                                                      'null' &&
+                                                  item.description.trim() !=
+                                                      '-') ...[
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  item.description,
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color: Color(0xFF94A3B8),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          item.merchant,
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: Color(0xFF94A3B8),
+                                        Expanded(
+                                          flex: 2,
+                                          child: _buildRupeeText(
+                                            item.price,
+                                            textAlign: TextAlign.right,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            '${item.qty}',
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Align(
+                                            alignment: Alignment.centerRight,
+                                            child: _buildRupeeText(
+                                              item.total.contains('₹')
+                                                  ? item.total
+                                                  : '₹ ${item.total}',
+                                              textAlign: TextAlign.right,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                                color: Color(0xFF475569),
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      item.price,
-                                      textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      '${item.qty}',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      item.total,
-                                      textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF475569),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                  );
+                                }).toList(),
                               ),
-                            );
-                          }).toList(),
-                        ),
                       ),
                     ],
                   ),
@@ -1086,6 +1520,13 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFE5E5E6),
+            blurRadius: 6.0,
+            spreadRadius: 2.2,
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -1094,109 +1535,152 @@ class OrderDetailsScreen extends StatelessWidget {
           Text(
             'Shipping Activity',
             style: TextStyle(
+              fontFamily: 'Public-Sans',
               fontSize: Responsive.sp(context, 15),
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E293B),
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 24),
           Obx(
-            () => ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.shippingActivities.length,
-              itemBuilder: (context, index) {
-                final activity = controller.shippingActivities[index];
-                final isLast =
-                    index == controller.shippingActivities.length - 1;
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Timeline dot and connecting vertical line
-                    Column(
-                      children: [
-                        const SizedBox(height: 3),
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: activity.isCompleted
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF94A3B8),
-                          ),
-                        ),
-                        if (!isLast)
-                          Container(
-                            width: 2,
-                            height: 48,
-                            color: const Color(0xFFE2E8F0),
-                          ),
-                      ],
+            () => controller.shippingActivities.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text("No shipping activity found!"),
                     ),
-                    const SizedBox(width: 16),
-                    // Activity Title, Timestamp, Description
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1E293B),
-                                      ),
-                                      children: [
-                                        TextSpan(text: activity.title),
-                                        if (activity.highlightText != null) ...[
-                                          const TextSpan(text: ' '),
-                                          TextSpan(
-                                            text: activity.highlightText!,
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.shippingActivities.length,
+                    itemBuilder: (context, index) {
+                      final activity = controller.shippingActivities[index];
+                      final isLast =
+                          index == controller.shippingActivities.length - 1;
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Timeline dot and connecting vertical line
+                          Column(
+                            children: [
+                              const SizedBox(height: 3),
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: activity.isCompleted
+                                      ? const Color(0xFF10B981)
+                                      : const Color(0xFF94A3B8),
+                                ),
+                              ),
+                              if (!isLast)
+                                Container(
+                                  width: 2,
+                                  height: 48,
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 16),
+                          // Activity Title, Timestamp, Description
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: RichText(
+                                          text: TextSpan(
                                             style: const TextStyle(
-                                              color: Color(0xFFCF4340),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF1E293B),
                                             ),
+                                            children: [
+                                              TextSpan(text: activity.title),
+                                              if (activity.highlightText !=
+                                                  null) ...[
+                                                const TextSpan(text: ' '),
+                                                TextSpan(
+                                                  text: activity.highlightText!,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFFCF4340),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
-                                        ],
-                                      ],
+                                        ),
+                                      ),
+                                      Text(
+                                        activity.timestamp,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF94A3B8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    activity.description,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF94A3B8),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  activity.timestamp,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF94A3B8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              activity.description,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF94A3B8),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRupeeText(
+    String text, {
+    TextStyle? style,
+    TextAlign textAlign = TextAlign.start,
+  }) {
+    if (!text.contains('₹')) {
+      return Text(text, style: style, textAlign: textAlign);
+    }
+
+    final baseStyle = style ?? const TextStyle();
+    final List<InlineSpan> spans = [];
+    final parts = text.split('₹');
+
+    for (int i = 0; i < parts.length; i++) {
+      if (parts[i].isNotEmpty) {
+        spans.add(TextSpan(text: parts[i]));
+      }
+      if (i < parts.length - 1) {
+        spans.add(
+          TextSpan(
+            text: '₹',
+            style: baseStyle.copyWith(fontFamily: 'Inter'),
+          ),
+        );
+      }
+    }
+
+    return Text.rich(
+      TextSpan(style: baseStyle, children: spans),
+      textAlign: textAlign,
     );
   }
 
@@ -1208,12 +1692,18 @@ class OrderDetailsScreen extends StatelessWidget {
     double valueFontSize = 13,
     Widget? customValueWidget,
   }) {
+    final cleanValue = value.trim();
+    final displayValue = (cleanValue.isEmpty || cleanValue == 'null')
+        ? '-'
+        : value;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
+            fontFamily: 'Public-Sans',
             fontSize: isBoldLabel ? 14 : 13,
             fontWeight: isBoldLabel ? FontWeight.bold : FontWeight.w400,
             color: isBoldLabel
@@ -1222,15 +1712,56 @@ class OrderDetailsScreen extends StatelessWidget {
           ),
         ),
         customValueWidget ??
-            Text(
-              value,
+            _buildRupeeText(
+              displayValue,
               style: TextStyle(
                 fontSize: valueFontSize,
-                fontWeight: isBoldValue ? FontWeight.bold : FontWeight.w500,
+                fontWeight: (isBoldValue && label == "Total:")
+                    ? FontWeight.w800
+                    : (isBoldValue && label != "Total:")
+                    ? FontWeight.w600
+                    : FontWeight.w500,
                 color: const Color(0xFF1E293B),
               ),
             ),
       ],
     );
   }
+}
+
+class DottedLinePainter extends CustomPainter {
+  final Color color;
+  final double dashLength;
+  final double dashGap;
+  final double strokeWidth;
+
+  DottedLinePainter({
+    this.color = Colors.black,
+    this.dashLength = 5.0,
+    this.dashGap = 3.0,
+    this.strokeWidth = 1.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    double startX = 0;
+    while (startX < size.width) {
+      // Draw a single dash segment
+      canvas.drawLine(
+        Offset(startX, size.height / 2),
+        Offset(startX + dashLength, size.height / 2),
+        paint,
+      );
+      // Move forward by the length of the dash + the gap space
+      startX += dashLength + dashGap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

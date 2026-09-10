@@ -52,31 +52,31 @@ class OrderListScreen extends StatelessWidget {
                         SizedBox(height: spacingHeight * 1.2),
 
                         // Page Footer
-                        Container(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: RichText(
-                              textAlign: TextAlign.right,
-                              text: TextSpan(
-                                style: TextStyle(
-                                  fontSize: Responsive.sp(context, 13),
-                                  color: const Color(0xFF64748B),
-                                ),
-                                children: const [
-                                  TextSpan(text: '© Devolved by '),
-                                  TextSpan(
-                                    text: 'Digital Trident Solutions',
-                                    style: TextStyle(
-                                      color: Color(0xFFCF4340),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        // Container(
+                        //   alignment: Alignment.centerRight,
+                        //   child: Padding(
+                        //     padding: const EdgeInsets.only(bottom: 12.0),
+                        //     child: RichText(
+                        //       textAlign: TextAlign.right,
+                        //       text: TextSpan(
+                        //         style: TextStyle(
+                        //           fontSize: Responsive.sp(context, 13),
+                        //           color: const Color(0xFF64748B),
+                        //         ),
+                        //         children: const [
+                        //           TextSpan(text: '© Devolved by '),
+                        //           TextSpan(
+                        //             text: 'Digital Trident Solutions',
+                        //             style: TextStyle(
+                        //               color: Color(0xFFCF4340),
+                        //               fontWeight: FontWeight.w600,
+                        //             ),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -584,34 +584,49 @@ class OrderListScreen extends StatelessWidget {
                                   // DATE & TIME
                                   Expanded(
                                     flex: 3,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          displayDate.split(" ")[0],
-                                          textAlign: TextAlign.start,
-                                          style: TextStyle(
-                                            fontSize: fontSize,
-                                            color: const Color(0xFF475569),
-                                          ),
-                                        ),
-                                        if (displayDate.isNotEmpty) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            displayDate.split(" ")[1] +
-                                                displayDate.split(" ")[2],
-                                            textAlign: TextAlign.start,
-                                            style: TextStyle(
-                                              fontSize: fontSize - 2,
-                                              fontWeight: FontWeight.w400,
-                                              color: const Color(0xFF64748B),
+                                    child: Builder(
+                                      builder: (context) {
+                                        final dateParts = displayDate.split(
+                                          ' ',
+                                        );
+                                        final dateLine1 = dateParts.isNotEmpty
+                                            ? dateParts[0]
+                                            : '-';
+                                        final dateLine2 = dateParts.length > 1
+                                            ? dateParts.sublist(1).join(' ')
+                                            : '';
+
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              dateLine1,
+                                              textAlign: TextAlign.start,
+                                              style: TextStyle(
+                                                fontSize: fontSize,
+                                                color: const Color(0xFF475569),
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ],
+                                            if (dateLine2.isNotEmpty) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                dateLine2,
+                                                textAlign: TextAlign.start,
+                                                style: TextStyle(
+                                                  fontSize: fontSize - 2,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: const Color(
+                                                    0xFF64748B,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        );
+                                      },
                                     ),
                                   ),
 
@@ -668,8 +683,16 @@ class OrderListScreen extends StatelessWidget {
                                     flex: 2,
                                     child: _buildPaymentStatusCell(
                                       context,
-                                      order.paymentStatus[0].toUpperCase() +
-                                          order.paymentStatus.substring(1),
+                                      (order.paymentStatus.trim().isEmpty ||
+                                              order.paymentStatus.trim() ==
+                                                  'null' ||
+                                              order.paymentStatus.trim() == '-')
+                                          ? '-'
+                                          : order.paymentStatus[0]
+                                                    .toUpperCase() +
+                                                order.paymentStatus.substring(
+                                                  1,
+                                                ),
                                     ),
                                   ),
 
@@ -678,8 +701,13 @@ class OrderListScreen extends StatelessWidget {
                                     flex: 2,
                                     child: _buildOrderStatusBadge(
                                       context,
-                                      order.orderStatus[0].toUpperCase() +
-                                          order.orderStatus.substring(1),
+                                      (order.orderStatus.trim().isEmpty ||
+                                              order.orderStatus.trim() ==
+                                                  'null' ||
+                                              order.orderStatus.trim() == '-')
+                                          ? '-'
+                                          : order.orderStatus[0].toUpperCase() +
+                                                order.orderStatus.substring(1),
                                     ),
                                   ),
 

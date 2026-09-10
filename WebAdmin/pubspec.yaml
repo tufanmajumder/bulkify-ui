@@ -38,6 +38,7 @@ dependencies:
   device_info_plus: ^11.3.0
   shared_preferences: ^2.5.5
   intl: ^0.19.0
+  dotted_line: ^3.3.0
 
 dev_dependencies:
   flutter_test:
@@ -91,6 +92,21 @@ flutter:
         weight: 600
       - asset: assets/fonts/Poppins-Bold.ttf
         weight: 700
+  - family: Public Sans
+    fonts:
+      - asset: assets/fonts/PublicSans-Light.ttf
+        weight: 300
+      #- asset: assets/fonts/public-sans.regular.ttf
+      - asset: assets/fonts/PublicSans-Regular.ttf
+        weight: 400
+      - asset: assets/fonts/PublicSans-Medium.ttf
+        weight: 500
+      # - asset: assets/fonts/public-sans.medium.ttf
+      #   weight: 700
+  - family: Inter
+    fonts:
+      - asset: assets/fonts/Inter-Regular.ttf
+        weight: 400
   # fonts:
   #   - family: Schyler
   #     fonts:

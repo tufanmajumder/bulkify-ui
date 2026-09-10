@@ -19,6 +19,7 @@ class BulkifyAdminApp extends StatelessWidget {
       title: 'Admin App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'Public Sans',
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF6F7FB),
         colorScheme: ColorScheme.fromSeed(

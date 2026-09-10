@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_profile_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
@@ -570,6 +570,10 @@ class UserProfileScreen extends StatelessWidget {
   }
 
   Widget _buildInfoRow(BuildContext context, String label, String value) {
+    final cleanValue = value.trim();
+    final displayValue =
+        (cleanValue.isEmpty || cleanValue == 'null') ? '-' : value;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -582,7 +586,7 @@ class UserProfileScreen extends StatelessWidget {
         ),
         Flexible(
           child: Text(
-            value,
+            displayValue,
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

@@ -26,18 +26,20 @@ class PaymentTransactionModel {
 
 class OrderItemModel {
   final String name;
-  final String merchant;
+  final String description;
   final String price;
   final int qty;
   final String total;
 
   OrderItemModel({
     required this.name,
-    required this.merchant,
+    required this.description,
     required this.price,
     required this.qty,
     required this.total,
   });
+
+  String get merchant => description;
 }
 
 class DocumentModel {
@@ -127,7 +129,7 @@ class OrderDetailsController extends GetxController {
       selectedOrder.value = args;
       salesorderId = args.salesorderId.isNotEmpty ? args.salesorderId : args.id;
       if (args.id.isNotEmpty && args.id != '-') {
-        orderNo.value = args.id.startsWith('#') ? args.id : '#${args.id}';
+        orderNo.value = args.id;
       }
       if (args.customerName.isNotEmpty && args.customerName != '-') {
         customer.value = args.customerName;
@@ -142,14 +144,11 @@ class OrderDetailsController extends GetxController {
         shipmentStatus.value = args.orderStatus;
       }
       if (args.amount.isNotEmpty) {
-        grandTotal.value = args.amount;
+        grandTotal.value = _formatPriceVal(args.amount);
       }
       if (args.date.isNotEmpty && args.date != '-') {
-        final parts = args.date.split(' ');
-        if (parts.isNotEmpty) date.value = parts[0];
-        if (parts.length > 1) {
-          time.value = parts.sublist(1).join(' ');
-        }
+        date.value = formatDateOnly(args.date);
+        time.value = _formatTimeOnly(args.date);
       }
     } else if (args is String) {
       salesorderId = args;
@@ -264,7 +263,7 @@ class OrderDetailsController extends GetxController {
 
     if (num != null && num.toString().trim().isNotEmpty) {
       final numStr = num.toString().trim();
-      orderNo.value = numStr.startsWith('#') ? numStr : '#$numStr';
+      orderNo.value = numStr;
     } else {
       orderNo.value = '';
     }
@@ -274,7 +273,7 @@ class OrderDetailsController extends GetxController {
         data['salesorder_date'] ??
         data['created_time'] ??
         data['created_at'];
-    date.value = dateVal != null ? _formatDateOnly(dateVal.toString()) : '';
+    date.value = dateVal != null ? formatDateOnly(dateVal.toString()) : '';
 
     final timeVal = data['time'] ?? data['created_time'] ?? data['created_at'];
     time.value = timeVal != null ? _formatTimeOnly(timeVal.toString()) : '';
@@ -475,13 +474,14 @@ class OrderDetailsController extends GetxController {
                           tx['bank'] ??
                           '')
                       .toString(),
-              createdOn:
-                  (tx['created_on'] ??
-                          tx['created_time'] ??
-                          tx['date'] ??
-                          tx['created_at'] ??
-                          '')
-                      .toString(),
+              createdOn: formatDateOnly(
+                (tx['created_on'] ??
+                        tx['created_time'] ??
+                        tx['date'] ??
+                        tx['created_at'] ??
+                        '')
+                    .toString(),
+              ),
               paymentId:
                   (tx['payment_id'] ??
                           tx['transaction_id'] ??
@@ -542,11 +542,13 @@ class OrderDetailsController extends GetxController {
                   (item['name'] ??
                           item['item_name'] ??
                           item['product_name'] ??
-                          item['item_description'] ??
                           '')
                       .toString(),
-              merchant:
-                  (item['merchant_name'] ??
+              description:
+                  (item['description'] ??
+                          item['item_description'] ??
+                          item['details'] ??
+                          item['merchant_name'] ??
                           item['vendor'] ??
                           item['brand'] ??
                           item['seller_name'] ??
@@ -563,7 +565,7 @@ class OrderDetailsController extends GetxController {
           }
           return OrderItemModel(
             name: '',
-            merchant: '',
+            description: '',
             price: '',
             qty: 0,
             total: '',
@@ -609,33 +611,120 @@ class OrderDetailsController extends GetxController {
   }
 
   String _formatPriceVal(dynamic raw) {
-    if (raw == null) return '';
+    if (raw == null) return '-';
     final str = raw.toString().trim();
-    if (str.isEmpty || str == 'null') return '';
-    final parsed = double.tryParse(str);
+    if (str.isEmpty || str == 'null') return '-';
+    final cleanStr = str.replaceAll('₹', '').trim();
+    final parsed = double.tryParse(cleanStr);
     if (parsed != null) {
       return '₹ ${parsed.toStringAsFixed(2)}';
     }
     return str;
   }
 
-  String _formatDateOnly(String raw) {
-    if (raw.isEmpty || raw == 'null') return '';
-    if (raw.contains(' ')) {
-      return raw.split(' ')[0];
+  String formatDateOnly(String raw) {
+    final str = raw.trim();
+    if (str.isEmpty || str == 'null' || str == '-') return '-';
+
+    // 1. Try parsing full DateTime (ISO, yyyy-MM-dd, etc.)
+    DateTime? dt = DateTime.tryParse(str);
+    if (dt == null && str.contains(' ')) {
+      dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
     }
-    return raw;
+    if (dt != null) {
+      final dd = dt.day.toString().padLeft(2, '0');
+      final mm = dt.month.toString().padLeft(2, '0');
+      final yyyy = dt.year.toString().padLeft(4, '0');
+      return '$dd-$mm-$yyyy';
+    }
+
+    // 2. Extract date portion if input contains time
+    String datePart = str;
+    if (str.contains(' ')) {
+      datePart = str.split(RegExp(r'\s+'))[0];
+    }
+
+    // 3. Parse date components
+    final components = datePart.split(RegExp(r'[-/.]'));
+    if (components.length == 3) {
+      String? dd, mm, yyyy;
+
+      if (components[0].length == 4) {
+        // yyyy-MM-dd
+        yyyy = components[0];
+        mm = components[1].padLeft(2, '0');
+        dd = components[2].padLeft(2, '0');
+      } else if (components[2].length == 4) {
+        // dd-MM-yyyy
+        dd = components[0].padLeft(2, '0');
+        mm = components[1].padLeft(2, '0');
+        yyyy = components[2];
+      } else if (components[2].length == 2) {
+        // dd-MM-yy
+        dd = components[0].padLeft(2, '0');
+        mm = components[1].padLeft(2, '0');
+        yyyy = '20${components[2]}';
+      }
+
+      if (dd != null && mm != null && yyyy != null) {
+        return '$dd-$mm-$yyyy';
+      }
+    }
+
+    return datePart;
   }
 
   String _formatTimeOnly(String raw) {
-    if (raw.isEmpty || raw == 'null') return '';
-    if (raw.contains(' ')) {
-      final parts = raw.split(' ');
-      if (parts.length > 1) {
-        return parts.sublist(1).join(' ');
+    final str = raw.trim();
+    if (str.isEmpty || str == 'null' || str == '-') return '-';
+
+    // 1. Try parsing full DateTime
+    DateTime? dt = DateTime.tryParse(str);
+    if (dt == null && str.contains(' ')) {
+      dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
+    }
+    if (dt != null) {
+      int hr = dt.hour % 12;
+      if (hr == 0) hr = 12;
+      final hrStr = hr.toString().padLeft(2, '0');
+      final minStr = dt.minute.toString().padLeft(2, '0');
+      final period = dt.hour >= 12 ? 'PM' : 'AM';
+      return '$hrStr:$minStr $period';
+    }
+
+    // 2. Extract time component if input contains Date & Time
+    String timePart = str;
+    if (str.contains(' ')) {
+      final parts = str.split(RegExp(r'\s+'));
+      if (parts.length > 1 &&
+          (parts[0].contains('-') || parts[0].contains('/'))) {
+        timePart = parts.sublist(1).join(' ');
       }
     }
-    return raw;
+
+    // 3. Match HH:mm:ss or HH:mm with optional AM/PM
+    final timeMatch = RegExp(
+      r'^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$',
+    ).firstMatch(timePart.trim());
+    if (timeMatch != null) {
+      int hr = int.parse(timeMatch.group(1)!);
+      final minStr = timeMatch.group(2)!;
+      final ampm = timeMatch.group(3);
+
+      if (ampm != null && ampm.isNotEmpty) {
+        final period = ampm.toUpperCase();
+        final hrStr = hr.toString().padLeft(2, '0');
+        return '$hrStr:$minStr $period';
+      } else {
+        final period = hr >= 12 ? 'PM' : 'AM';
+        hr = hr % 12;
+        if (hr == 0) hr = 12;
+        final hrStr = hr.toString().padLeft(2, '0');
+        return '$hrStr:$minStr $period';
+      }
+    }
+
+    return timePart;
   }
 
   String _buildAddressString(Map map) {

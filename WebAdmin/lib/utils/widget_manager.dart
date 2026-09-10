@@ -186,7 +186,7 @@ class WidgetManager {
             child: Text(
               formattedMessage,
               style: TextStyle(
-                fontFamily: 'Poppins',
+                fontFamily: 'Public Sans',
                 color: textColor,
                 fontSize: 13.5,
                 fontWeight: FontWeight.w500,
@@ -241,10 +241,10 @@ class WidgetManager {
     );
   }
 
-  /// Reusable & Custom Dynamic Text Widget using Poppins font across the entire app.
+  /// Reusable & Custom Dynamic Text Widget using Public Sans font across the entire app.
   static Widget customText({
     required String text,
-    String fontName = 'Poppins',
+    String fontName = 'Public Sans',
     double? fontSize,
     Color? color,
     FontWeight? fontWeight,
@@ -324,7 +324,7 @@ class WidgetManager {
                     ],
                     customText(
                       text: text,
-                      fontName: 'Poppins',
+                      fontName: 'Public Sans',
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: textColor,
