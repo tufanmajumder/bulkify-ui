@@ -1,9 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/user_model.dart';
+import 'package:admin_app/service/user_service.dart';
 
 class UserController extends GetxController {
   // Reactive list of all users
   final RxList<UserModel> users = <UserModel>[].obs;
+
+  // Summary state from API
+  final Rxn<UserSummaryModel> summary = Rxn<UserSummaryModel>();
+
+  // Loading & Error states
+  final RxBool isLoading = false.obs;
+  final RxString errorMessage = ''.obs;
 
   // Search and Filter states
   final RxString searchQuery = ''.obs;
@@ -11,14 +20,64 @@ class UserController extends GetxController {
   final RxString selectedStatus = 'All'.obs;
 
   // Pagination states
-  final RxInt currentPage = 3.obs;
+  final RxInt currentPage = 1.obs;
   final RxInt rowsPerPage = 10.obs;
+
+  late final UserService _userService;
 
   @override
   void onInit() {
     super.onInit();
-    _loadInitialUsers();
+    _userService = Get.isRegistered<UserService>()
+        ? Get.find<UserService>()
+        : Get.put(UserService());
+    fetchUsers();
   }
+
+  /// Calls getUserList API from ApiManager (via UserService) and updates user list & summary.
+  Future<void> fetchUsers() async {
+    isLoading.value = true;
+    errorMessage.value = '';
+
+    try {
+      final result = await _userService.getUserList();
+
+      if (result.isTokenExpired) {
+        errorMessage.value = 'Session expired. Please log in again.';
+        Get.offAllNamed('/login');
+        return;
+      }
+
+      if (result.success || result.code == 200) {
+        if (result.summary != null) {
+          summary.value = result.summary;
+        }
+        if (result.users.isNotEmpty) {
+          users.assignAll(result.users);
+        } else {
+          // If backend returns empty list, fall back to initial data for demo/preview
+          _loadInitialUsers();
+        }
+        currentPage.value = 1;
+      } else {
+        errorMessage.value = result.message;
+        if (users.isEmpty) {
+          _loadInitialUsers();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[UserController] Error fetching users: $e');
+      }
+      errorMessage.value = 'Failed to load users';
+      if (users.isEmpty) {
+        _loadInitialUsers();
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
 
   void _loadInitialUsers() {
     // Demo data uses clearly fictional identifiers (example.com, 90000XXXXX)

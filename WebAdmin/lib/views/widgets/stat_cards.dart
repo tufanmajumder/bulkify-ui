@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
@@ -20,9 +20,23 @@ class StatCards extends StatelessWidget {
             : (width - 48) / 4;
 
         return Obx(() {
+          final summary = controller.summary.value;
           final inactiveCount = controller.users
               .where((u) => u.status == 'Inactive')
               .length;
+
+          final activeUsersVal = summary != null
+              ? '${summary.activeUsers}'
+              : '19,860';
+          final pendingUsersVal = summary != null
+              ? '${summary.pendingUsers}'
+              : '237';
+          final inactiveUsersVal = summary != null
+              ? '${summary.inactiveUsers}'
+              : '${4567 + (inactiveCount - 4)}';
+          final activeSessionVal = summary != null
+              ? '${summary.activeSession}'
+              : '21,459';
 
           return Wrap(
             spacing: 16,
@@ -32,7 +46,7 @@ class StatCards extends StatelessWidget {
                 context: context,
                 width: cardWidth,
                 title: 'Active Users',
-                value: '19,860',
+                value: activeUsersVal,
                 percentage: '(-14%)',
                 isNegative: true,
                 subtitle: 'Last week analytics',
@@ -44,7 +58,7 @@ class StatCards extends StatelessWidget {
                 context: context,
                 width: cardWidth,
                 title: 'Pending Users',
-                value: '237',
+                value: pendingUsersVal,
                 percentage: '(+42%)',
                 isNegative: false,
                 subtitle: 'Last week analytics',
@@ -56,7 +70,7 @@ class StatCards extends StatelessWidget {
                 context: context,
                 width: cardWidth,
                 title: 'Inactive Users',
-                value: '${4567 + (inactiveCount - 4)}',
+                value: inactiveUsersVal,
                 percentage: '(+18%)',
                 isNegative: false,
                 subtitle: 'Last week analytics',
@@ -68,7 +82,7 @@ class StatCards extends StatelessWidget {
                 context: context,
                 width: cardWidth,
                 title: 'Active Session',
-                value: '21,459',
+                value: activeSessionVal,
                 percentage: '(+29%)',
                 isNegative: false,
                 subtitle: 'Total Users',

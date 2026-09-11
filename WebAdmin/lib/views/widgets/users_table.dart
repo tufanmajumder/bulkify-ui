@@ -85,25 +85,37 @@ class UsersTable extends StatelessWidget {
                       ),
                     ),
 
-                    // Empty State if no users
-                    if (users.isEmpty)
+                    // Loading state
+                    if (controller.isLoading.value)
+                      Container(
+                        padding: const EdgeInsets.all(40),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFCF4340),
+                          ),
+                        ),
+                      )
+                    // Empty / Error State if no users
+                    else if (users.isEmpty)
                       Container(
                         padding: const EdgeInsets.all(40),
                         child: Center(
                           child: Text(
-                            'No users found matching criteria.',
+                            controller.errorMessage.value.isNotEmpty
+                                ? controller.errorMessage.value
+                                : 'No users found',
                             style: TextStyle(
                               color: const Color(0xFF94A3B8),
                               fontSize: Responsive.sp(context, 14),
                             ),
                           ),
                         ),
-                      ),
-
+                      )
                     // Table Data Rows
-                    ...users.map(
-                      (user) => _buildDataRow(context, controller, user),
-                    ),
+                    else
+                      ...users.map(
+                        (user) => _buildDataRow(context, controller, user),
+                      ),
                   ],
                 ),
               ),
@@ -145,13 +157,21 @@ class UsersTable extends StatelessWidget {
         border: Border(bottom: BorderSide(color: borderColor)),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // NAME Column
           Expanded(
             flex: 3,
             child: Row(
               children: [
-                Icon(Icons.circle, color: Colors.grey[600], size: 8),
+                Icon(
+                  Icons.circle,
+                  color: isActive
+                      ? const Color(0xFF22C55E)
+                      : const Color(0xFFEF4444),
+                  size: 8,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   user.name,
@@ -207,14 +227,51 @@ class UsersTable extends StatelessWidget {
           // LAST LOGIN Column
           Expanded(
             flex: 2,
-            child: Text(
-              user.lastLogin,
-              style: TextStyle(
-                color: const Color(0xFF475569),
-                fontSize: Responsive.sp(context, 13.5),
-                fontWeight: FontWeight.w400,
-              ),
+            child: Builder(
+              builder: (context) {
+                final dateParts = user.lastLogin.split(' ');
+                print("data partss...$dateParts");
+                final dateLine1 = dateParts.isNotEmpty ? dateParts[0] : '-';
+                final dateLine2 = dateParts.length > 1
+                    ? dateParts.sublist(1).join(' ')
+                    : '';
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      dateLine1,
+                      textAlign: TextAlign.start,
+                      style: TextStyle(
+                        fontSize: Responsive.sp(context, 13.5),
+                        color: const Color(0xFF475569),
+                      ),
+                    ),
+                    if (dateLine2.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        dateLine2,
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontSize: Responsive.sp(context, 13.5),
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
+            // child: Text(
+            //   user.lastLogin,
+            //   style: TextStyle(
+            //     color: const Color(0xFF475569),
+            //     fontSize: Responsive.sp(context, 13.5),
+            //     fontWeight: FontWeight.w400,
+            //   ),
+            // ),
           ),
 
           // STATUS Column (Plain colored text as shown in screenshot)

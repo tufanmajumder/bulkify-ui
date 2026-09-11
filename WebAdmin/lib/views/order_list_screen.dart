@@ -667,14 +667,30 @@ class OrderListScreen extends StatelessWidget {
                                   // AMOUNT
                                   Expanded(
                                     flex: 2,
-                                    child: Text(
-                                      order.amount,
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        fontSize: fontSize,
-                                        fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF475569),
-                                      ),
+                                    child: Row(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 28.0),
+                                          child: Text(
+                                            "₹ ",
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: fontSize,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xFF475569),
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          order.amount,
+                                          //textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                            fontSize: fontSize,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xFF475569),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
 
@@ -849,7 +865,7 @@ class OrderListScreen extends StatelessWidget {
 
   // Payment Status Bullet Cell
   Widget _buildPaymentStatusCell(BuildContext context, String status) {
-    final isPending = status.toLowerCase() == 'pending';
+    final isPending = status.toLowerCase() == 'unpaid';
     final color = isPending ? const Color(0xFFF97316) : const Color(0xFF10B981);
 
     return Text(

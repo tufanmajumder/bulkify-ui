@@ -571,8 +571,9 @@ class UserProfileScreen extends StatelessWidget {
 
   Widget _buildInfoRow(BuildContext context, String label, String value) {
     final cleanValue = value.trim();
-    final displayValue =
-        (cleanValue.isEmpty || cleanValue == 'null') ? '-' : value;
+    final displayValue = (cleanValue.isEmpty || cleanValue == 'null')
+        ? '-'
+        : value;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

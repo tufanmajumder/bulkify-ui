@@ -134,8 +134,8 @@ class OrderModel {
     // Extract Amount ("total", "amount", "grand_total")
     final amountRaw = json['total'] ?? '0.00';
     String amountStr = amountRaw != null
-        ? "₹ ${double.parse(amountRaw.toString().trim()).toStringAsFixed(2)}"
-        : '₹ 0.00';
+        ? "${double.parse(amountRaw.toString().trim()).toStringAsFixed(2)}"
+        : '0.00';
 
     return OrderModel(
       id: idDisplay,
