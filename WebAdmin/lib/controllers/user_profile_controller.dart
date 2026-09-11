@@ -98,16 +98,16 @@ class UserProfileController extends GetxController {
 
   void _loadInitialInvoices() {
     final List<Map<String, String>> baseInvoices = [
-      {'id': '#4910', 'total': '\$3428', 'date': '22 Oct 2026'},
-      {'id': '#4909', 'total': '\$2872', 'date': '18 Oct 2026'},
-      {'id': '#4908', 'total': '\$4077', 'date': '01 Feb 2026'},
-      {'id': '#4907', 'total': '\$2060', 'date': '08 Dec 2025'},
-      {'id': '#4906', 'total': '\$3128', 'date': '10 Sep 2025'},
-      {'id': '#4905', 'total': '\$2032', 'date': '30 Nov 2025'},
-      {'id': '#4904', 'total': '\$2230', 'date': '19 Nov 2025'},
-      {'id': '#4903', 'total': '\$5612', 'date': '12 Apr 2025'},
-      {'id': '#4902', 'total': '\$5293', 'date': '01 Aug 2025'},
-      {'id': '#4901', 'total': '\$1980', 'date': '15 May 2025'},
+      {'id': '#4910', 'total': '\$0', 'date': '22 Oct 2026'},
+      {'id': '#4909', 'total': '\$0', 'date': '18 Oct 2026'},
+      {'id': '#4908', 'total': '\$0', 'date': '01 Feb 2026'},
+      {'id': '#4907', 'total': '\$0', 'date': '08 Dec 2025'},
+      {'id': '#4906', 'total': '\$0', 'date': '10 Sep 2025'},
+      {'id': '#4905', 'total': '\$0', 'date': '30 Nov 2025'},
+      {'id': '#4904', 'total': '\$0', 'date': '19 Nov 2025'},
+      {'id': '#4903', 'total': '\$0', 'date': '12 Apr 2025'},
+      {'id': '#4902', 'total': '\$0', 'date': '01 Aug 2025'},
+      {'id': '#4901', 'total': '\$0', 'date': '15 May 2025'},
     ];
 
     // Expand to 50 items for pagination testing

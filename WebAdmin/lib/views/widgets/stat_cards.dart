@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
@@ -27,16 +27,16 @@ class StatCards extends StatelessWidget {
 
           final activeUsersVal = summary != null
               ? '${summary.activeUsers}'
-              : '19,860';
+              : '0';
           final pendingUsersVal = summary != null
               ? '${summary.pendingUsers}'
-              : '237';
+              : '0';
           final inactiveUsersVal = summary != null
               ? '${summary.inactiveUsers}'
-              : '${4567 + (inactiveCount - 4)}';
+              : '${0}';
           final activeSessionVal = summary != null
               ? '${summary.activeSession}'
-              : '21,459';
+              : '0';
 
           return Wrap(
             spacing: 16,

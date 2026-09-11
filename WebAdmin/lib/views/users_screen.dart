@@ -61,32 +61,32 @@ class UsersScreen extends StatelessWidget {
                         ),
                         SizedBox(height: spacingHeight * 1.2),
 
-                        // Page Footer
-                        Container(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: RichText(
-                              textAlign: TextAlign.center,
-                              text: TextSpan(
-                                style: TextStyle(
-                                  fontSize: Responsive.sp(context, 13),
-                                  color: const Color(0xFF64748B),
-                                ),
-                                children: const [
-                                  TextSpan(text: '© Developed by '),
-                                  TextSpan(
-                                    text: 'Digital Trident Solutions LLC',
-                                    style: TextStyle(
-                                      color: Color(0xFFCF4340),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        // // Page Footer
+                        // Container(
+                        //   alignment: Alignment.centerRight,
+                        //   child: Padding(
+                        //     padding: const EdgeInsets.only(bottom: 12.0),
+                        //     child: RichText(
+                        //       textAlign: TextAlign.center,
+                        //       text: TextSpan(
+                        //         style: TextStyle(
+                        //           fontSize: Responsive.sp(context, 13),
+                        //           color: const Color(0xFF64748B),
+                        //         ),
+                        //         children: const [
+                        //           TextSpan(text: '© Developed by '),
+                        //           TextSpan(
+                        //             text: 'Digital Trident Solutions LLC',
+                        //             style: TextStyle(
+                        //               color: Color(0xFFCF4340),
+                        //               fontWeight: FontWeight.w600,
+                        //             ),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
