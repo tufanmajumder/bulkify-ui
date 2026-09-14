@@ -13,4 +13,5 @@ class ApiManager {
   static const String getOrderList = "zoho/v1/salesorder/list";
   static const String getOrderDetails = "zoho/v1/salesorder/get";
   static const String getUserList = "users/v1/list";
+  static const String invoiceDownload = "zoho/v1/invoice/download";
 }

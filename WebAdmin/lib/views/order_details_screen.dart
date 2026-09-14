@@ -629,9 +629,13 @@ class OrderDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 _buildKeyValueRow(
-                  'Coupon #WELCOME10',
+                  controller.couponCode.value.isNotEmpty
+                      ? (controller.couponCode.value.startsWith('#')
+                            ? 'Coupon ${controller.couponCode.value}'
+                            : 'Coupon #${controller.couponCode.value}')
+                      : 'Coupon #WELCOME10',
                   controller.couponDiscount.value,
-                  isBoldValue: true,
+                  isBoldValue: false,
                 ),
                 const SizedBox(height: 10),
                 DottedLine(
@@ -771,11 +775,27 @@ class OrderDetailsScreen extends StatelessWidget {
               }
 
               final docToUse = matchedDoc;
-              final hasFile =
-                  docToUse != null &&
-                  docToUse.code.trim().isNotEmpty &&
-                  docToUse.code.trim() != 'null' &&
-                  docToUse.code.trim() != '-';
+              final isInvoiceRow =
+                  typeTitle.toLowerCase().replaceAll(' ', '') == 'invoice';
+              final hasInvoiceId =
+                  controller.invoiceId.value.trim().isNotEmpty &&
+                  controller.invoiceId.value.trim() != 'null';
+
+              final hasFile = isInvoiceRow
+                  ? hasInvoiceId
+                  : (docToUse != null &&
+                        docToUse.code.trim().isNotEmpty &&
+                        docToUse.code.trim() != 'null' &&
+                        docToUse.code.trim() != '-');
+
+              final String displayCode = isInvoiceRow
+                  ? (controller.invoiceNumber.value.trim().isNotEmpty
+                        ? controller.invoiceNumber.value
+                        : (docToUse?.code.trim().isNotEmpty == true &&
+                                  docToUse!.code != '-'
+                              ? docToUse.code
+                              : controller.invoiceId.value))
+                  : (docToUse?.code ?? '');
 
               if (i > 0) {
                 docRows.add(const SizedBox(height: 10));
@@ -807,7 +827,15 @@ class OrderDetailsScreen extends StatelessWidget {
                     ),
                     hasFile
                         ? InkWell(
-                            onTap: () => controller.downloadDocument(docToUse),
+                            onTap: () {
+                              if (isInvoiceRow) {
+                                controller.downloadInvoiceById(
+                                  controller.invoiceId.value,
+                                );
+                              } else if (docToUse != null) {
+                                controller.downloadDocument(docToUse);
+                              }
+                            },
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -824,14 +852,24 @@ class OrderDetailsScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
-                                    Icons.download_outlined,
-                                    size: 14,
-                                    color: Color(0xFF1E293B),
-                                  ),
+                                  isInvoiceRow &&
+                                          controller.isDownloadingInvoice.value
+                                      ? const SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Color(0xFF1E293B),
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.download_outlined,
+                                          size: 14,
+                                          color: Color(0xFF1E293B),
+                                        ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    docToUse.code,
+                                    displayCode,
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
@@ -1030,7 +1068,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1043,7 +1081,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1056,7 +1094,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1069,7 +1107,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1082,7 +1120,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1095,7 +1133,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1109,7 +1147,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1339,7 +1377,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1353,7 +1391,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1367,7 +1405,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1381,7 +1419,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
+                                  color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -1429,8 +1467,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                                     : item.name,
                                                 style: const TextStyle(
                                                   fontSize: 13,
+                                                  fontFamily: 'Public Sans',
                                                   fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF1E293B),
+                                                  color: Color(0xFF2F2B3D),
                                                 ),
                                               ),
                                               if (item.description
@@ -1444,6 +1483,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                                 Text(
                                                   item.description,
                                                   style: const TextStyle(
+                                                    fontFamily: 'Public Sans',
                                                     fontSize: 11,
                                                     color: Color(0xFF94A3B8),
                                                   ),
@@ -1469,6 +1509,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                             '${item.qty}',
                                             textAlign: TextAlign.center,
                                             style: const TextStyle(
+                                              fontFamily: 'Public Sans',
                                               fontSize: 13,
                                               color: Color(0xFF64748B),
                                             ),
@@ -1600,6 +1641,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                         child: RichText(
                                           text: TextSpan(
                                             style: const TextStyle(
+                                              fontFamily: 'Public Sans',
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,
                                               color: Color(0xFF1E293B),
@@ -1612,6 +1654,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                                 TextSpan(
                                                   text: activity.highlightText!,
                                                   style: const TextStyle(
+                                                    fontFamily: 'Public Sans',
                                                     color: Color(0xFFCF4340),
                                                   ),
                                                 ),
@@ -1623,6 +1666,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                       Text(
                                         activity.timestamp,
                                         style: const TextStyle(
+                                          fontFamily: 'Public Sans',
                                           fontSize: 12,
                                           color: Color(0xFF94A3B8),
                                         ),
@@ -1633,6 +1677,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   Text(
                                     activity.description,
                                     style: const TextStyle(
+                                      fontFamily: 'Public Sans',
                                       fontSize: 12,
                                       color: Color(0xFF94A3B8),
                                     ),
@@ -1691,17 +1736,23 @@ class OrderDetailsScreen extends StatelessWidget {
     bool isBoldValue = false,
     double valueFontSize = 13,
     Widget? customValueWidget,
+    Widget? customLabelWidget,
   }) {
     final cleanValue = value.trim();
     final displayValue = (cleanValue.isEmpty || cleanValue == 'null')
         ? '-'
         : value;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
+    Widget labelWidget;
+    if (customLabelWidget != null) {
+      labelWidget = customLabelWidget;
+    } else if (label.contains('#')) {
+      final hashIndex = label.indexOf('#');
+      final prefix = label.substring(0, hashIndex);
+      final code = label.substring(hashIndex);
+
+      labelWidget = Text.rich(
+        TextSpan(
           style: TextStyle(
             fontFamily: 'Public-Sans',
             fontSize: isBoldLabel ? 14 : 13,
@@ -1710,18 +1761,48 @@ class OrderDetailsScreen extends StatelessWidget {
                 ? const Color(0xFF1E293B)
                 : const Color(0xFF64748B),
           ),
+          children: [
+            TextSpan(text: prefix),
+            TextSpan(
+              text: code,
+              style: const TextStyle(
+                fontFamily: 'Public Sans',
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6D6B77),
+              ),
+            ),
+          ],
         ),
+      );
+    } else {
+      labelWidget = Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Public-Sans',
+          fontSize: isBoldLabel ? 14 : 13,
+          fontWeight: isBoldLabel ? FontWeight.bold : FontWeight.w400,
+          color: isBoldLabel
+              ? const Color(0xFF1E293B)
+              : const Color(0xFF64748B),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        labelWidget,
         customValueWidget ??
             _buildRupeeText(
               displayValue,
               style: TextStyle(
                 fontSize: valueFontSize,
-                fontWeight: (isBoldValue && label == "Total:")
+                fontWeight: (isBoldValue && label.startsWith("Total"))
                     ? FontWeight.w800
-                    : (isBoldValue && label != "Total:")
+                    : (isBoldValue && !label.startsWith("Total"))
                     ? FontWeight.w600
                     : FontWeight.w500,
-                color: const Color(0xFF1E293B),
+                color: const Color(0xFF444050),
               ),
             ),
       ],

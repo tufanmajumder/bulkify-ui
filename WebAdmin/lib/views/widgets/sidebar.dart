@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/views/order_list_screen.dart';
+import 'package:admin_app/views/payment_list_screen.dart';
 import 'package:admin_app/views/users_screen.dart';
 
 class Sidebar extends StatefulWidget {
@@ -32,15 +33,23 @@ class _SidebarState extends State<Sidebar> {
     final currentRoute = widget.activeRoute ?? Get.currentRoute;
     final routeLower = currentRoute.toLowerCase();
 
+    final isPaymentsActive =
+        currentRoute == '/payments' ||
+        currentRoute == '/payment-details' ||
+        routeLower.contains('payment');
     final isOrdersActive =
-        currentRoute == '/orders' || routeLower.contains('order');
+        (currentRoute == '/orders' || routeLower.contains('order')) &&
+        !isPaymentsActive;
     final isUsersActive =
         currentRoute == '/users' ||
         currentRoute == '/user-profile' ||
         routeLower.contains('user');
     final isDashboardActive =
         currentRoute == '/dashboard' ||
-        (currentRoute == '/' && !isOrdersActive);
+        (currentRoute == '/' &&
+            !isOrdersActive &&
+            !isUsersActive &&
+            !isPaymentsActive);
 
     return MouseRegion(
       onEnter: (_) {
@@ -101,7 +110,10 @@ class _SidebarState extends State<Sidebar> {
                   icon: Icons.home_outlined,
                   label: 'Dashboard',
                   isSelected:
-                      isDashboardActive && !isOrdersActive && !isUsersActive,
+                      isDashboardActive &&
+                      !isOrdersActive &&
+                      !isUsersActive &&
+                      !isPaymentsActive,
                   isExpanded: isExpanded,
                   onTap: () {
                     Get.offAll(
@@ -131,6 +143,19 @@ class _SidebarState extends State<Sidebar> {
                   isExpanded: isExpanded,
                   onTap: () {
                     Get.offAll(() => const UsersScreen(), routeName: '/users');
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildNavItem(
+                  icon: Icons.payments_outlined,
+                  label: 'Payment Details',
+                  isSelected: isPaymentsActive,
+                  isExpanded: isExpanded,
+                  onTap: () {
+                    Get.offAll(
+                      () => const PaymentListScreen(),
+                      routeName: '/payment-details',
+                    );
                   },
                 ),
                 const SizedBox(height: 12),

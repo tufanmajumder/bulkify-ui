@@ -1,5 +1,6 @@
 import 'package:admin_app/views/order_details_screen.dart';
 import 'package:admin_app/views/order_list_screen.dart';
+import 'package:admin_app/views/payment_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'views/login_screen.dart';
@@ -39,6 +40,8 @@ class BulkifyAdminApp extends StatelessWidget {
         GetPage(name: '/user-profile', page: () => const UserProfileScreen()),
         GetPage(name: '/orders', page: () => const OrderListScreen()),
         GetPage(name: '/order-details', page: () => const OrderDetailsScreen()),
+        GetPage(name: '/payment-details', page: () => const PaymentListScreen()),
+        GetPage(name: '/payments', page: () => const PaymentListScreen()),
       ],
     );
   }

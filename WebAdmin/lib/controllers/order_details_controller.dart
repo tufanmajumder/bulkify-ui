@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/order_model.dart';
 import 'package:admin_app/service/order_service.dart';
+import 'package:admin_app/utils/blob_downloader.dart';
 
 class PaymentTransactionModel {
   final String issuedBy;
@@ -100,10 +101,16 @@ class OrderDetailsController extends GetxController {
   final RxString bankFee = ''.obs;
   final RxString discountPercent = ''.obs;
   final RxString couponDiscount = ''.obs;
+  final RxString couponCode = '#WELCOME10'.obs;
   final RxString tax = ''.obs;
   final RxString cgst = ''.obs;
   final RxString sgst = ''.obs;
   final RxString grandTotal = ''.obs;
+
+  // Invoice details
+  final RxString invoiceId = ''.obs;
+  final RxString invoiceNumber = ''.obs;
+  final RxBool isDownloadingInvoice = false.obs;
 
   // Documents List
   final RxList<DocumentModel> documents = <DocumentModel>[].obs;
@@ -417,6 +424,10 @@ class OrderDetailsController extends GetxController {
     couponDiscount.value = _formatPriceVal(
       data['coupon_discount'] ?? data['coupon_amount'],
     );
+    if (data['coupon_code'] != null || data['coupon_name'] != null) {
+      couponCode.value = (data['coupon_code'] ?? data['coupon_name'])
+          .toString();
+    }
     tax.value = _formatPriceVal(
       data['tax_total'] ?? data['tax'] ?? data['tax_amount'],
     );
@@ -426,13 +437,57 @@ class OrderDetailsController extends GetxController {
       data['total'] ?? data['grand_total'] ?? data['amount'],
     );
 
+    // Extract invoice_id & invoice_number from data['invoices'] list or top-level keys
+    invoiceId.value = '';
+    invoiceNumber.value = '';
+
+    final invoicesList =
+        data['invoices'] ?? data['invoices_list'] ?? data['invoice'];
+    if (invoicesList is List && invoicesList.isNotEmpty) {
+      for (final inv in invoicesList) {
+        if (inv is Map) {
+          final id = (inv['invoice_id'] ?? inv['id'] ?? '').toString().trim();
+          if (id.isNotEmpty && id != 'null') {
+            invoiceId.value = id;
+            invoiceNumber.value =
+                (inv['invoice_number'] ?? inv['number'] ?? inv['invoice_id'] ?? id)
+                    .toString()
+                    .trim();
+            break;
+          }
+        }
+      }
+    } else if (invoicesList is Map) {
+      final id =
+          (invoicesList['invoice_id'] ?? invoicesList['id'] ?? '')
+              .toString()
+              .trim();
+      if (id.isNotEmpty && id != 'null') {
+        invoiceId.value = id;
+        invoiceNumber.value =
+            (invoicesList['invoice_number'] ?? invoicesList['number'] ?? id)
+                .toString()
+                .trim();
+      }
+    }
+
+    if (invoiceId.value.isEmpty &&
+        data['invoice_id'] != null &&
+        data['invoice_id'].toString().trim().isNotEmpty &&
+        data['invoice_id'].toString().trim() != 'null') {
+      invoiceId.value = data['invoice_id'].toString().trim();
+      invoiceNumber.value =
+          (data['invoice_number'] ?? data['invoice_id'] ?? '').toString().trim();
+    }
+
     // 5. Documents (if key missing -> empty list)
     final docsList = data['documents'] ?? data['document_list'] ?? data['docs'];
+    final List<DocumentModel> parsedDocs = [];
     if (docsList is List && docsList.isNotEmpty) {
-      documents.assignAll(
-        docsList.map((d) {
-          if (d is Map) {
-            return DocumentModel(
+      for (final d in docsList) {
+        if (d is Map) {
+          parsedDocs.add(
+            DocumentModel(
               title:
                   (d['title'] ??
                           d['name'] ??
@@ -447,14 +502,37 @@ class OrderDetailsController extends GetxController {
                           d['id'] ??
                           '')
                       .toString(),
-            );
-          }
-          return DocumentModel(title: 'Document', code: d.toString());
-        }).toList(),
+            ),
+          );
+        } else {
+          parsedDocs.add(DocumentModel(title: 'Document', code: d.toString()));
+        }
+      }
+    }
+
+    // Ensure 'Invoice' document entry in documents list matches invoiceId / invoiceNumber
+    final int existingInvoiceIdx = parsedDocs.indexWhere(
+      (doc) => doc.title.toLowerCase().replaceAll(' ', '') == 'invoice',
+    );
+    final String invoiceCodeToUse = invoiceId.value.isNotEmpty
+        ? (invoiceNumber.value.isNotEmpty
+              ? invoiceNumber.value
+              : invoiceId.value)
+        : '';
+
+    if (existingInvoiceIdx != -1) {
+      parsedDocs[existingInvoiceIdx] = DocumentModel(
+        title: 'Invoice',
+        code: invoiceCodeToUse,
       );
     } else {
-      documents.clear();
+      parsedDocs.insert(
+        0,
+        DocumentModel(title: 'Invoice', code: invoiceCodeToUse),
+      );
     }
+
+    documents.assignAll(parsedDocs);
 
     // 6. Payment Transactions (if key missing -> empty list)
     final txList =
@@ -739,7 +817,86 @@ class OrderDetailsController extends GetxController {
     return parts.join(', ');
   }
 
+  Future<void> downloadInvoiceById(String invId) async {
+    final targetInvoiceId = invId.trim().isNotEmpty
+        ? invId.trim()
+        : invoiceId.value.trim();
+
+    if (kDebugMode) {
+      debugPrint('[OrderDetailsController] Requesting invoice download for invoice_id: $targetInvoiceId');
+    }
+
+    if (targetInvoiceId.isEmpty || targetInvoiceId == 'null') {
+      Get.snackbar(
+        'Invoice Unavailable',
+        'No valid invoice ID found for this order. An invoice may not have been generated yet on Zoho.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    isDownloadingInvoice.value = true;
+    Get.snackbar(
+      'Download Started',
+      'Downloading invoice...',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: const Color(0xFF1E293B),
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+      duration: const Duration(seconds: 2),
+    );
+
+    try {
+      final bytes = await _orderService.downloadInvoice(
+        invoiceId: targetInvoiceId,
+      );
+
+      if (bytes != null && bytes.isNotEmpty) {
+        final filename = invoiceNumber.value.isNotEmpty
+            ? "Invoice_${invoiceNumber.value}.pdf"
+            : "Invoice_$targetInvoiceId.pdf";
+        downloadBlob(bytes, filename, mimeType: 'application/pdf');
+        Get.snackbar(
+          'Success',
+          'Invoice downloaded successfully.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF10B981),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      } else {
+        Get.snackbar(
+          'Download Failed',
+          'Failed to download invoice for ID: $targetInvoiceId.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFEF4444),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to download invoice: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    } finally {
+      isDownloadingInvoice.value = false;
+    }
+  }
+
   void downloadDocument(DocumentModel doc) {
+    if (doc.title.toLowerCase().replaceAll(' ', '') == 'invoice') {
+      downloadInvoiceById(invoiceId.value);
+      return;
+    }
+
     Get.snackbar(
       'Download Started',
       'Downloading ${doc.title} (${doc.code})...',

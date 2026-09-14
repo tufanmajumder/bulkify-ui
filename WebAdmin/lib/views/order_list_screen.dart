@@ -240,6 +240,7 @@ class OrderListScreen extends StatelessWidget {
               Text(
                 count,
                 style: TextStyle(
+                  fontFamily: 'Public Sans',
                   fontSize: Responsive.sp(context, 18),
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1E293B),
@@ -249,6 +250,7 @@ class OrderListScreen extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
+                  fontFamily: 'Public Sans',
                   fontSize: Responsive.sp(context, 12),
                   color: const Color(0xFF64748B),
                 ),
@@ -472,11 +474,26 @@ class OrderListScreen extends StatelessWidget {
                             ),
                             Expanded(
                               flex: 2,
-                              child: _buildHeaderCell(context, 'AMOUNT', true),
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 36),
+                                child: _buildHeaderCell(
+                                  context,
+                                  'AMOUNT',
+                                  true,
+                                  alignment: Alignment.centerRight,
+                                ),
+                              ),
                             ),
                             Expanded(
-                              flex: 2,
-                              child: _buildHeaderCell(context, 'PAYMENT', true),
+                              flex: 3,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: _buildHeaderCell(
+                                  context,
+                                  'PAYMENT',
+                                  true,
+                                ),
+                              ),
                             ),
                             Expanded(
                               flex: 2,
@@ -521,6 +538,7 @@ class OrderListScreen extends StatelessWidget {
                               child: Text(
                                 'No orders found',
                                 style: TextStyle(
+                                  fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   color: Color(0xFF94A3B8),
                                 ),
@@ -573,6 +591,7 @@ class OrderListScreen extends StatelessWidget {
                                         order.id,
                                         textAlign: TextAlign.start,
                                         style: TextStyle(
+                                          fontFamily: 'Public Sans',
                                           fontSize: fontSize,
                                           fontWeight: FontWeight.w600,
                                           color: const Color(0xFFCF4340),
@@ -606,6 +625,7 @@ class OrderListScreen extends StatelessWidget {
                                               dateLine1,
                                               textAlign: TextAlign.start,
                                               style: TextStyle(
+                                                fontFamily: 'Public Sans',
                                                 fontSize: fontSize,
                                                 color: const Color(0xFF475569),
                                               ),
@@ -616,6 +636,7 @@ class OrderListScreen extends StatelessWidget {
                                                 dateLine2,
                                                 textAlign: TextAlign.start,
                                                 style: TextStyle(
+                                                  fontFamily: 'Public Sans',
                                                   fontSize: fontSize - 2,
                                                   fontWeight: FontWeight.w400,
                                                   color: const Color(
@@ -643,6 +664,7 @@ class OrderListScreen extends StatelessWidget {
                                           displayCustomer,
                                           textAlign: TextAlign.start,
                                           style: TextStyle(
+                                            fontFamily: 'Public Sans',
                                             fontSize: fontSize,
                                             fontWeight: FontWeight.w400,
                                             color: const Color(0xFF64748B),
@@ -654,6 +676,7 @@ class OrderListScreen extends StatelessWidget {
                                             displayCompany,
                                             textAlign: TextAlign.start,
                                             style: TextStyle(
+                                              fontFamily: 'Public Sans',
                                               fontSize: fontSize - 2,
                                               fontWeight: FontWeight.w400,
                                               color: const Color(0xFF64748B),
@@ -667,48 +690,61 @@ class OrderListScreen extends StatelessWidget {
                                   // AMOUNT
                                   Expanded(
                                     flex: 2,
-                                    child: Row(
-                                      children: [
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 28.0),
-                                          child: Text(
-                                            "₹ ",
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: fontSize,
-                                              fontWeight: FontWeight.w500,
-                                              color: const Color(0xFF475569),
-                                            ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 36),
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text.rich(
+                                          TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: "₹ ",
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  fontSize: fontSize,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: const Color(
+                                                    0xFF475569,
+                                                  ),
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: order.amount,
+                                                style: TextStyle(
+                                                  fontFamily: 'Public Sans',
+                                                  fontSize: fontSize,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: const Color(
+                                                    0xFF475569,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        Text(
-                                          order.amount,
-                                          //textAlign: TextAlign.end,
-                                          style: TextStyle(
-                                            fontSize: fontSize,
-                                            fontWeight: FontWeight.w500,
-                                            color: const Color(0xFF475569),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
                                     ),
                                   ),
 
                                   // PAYMENT STATUS (text)
                                   Expanded(
-                                    flex: 2,
-                                    child: _buildPaymentStatusCell(
-                                      context,
-                                      (order.paymentStatus.trim().isEmpty ||
-                                              order.paymentStatus.trim() ==
-                                                  'null' ||
-                                              order.paymentStatus.trim() == '-')
-                                          ? '-'
-                                          : order.paymentStatus[0]
-                                                    .toUpperCase() +
-                                                order.paymentStatus.substring(
-                                                  1,
-                                                ),
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 20),
+                                      child: _buildPaymentStatusCell(
+                                        context,
+                                        (order.paymentStatus.trim().isEmpty ||
+                                                order.paymentStatus.trim() ==
+                                                    'null' ||
+                                                order.paymentStatus.trim() ==
+                                                    '-')
+                                            ? '-'
+                                            : order.paymentStatus[0]
+                                                      .toUpperCase() +
+                                                  order.paymentStatus.substring(
+                                                    1,
+                                                  ),
+                                      ),
                                     ),
                                   ),
 
@@ -872,6 +908,7 @@ class OrderListScreen extends StatelessWidget {
       status,
       textAlign: TextAlign.start,
       style: TextStyle(
+        fontFamily: 'Public Sans',
         fontSize: Responsive.sp(context, 13),
         fontWeight: FontWeight.w400,
         color: color,
@@ -909,6 +946,7 @@ class OrderListScreen extends StatelessWidget {
       child: Text(
         status,
         style: TextStyle(
+          fontFamily: 'Public Sans',
           fontSize: Responsive.sp(context, 13),
           fontWeight: FontWeight.w500,
           color: text,
@@ -934,6 +972,7 @@ class OrderListScreen extends StatelessWidget {
                   ? TextAlign.end
                   : TextAlign.start,
               style: TextStyle(
+                fontFamily: 'Public Sans',
                 fontSize: Responsive.sp(context, 12),
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF475569),
