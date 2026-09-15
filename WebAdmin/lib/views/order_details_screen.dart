@@ -577,23 +577,23 @@ class OrderDetailsScreen extends StatelessWidget {
                   dashGapColor: Colors.transparent,
                 ),
                 const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  'Platform Fee',
-                  controller.platformFee.value,
-                  isBoldValue: false,
-                ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
+                // _buildKeyValueRow(
+                //   'Platform Fee',
+                //   controller.platformFee.value,
+                //   isBoldValue: false,
+                // ),
+                // const SizedBox(height: 10),
+                // DottedLine(
+                //   direction: Axis.horizontal,
+                //   alignment: WrapAlignment.center,
+                //   lineLength: double.infinity,
+                //   lineThickness: 1.0,
+                //   dashLength: 4.0,
+                //   dashColor: Colors.grey.shade300,
+                //   dashGapLength: 2.0,
+                //   dashGapColor: Colors.transparent,
+                // ),
+                //const SizedBox(height: 10),
                 _buildKeyValueRow(
                   'Bank Fee',
                   controller.bankFee.value,
@@ -752,11 +752,11 @@ class OrderDetailsScreen extends StatelessWidget {
             final List<Widget> docRows = [];
             final standardTypes = [
               'Invoice',
-              'Way Bill',
-              'Credit Note',
-              'Debit Note',
-              'Delivery Challan',
-              'Quotation',
+              // 'Way Bill',
+              // 'Credit Note',
+              // 'Debit Note',
+              // 'Delivery Challan',
+              // 'Quotation',
             ];
 
             final processedTitles = <String>{};
@@ -903,79 +903,79 @@ class OrderDetailsScreen extends StatelessWidget {
                     doc.code.trim() != '-';
 
                 docRows.add(const SizedBox(height: 10));
-                docRows.add(
-                  DottedLine(
-                    direction: Axis.horizontal,
-                    alignment: WrapAlignment.center,
-                    lineLength: double.infinity,
-                    lineThickness: 1.0,
-                    dashLength: 4.0,
-                    dashColor: Colors.grey.shade300,
-                    dashGapLength: 2.0,
-                    dashGapColor: Colors.transparent,
-                  ),
-                );
-                docRows.add(const SizedBox(height: 10));
+                // docRows.add(
+                //   DottedLine(
+                //     direction: Axis.horizontal,
+                //     alignment: WrapAlignment.center,
+                //     lineLength: double.infinity,
+                //     lineThickness: 1.0,
+                //     dashLength: 4.0,
+                //     dashColor: Colors.grey.shade300,
+                //     dashGapLength: 2.0,
+                //     dashGapColor: Colors.transparent,
+                //   ),
+                // );
+                // docRows.add(const SizedBox(height: 10));
 
-                docRows.add(
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        doc.title,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                      hasFile
-                          ? InkWell(
-                              onTap: () => controller.downloadDocument(doc),
-                              borderRadius: BorderRadius.circular(6),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8FAFC),
-                                  border: Border.all(
-                                    color: const Color(0xFFE2E8F0),
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.download_outlined,
-                                      size: 14,
-                                      color: Color(0xFF1E293B),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      doc.code,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF1E293B),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              '-',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                    ],
-                  ),
-                );
+                // docRows.add(
+                //   Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Text(
+                //         doc.title,
+                //         style: const TextStyle(
+                //           fontSize: 13,
+                //           color: Color(0xFF64748B),
+                //         ),
+                //       ),
+                //       hasFile
+                //           ? InkWell(
+                //               onTap: () => controller.downloadDocument(doc),
+                //               borderRadius: BorderRadius.circular(6),
+                //               child: Container(
+                //                 padding: const EdgeInsets.symmetric(
+                //                   horizontal: 10,
+                //                   vertical: 6,
+                //                 ),
+                //                 decoration: BoxDecoration(
+                //                   color: const Color(0xFFF8FAFC),
+                //                   border: Border.all(
+                //                     color: const Color(0xFFE2E8F0),
+                //                   ),
+                //                   borderRadius: BorderRadius.circular(6),
+                //                 ),
+                //                 child: Row(
+                //                   mainAxisSize: MainAxisSize.min,
+                //                   children: [
+                //                     const Icon(
+                //                       Icons.download_outlined,
+                //                       size: 14,
+                //                       color: Color(0xFF1E293B),
+                //                     ),
+                //                     const SizedBox(width: 4),
+                //                     Text(
+                //                       doc.code,
+                //                       style: const TextStyle(
+                //                         fontSize: 11,
+                //                         fontWeight: FontWeight.w700,
+                //                         color: Color(0xFF1E293B),
+                //                       ),
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ),
+                //             )
+                //           : const Text(
+                //               '-',
+                //               style: TextStyle(
+                //                 fontSize: 13,
+                //                 fontWeight: FontWeight.w500,
+                //                 color: Color(0xFF64748B),
+                //               ),
+                //             ),
+                //     ],
+                //   ),
+                // );
               }
             }
 
