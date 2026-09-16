@@ -72,7 +72,13 @@ class OrderModel {
     final idDisplay = idRaw.toString().trim();
 
     // Extract Date & Time ("created_time", "created_at", "salesorder_date", "date")
-    final dateRaw = json['created_time'];
+    final dateRaw =
+        json['created_time'] ??
+        json['created_at'] ??
+        json['salesorder_date'] ??
+        json['date'] ??
+        json['createdTime'] ??
+        json['createdAt'];
     final dateStr = _formatCreatedTime(dateRaw);
 
     // Extract Customer Name ("customer_name", "customerName", "name", "customer")
@@ -241,7 +247,7 @@ class OrderModel {
     if (dt != null) {
       final dayStr = dt.day.toString().padLeft(2, '0');
       final monthStr = dt.month.toString().padLeft(2, '0');
-      final yearStr = (dt.year % 100).toString().padLeft(2, '0');
+      final yearStr = dt.year.toString().padLeft(4, '0');
 
       int hour = dt.hour;
       final period = hour >= 12 ? 'PM' : 'AM';
@@ -253,6 +259,13 @@ class OrderModel {
       return '$dayStr-$monthStr-$yearStr $hourStr:$minStr $period';
     }
 
-    return raw;
+    String formattedRaw = raw;
+    if (formattedRaw.contains('-26')) {
+      formattedRaw = formattedRaw.replaceAll('-26', '-2026');
+    }
+    if (formattedRaw.contains('/26')) {
+      formattedRaw = formattedRaw.replaceAll('/26', '/2026');
+    }
+    return formattedRaw;
   }
 }

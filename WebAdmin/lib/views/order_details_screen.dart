@@ -666,40 +666,70 @@ class OrderDetailsScreen extends StatelessWidget {
                   dashGapColor: Colors.transparent,
                 ),
                 const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  'CGST',
-                  controller.cgst.value,
-                  isBoldValue: false,
-                ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  'SGST',
-                  controller.sgst.value,
-                  isBoldValue: false,
-                ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
+
+                if (controller.cgst.value.trim().isNotEmpty &&
+                    controller.cgst.value.trim() != 'null' &&
+                    controller.cgst.value.trim() != '-') ...[
+                  _buildKeyValueRow(
+                    'CGST',
+                    controller.cgst.value,
+                    isBoldValue: false,
+                  ),
+                  const SizedBox(height: 10),
+                  DottedLine(
+                    direction: Axis.horizontal,
+                    alignment: WrapAlignment.center,
+                    lineLength: double.infinity,
+                    lineThickness: 1.0,
+                    dashLength: 4.0,
+                    dashColor: Colors.grey.shade300,
+                    dashGapLength: 2.0,
+                    dashGapColor: Colors.transparent,
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                if (controller.sgst.value.trim().isNotEmpty &&
+                    controller.sgst.value.trim() != 'null' &&
+                    controller.sgst.value.trim() != '-') ...[
+                  _buildKeyValueRow(
+                    'SGST',
+                    controller.sgst.value,
+                    isBoldValue: false,
+                  ),
+                  const SizedBox(height: 10),
+                  DottedLine(
+                    direction: Axis.horizontal,
+                    alignment: WrapAlignment.center,
+                    lineLength: double.infinity,
+                    lineThickness: 1.0,
+                    dashLength: 4.0,
+                    dashColor: Colors.grey.shade300,
+                    dashGapLength: 2.0,
+                    dashGapColor: Colors.transparent,
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                if (controller.igst.value.trim().isNotEmpty &&
+                    controller.igst.value.trim() != 'null' &&
+                    controller.igst.value.trim() != '-') ...[
+                  _buildKeyValueRow(
+                    'IGST',
+                    controller.igst.value,
+                    isBoldValue: false,
+                  ),
+                  const SizedBox(height: 10),
+                  DottedLine(
+                    direction: Axis.horizontal,
+                    alignment: WrapAlignment.center,
+                    lineLength: double.infinity,
+                    lineThickness: 1.0,
+                    dashLength: 4.0,
+                    dashColor: Colors.grey.shade300,
+                    dashGapLength: 2.0,
+                    dashGapColor: Colors.transparent,
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 _buildKeyValueRow(
                   'Total:',
                   controller.grandTotal.value,
@@ -897,11 +927,6 @@ class OrderDetailsScreen extends StatelessWidget {
             for (final doc in controller.documents) {
               final normTitle = doc.title.toLowerCase().replaceAll(' ', '');
               if (!processedTitles.contains(normTitle)) {
-                final hasFile =
-                    doc.code.trim().isNotEmpty &&
-                    doc.code.trim() != 'null' &&
-                    doc.code.trim() != '-';
-
                 docRows.add(const SizedBox(height: 10));
                 // docRows.add(
                 //   DottedLine(
@@ -1486,6 +1511,24 @@ class OrderDetailsScreen extends StatelessWidget {
                                                     fontFamily: 'Public Sans',
                                                     fontSize: 11,
                                                     color: Color(0xFF94A3B8),
+                                                  ),
+                                                ),
+                                              ],
+                                              if (item
+                                                  .lineItemTaxes
+                                                  .isNotEmpty) ...[
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  item.lineItemTaxes
+                                                      .map(
+                                                        (t) =>
+                                                            '${t.taxName}${t.taxPercent > 0 ? " (${t.taxPercent.toStringAsFixed(t.taxPercent.truncateToDouble() == t.taxPercent ? 0 : 1)}%)" : ""}: ${t.taxAmount}',
+                                                      )
+                                                      .join(' · '),
+                                                  style: const TextStyle(
+                                                    fontFamily: 'Public Sans',
+                                                    fontSize: 11,
+                                                    color: Color(0xFF64748B),
                                                   ),
                                                 ),
                                               ],

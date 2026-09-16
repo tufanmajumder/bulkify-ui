@@ -25,12 +25,25 @@ class PaymentTransactionModel {
   });
 }
 
+class LineItemTaxModel {
+  final String taxName;
+  final String taxAmount;
+  final double taxPercent;
+
+  LineItemTaxModel({
+    required this.taxName,
+    required this.taxAmount,
+    this.taxPercent = 0.0,
+  });
+}
+
 class OrderItemModel {
   final String name;
   final String description;
   final String price;
   final int qty;
   final String total;
+  final List<LineItemTaxModel> lineItemTaxes;
 
   OrderItemModel({
     required this.name,
@@ -38,6 +51,7 @@ class OrderItemModel {
     required this.price,
     required this.qty,
     required this.total,
+    this.lineItemTaxes = const [],
   });
 
   String get merchant => description;
@@ -105,6 +119,7 @@ class OrderDetailsController extends GetxController {
   final RxString tax = ''.obs;
   final RxString cgst = ''.obs;
   final RxString sgst = ''.obs;
+  final RxString igst = ''.obs;
   final RxString grandTotal = ''.obs;
 
   // Invoice details
@@ -429,10 +444,131 @@ class OrderDetailsController extends GetxController {
           .toString();
     }
     tax.value = _formatPriceVal(
-      data['tax_total'] ?? data['tax'] ?? data['tax_amount'],
+      data['tax_total'] ??
+          data['tax_total_formatted'] ??
+          data['tax'] ??
+          data['tax_amount'],
     );
-    cgst.value = _formatPriceVal(data['cgst'] ?? data['cgst_amount']);
-    sgst.value = _formatPriceVal(data['sgst'] ?? data['sgst_amount']);
+
+    // Tax breakdown from taxes array, line_item_taxes, or line items
+    double calculatedCgst = 0.0;
+    double calculatedSgst = 0.0;
+    double calculatedIgst = 0.0;
+    bool foundCgstInTaxes = false;
+    bool foundSgstInTaxes = false;
+    bool foundIgstInTaxes = false;
+
+    void processTaxMap(Map t) {
+      final taxSpecificType = (t['tax_specific_type'] ?? '')
+          .toString()
+          .toLowerCase()
+          .trim();
+      final taxName =
+          (t['tax_name'] ?? t['name'] ?? t['tax_type'] ?? t['tax_label'] ?? '')
+              .toString()
+              .toUpperCase();
+      final amtVal = t['tax_amount_formatted'] ??
+          t['tax_amount'] ??
+          t['amount'] ??
+          t['val'];
+      double amt = 0.0;
+      if (amtVal != null) {
+        final cleanStr = amtVal
+            .toString()
+            .replaceAll('₹', '')
+            .replaceAll(',', '')
+            .replaceAll(RegExp(r'\s+'), '')
+            .trim();
+        amt = double.tryParse(cleanStr) ?? 0.0;
+      }
+
+      if (taxSpecificType == 'cgst' || taxName.contains('CGST')) {
+        calculatedCgst += amt;
+        foundCgstInTaxes = true;
+      } else if (taxSpecificType == 'sgst' || taxName.contains('SGST')) {
+        calculatedSgst += amt;
+        foundSgstInTaxes = true;
+      } else if (taxSpecificType == 'igst' || taxName.contains('IGST')) {
+        calculatedIgst += amt;
+        foundIgstInTaxes = true;
+      }
+    }
+
+    final topTaxes = data['taxes'];
+    if (topTaxes is List && topTaxes.isNotEmpty) {
+      for (final t in topTaxes) {
+        if (t is Map) processTaxMap(t);
+      }
+    } else {
+      final rawItems =
+          data['line_items'] ??
+          data['order_items'] ??
+          data['items'] ??
+          data['products'];
+      if (rawItems is List && rawItems.isNotEmpty) {
+        for (final item in rawItems) {
+          if (item is Map) {
+            final itemTaxes =
+                item['line_item_taxes'] ?? item['item_taxes'] ?? item['taxes'];
+            if (itemTaxes is List && itemTaxes.isNotEmpty) {
+              for (final t in itemTaxes) {
+                if (t is Map) processTaxMap(t);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    final directCgst =
+        data['cgst'] ??
+        data['cgst_amount'] ??
+        data['cgst_total'] ??
+        data['cgst_tax_amount'];
+    final directSgst =
+        data['sgst'] ??
+        data['sgst_amount'] ??
+        data['sgst_total'] ??
+        data['sgst_tax_amount'];
+    final directIgst =
+        data['igst'] ??
+        data['igst_amount'] ??
+        data['igst_total'] ??
+        data['igst_tax_amount'];
+
+    if (foundCgstInTaxes || calculatedCgst > 0) {
+      cgst.value = _formatPriceVal(calculatedCgst);
+    } else if (directCgst != null &&
+        directCgst.toString().trim().isNotEmpty &&
+        directCgst.toString().trim() != 'null' &&
+        directCgst.toString().trim() != '-') {
+      cgst.value = _formatPriceVal(directCgst);
+    } else {
+      cgst.value = '';
+    }
+
+    if (foundSgstInTaxes || calculatedSgst > 0) {
+      sgst.value = _formatPriceVal(calculatedSgst);
+    } else if (directSgst != null &&
+        directSgst.toString().trim().isNotEmpty &&
+        directSgst.toString().trim() != 'null' &&
+        directSgst.toString().trim() != '-') {
+      sgst.value = _formatPriceVal(directSgst);
+    } else {
+      sgst.value = '';
+    }
+
+    if (foundIgstInTaxes || calculatedIgst > 0) {
+      igst.value = _formatPriceVal(calculatedIgst);
+    } else if (directIgst != null &&
+        directIgst.toString().trim().isNotEmpty &&
+        directIgst.toString().trim() != 'null' &&
+        directIgst.toString().trim() != '-') {
+      igst.value = _formatPriceVal(directIgst);
+    } else {
+      igst.value = '';
+    }
+
     grandTotal.value = _formatPriceVal(
       data['total'] ?? data['grand_total'] ?? data['amount'],
     );
@@ -450,7 +586,10 @@ class OrderDetailsController extends GetxController {
           if (id.isNotEmpty && id != 'null') {
             invoiceId.value = id;
             invoiceNumber.value =
-                (inv['invoice_number'] ?? inv['number'] ?? inv['invoice_id'] ?? id)
+                (inv['invoice_number'] ??
+                        inv['number'] ??
+                        inv['invoice_id'] ??
+                        id)
                     .toString()
                     .trim();
             break;
@@ -458,10 +597,9 @@ class OrderDetailsController extends GetxController {
         }
       }
     } else if (invoicesList is Map) {
-      final id =
-          (invoicesList['invoice_id'] ?? invoicesList['id'] ?? '')
-              .toString()
-              .trim();
+      final id = (invoicesList['invoice_id'] ?? invoicesList['id'] ?? '')
+          .toString()
+          .trim();
       if (id.isNotEmpty && id != 'null') {
         invoiceId.value = id;
         invoiceNumber.value =
@@ -476,8 +614,9 @@ class OrderDetailsController extends GetxController {
         data['invoice_id'].toString().trim().isNotEmpty &&
         data['invoice_id'].toString().trim() != 'null') {
       invoiceId.value = data['invoice_id'].toString().trim();
-      invoiceNumber.value =
-          (data['invoice_number'] ?? data['invoice_id'] ?? '').toString().trim();
+      invoiceNumber.value = (data['invoice_number'] ?? data['invoice_id'] ?? '')
+          .toString()
+          .trim();
     }
 
     // 5. Documents (if key missing -> empty list)
@@ -615,6 +754,36 @@ class OrderDetailsController extends GetxController {
                       '0',
                 ) ??
                 0;
+
+            final List<LineItemTaxModel> itemTaxList = [];
+            final rawItemTaxes =
+                item['line_item_taxes'] ?? item['item_taxes'] ?? item['taxes'];
+            if (rawItemTaxes is List && rawItemTaxes.isNotEmpty) {
+              for (final t in rawItemTaxes) {
+                if (t is Map) {
+                  itemTaxList.add(
+                    LineItemTaxModel(
+                      taxName:
+                          (t['tax_name'] ?? t['name'] ?? t['tax_type'] ?? '')
+                              .toString(),
+                      taxAmount: _formatPriceVal(
+                        t['tax_amount'] ?? t['amount'] ?? t['val'],
+                      ),
+                      taxPercent:
+                          double.tryParse(
+                            (t['tax_percentage'] ??
+                                    t['tax_percent'] ??
+                                    t['rate'] ??
+                                    '0')
+                                .toString(),
+                          ) ??
+                          0.0,
+                    ),
+                  );
+                }
+              }
+            }
+
             return OrderItemModel(
               name:
                   (item['name'] ??
@@ -639,6 +808,7 @@ class OrderDetailsController extends GetxController {
               total: _formatPriceVal(
                 item['item_total'] ?? item['total'] ?? item['line_total'],
               ),
+              lineItemTaxes: itemTaxList,
             );
           }
           return OrderItemModel(
@@ -823,7 +993,9 @@ class OrderDetailsController extends GetxController {
         : invoiceId.value.trim();
 
     if (kDebugMode) {
-      debugPrint('[OrderDetailsController] Requesting invoice download for invoice_id: $targetInvoiceId');
+      debugPrint(
+        '[OrderDetailsController] Requesting invoice download for invoice_id: $targetInvoiceId',
+      );
     }
 
     if (targetInvoiceId.isEmpty || targetInvoiceId == 'null') {

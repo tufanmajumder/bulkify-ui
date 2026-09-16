@@ -17,9 +17,25 @@ class PaymentModel {
     required this.paymentMethod,
     required this.customerName,
     this.customerSubtext = 'NA',
-    required this.date,
+    required String date,
     required this.time,
     required this.status,
     required this.amount,
-  });
+  }) : date = _formatDate(date);
+
+  static String _formatDate(String raw) {
+    final str = raw.trim();
+    if (str.isEmpty || str == 'null' || str == '-') return '-';
+    if (str.endsWith('-26')) {
+      return '${str.substring(0, str.length - 2)}2026';
+    }
+    if (str.endsWith('/26')) {
+      return '${str.substring(0, str.length - 2)}2026';
+    }
+    final components = str.split(RegExp(r'[-/.]'));
+    if (components.length == 3 && components[2] == '26') {
+      return '${components[0]}-${components[1]}-2026';
+    }
+    return str;
+  }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/order_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
@@ -44,8 +44,8 @@ class OrderListScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Top Summary Stat Cards (4 Stats Row)
-                        _buildStatSummaryRow(context, controller),
-                        SizedBox(height: spacingHeight),
+                        // _buildStatSummaryRow(context, controller),
+                        // SizedBox(height: spacingHeight),
 
                         // Main Order Table Card (Filter + Table + Pagination)
                         _buildOrderTableCard(context, controller),
@@ -564,7 +564,7 @@ class OrderListScreen extends StatelessWidget {
                                     order.companyName == '-' ||
                                     order.companyName.trim().toLowerCase() ==
                                         displayCustomer.trim().toLowerCase())
-                                ? ''
+                                ? '-'
                                 : order.companyName;
 
                             return Container(

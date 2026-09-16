@@ -35,8 +35,8 @@ class PaymentListScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Top 4 Analytics Stat Cards
-                        _buildStatCardsRow(context, controller),
-                        const SizedBox(height: 20),
+                        // _buildStatCardsRow(context, controller),
+                        // const SizedBox(height: 20),
 
                         // Main Card Container with Action Bar + Table + Footer
                         _buildMainContentCard(context, controller),
@@ -78,9 +78,9 @@ class PaymentListScreen extends StatelessWidget {
                   badge: controller.completedChange.value,
                   badgeIsNegative: true,
                   subtitle: 'Last week analytics',
-                  icon: Icons.check_rounded,
+                  icon: Icons.done_all_rounded,
                   iconBg: const Color(0xFFDCFCE7),
-                  iconColor: const Color(0xFF16A34A),
+                  iconColor: const Color(0xFF22C55E),
                 ),
               ),
               const SizedBox(width: 16),
@@ -92,9 +92,9 @@ class PaymentListScreen extends StatelessWidget {
                   badge: controller.pendingChange.value,
                   badgeIsNegative: false,
                   subtitle: 'Last week analytics',
-                  icon: Icons.calendar_month_outlined,
+                  icon: Icons.edit_calendar_outlined,
                   iconBg: const Color(0xFFFEF3C7),
-                  iconColor: const Color(0xFFD97706),
+                  iconColor: const Color(0xFFF59E0B),
                 ),
               ),
               const SizedBox(width: 16),
@@ -108,7 +108,7 @@ class PaymentListScreen extends StatelessWidget {
                   subtitle: 'Last week analytics',
                   icon: Icons.account_balance_wallet_outlined,
                   iconBg: const Color(0xFFF3E8FF),
-                  iconColor: const Color(0xFF9333EA),
+                  iconColor: const Color(0xFF8B5CF6),
                 ),
               ),
               const SizedBox(width: 16),
@@ -142,9 +142,9 @@ class PaymentListScreen extends StatelessWidget {
                 badge: controller.completedChange.value,
                 badgeIsNegative: true,
                 subtitle: 'Last week analytics',
-                icon: Icons.check_rounded,
+                icon: Icons.done_all_rounded,
                 iconBg: const Color(0xFFDCFCE7),
-                iconColor: const Color(0xFF16A34A),
+                iconColor: const Color(0xFF22C55E),
               ),
             ),
             SizedBox(
@@ -156,9 +156,9 @@ class PaymentListScreen extends StatelessWidget {
                 badge: controller.pendingChange.value,
                 badgeIsNegative: false,
                 subtitle: 'Last week analytics',
-                icon: Icons.calendar_month_outlined,
+                icon: Icons.edit_calendar_outlined,
                 iconBg: const Color(0xFFFEF3C7),
-                iconColor: const Color(0xFFD97706),
+                iconColor: const Color(0xFFF59E0B),
               ),
             ),
             SizedBox(
@@ -172,7 +172,7 @@ class PaymentListScreen extends StatelessWidget {
                 subtitle: 'Last week analytics',
                 icon: Icons.account_balance_wallet_outlined,
                 iconBg: const Color(0xFFF3E8FF),
-                iconColor: const Color(0xFF9333EA),
+                iconColor: const Color(0xFF8B5CF6),
               ),
             ),
             SizedBox(
@@ -725,7 +725,8 @@ class PaymentListScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  item.customerSubtext,
+                  "-",
+                  //item.customerSubtext,
                   style: TextStyle(
                     fontSize: fontSize - 2,
                     fontWeight: FontWeight.w400,
@@ -793,26 +794,26 @@ class PaymentListScreen extends StatelessWidget {
                   color: Color(0xFF64748B),
                 ),
                 onSelected: (val) {
-                  Get.snackbar(
-                    'Payment Action',
-                    '$val for ${item.orderId}',
-                    snackPosition: SnackPosition.BOTTOM,
-                    margin: const EdgeInsets.all(16),
-                  );
+                  // Get.snackbar(
+                  //   'Payment Action',
+                  //   '$val for ${item.orderId}',
+                  //   snackPosition: SnackPosition.BOTTOM,
+                  //   margin: const EdgeInsets.all(16),
+                  // );
                 },
                 itemBuilder: (context) => [
                   const PopupMenuItem(
                     value: 'View Details',
                     child: Text('View Details'),
                   ),
-                  const PopupMenuItem(
-                    value: 'Copy UTR',
-                    child: Text('Copy UTR'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'Download Receipt',
-                    child: Text('Download Receipt'),
-                  ),
+                  // const PopupMenuItem(
+                  //   value: 'Copy UTR',
+                  //   child: Text('Copy UTR'),
+                  // ),
+                  // const PopupMenuItem(
+                  //   value: 'Download Receipt',
+                  //   child: Text('Download Receipt'),
+                  // ),
                 ],
               ),
             ),
