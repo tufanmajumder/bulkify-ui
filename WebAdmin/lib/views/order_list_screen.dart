@@ -449,7 +449,7 @@ class OrderListScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              flex: 2,
+                              flex: 15,
                               child: _buildHeaderCell(
                                 context,
                                 'ORDER NO.',
@@ -457,7 +457,7 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 3,
+                              flex: 15,
                               child: _buildHeaderCell(
                                 context,
                                 'DATE & TIME',
@@ -465,7 +465,7 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 3,
+                              flex: 30,
                               child: _buildHeaderCell(
                                 context,
                                 'CUSTOMER',
@@ -473,7 +473,7 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 2,
+                              flex: 15,
                               child: Padding(
                                 padding: const EdgeInsets.only(right: 36),
                                 child: _buildHeaderCell(
@@ -485,18 +485,11 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 3,
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 20),
-                                child: _buildHeaderCell(
-                                  context,
-                                  'PAYMENT',
-                                  true,
-                                ),
-                              ),
+                              flex: 10,
+                              child: _buildHeaderCell(context, 'PAYMENT', true),
                             ),
                             Expanded(
-                              flex: 2,
+                              flex: 10,
                               child: _buildHeaderCell(
                                 context,
                                 'SHIPMENT',
@@ -505,7 +498,7 @@ class OrderListScreen extends StatelessWidget {
                             ),
 
                             Expanded(
-                              flex: 1,
+                              flex: 5,
                               child: _buildHeaderCell(
                                 context,
                                 'ACTION',
@@ -581,9 +574,9 @@ class OrderListScreen extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // ORDER ID (Red bold - clickable)
+                                  // ORDER ID (15%)
                                   Expanded(
-                                    flex: 2,
+                                    flex: 15,
                                     child: InkWell(
                                       onTap: () =>
                                           controller.viewOrderDetails(order),
@@ -600,11 +593,14 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // DATE & TIME
+                                  // DATE & TIME (15%)
                                   Expanded(
-                                    flex: 3,
+                                    flex: 15,
                                     child: Builder(
                                       builder: (context) {
+                                        print(
+                                          "[OrderListScreen] Order ${order.id} Date & Time: $displayDate",
+                                        );
                                         final dateParts = displayDate.split(
                                           ' ',
                                         );
@@ -651,9 +647,9 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // CUSTOMER (Customer Name & Company Name underneath)
+                                  // CUSTOMER (30%)
                                   Expanded(
-                                    flex: 3,
+                                    flex: 30,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -687,9 +683,9 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // AMOUNT
+                                  // AMOUNT (15%)
                                   Expanded(
-                                    flex: 2,
+                                    flex: 15,
                                     child: Padding(
                                       padding: const EdgeInsets.only(right: 36),
                                       child: Align(
@@ -726,31 +722,27 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // PAYMENT STATUS (text)
+                                  // PAYMENT STATUS (10%)
                                   Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 20),
-                                      child: _buildPaymentStatusCell(
-                                        context,
-                                        (order.paymentStatus.trim().isEmpty ||
-                                                order.paymentStatus.trim() ==
-                                                    'null' ||
-                                                order.paymentStatus.trim() ==
-                                                    '-')
-                                            ? '-'
-                                            : order.paymentStatus[0]
-                                                      .toUpperCase() +
-                                                  order.paymentStatus.substring(
-                                                    1,
-                                                  ),
-                                      ),
+                                    flex: 10,
+                                    child: _buildPaymentStatusCell(
+                                      context,
+                                      (order.paymentStatus.trim().isEmpty ||
+                                              order.paymentStatus.trim() ==
+                                                  'null' ||
+                                              order.paymentStatus.trim() == '-')
+                                          ? '-'
+                                          : order.paymentStatus[0]
+                                                    .toUpperCase() +
+                                                order.paymentStatus.substring(
+                                                  1,
+                                                ),
                                     ),
                                   ),
 
-                                  // ORDER STATUS
+                                  // SHIPMENT STATUS (10%)
                                   Expanded(
-                                    flex: 2,
+                                    flex: 10,
                                     child: _buildOrderStatusBadge(
                                       context,
                                       (order.orderStatus.trim().isEmpty ||
@@ -763,9 +755,9 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // ACTION Menu
+                                  // ACTION Menu (5%)
                                   Expanded(
-                                    flex: 1,
+                                    flex: 5,
                                     child: Align(
                                       alignment: Alignment.centerRight,
                                       child: PopupMenuButton<String>(

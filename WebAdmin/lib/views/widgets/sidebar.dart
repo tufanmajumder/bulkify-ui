@@ -148,7 +148,7 @@ class _SidebarState extends State<Sidebar> {
                 const SizedBox(height: 12),
                 _buildNavItem(
                   icon: Icons.payments_outlined,
-                  label: 'Payment Details',
+                  label: 'Payments',
                   isSelected: isPaymentsActive,
                   isExpanded: isExpanded,
                   onTap: () {

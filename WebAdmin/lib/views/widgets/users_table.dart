@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
 import 'package:admin_app/models/user_model.dart';
@@ -49,33 +49,33 @@ class UsersTable extends StatelessWidget {
                       child: Row(
                         children: [
                           Expanded(
-                            flex: 3,
+                            flex: 20,
                             child: _buildHeaderCell(context, 'NAME'),
                           ),
                           Expanded(
-                            flex: 4,
+                            flex: 20,
                             child: _buildHeaderCell(context, 'EMAIL'),
                           ),
                           Expanded(
-                            flex: 2,
+                            flex: 15,
                             child: _buildHeaderCell(context, 'MOBILE'),
                           ),
                           Expanded(
-                            flex: 2,
+                            flex: 15,
                             child: _buildHeaderCell(context, 'ROLE'),
                           ),
                           Expanded(
-                            flex: 2,
+                            flex: 15,
                             child: _buildHeaderCell(context, 'LAST LOGIN'),
                           ),
                           Expanded(
-                            flex: 2,
+                            flex: 10,
                             child: Center(
                               child: _buildHeaderCell(context, 'STATUS'),
                             ),
                           ),
                           Expanded(
-                            flex: 1,
+                            flex: 5,
                             child: Align(
                               alignment: Alignment.centerRight,
                               child: _buildHeaderCell(context, 'ACTION'),
@@ -160,34 +160,36 @@ class UsersTable extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // NAME Column
+          // NAME Column (20%)
           Expanded(
-            flex: 3,
+            flex: 20,
             child: Row(
               children: [
                 Icon(
                   Icons.circle,
-                  color: isActive
+                  color: user.isOnline == 'true'
                       ? const Color(0xFF22C55E)
                       : const Color(0xFFEF4444),
                   size: 8,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  user.name,
-                  style: TextStyle(
-                    color: const Color(0xFF475569),
-                    fontSize: Responsive.sp(context, 13.5),
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    user.name,
+                    style: TextStyle(
+                      color: const Color(0xFF475569),
+                      fontSize: Responsive.sp(context, 13.5),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          // EMAIL Column
+          // EMAIL Column (20%)
           Expanded(
-            flex: 4,
+            flex: 20,
             child: Text(
               user.email,
               style: TextStyle(
@@ -198,22 +200,33 @@ class UsersTable extends StatelessWidget {
             ),
           ),
 
-          // MOBILE Column
+          // MOBILE Column (15%)
           Expanded(
-            flex: 2,
-            child: Text(
-              user.mobNo.isNotEmpty ? user.mobNo : (user.contact ?? '-'),
-              style: TextStyle(
-                color: const Color(0xFF475569),
-                fontSize: Responsive.sp(context, 13.5),
-                fontWeight: FontWeight.w400,
-              ),
+            flex: 15,
+            child: Builder(
+              builder: (context) {
+                final rawMobile = user.mobNo.isNotEmpty
+                    ? user.mobNo
+                    : (user.contact ?? '');
+                final cleanMobile = rawMobile
+                    .replaceAll(RegExp(r'^\+91[\s-]*'), '')
+                    .replaceAll('+91', '')
+                    .trim();
+                return Text(
+                  cleanMobile.isNotEmpty ? cleanMobile : '-',
+                  style: TextStyle(
+                    color: const Color(0xFF475569),
+                    fontSize: Responsive.sp(context, 13.5),
+                    fontWeight: FontWeight.w400,
+                  ),
+                );
+              },
             ),
           ),
 
-          // ROLE Column
+          // ROLE Column (15%)
           Expanded(
-            flex: 2,
+            flex: 15,
             child: Text(
               user.role,
               style: TextStyle(
@@ -224,59 +237,22 @@ class UsersTable extends StatelessWidget {
             ),
           ),
 
-          // LAST LOGIN Column
+          // LAST LOGIN Column (15%)
           Expanded(
-            flex: 2,
-            child: Builder(
-              builder: (context) {
-                final dateParts = user.lastLogin.split(' ');
-                print("data partss...$dateParts");
-                final dateLine1 = dateParts.isNotEmpty ? dateParts[0] : '-';
-                final dateLine2 = dateParts.length > 1
-                    ? dateParts.sublist(1).join(' ')
-                    : '';
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      dateLine1,
-                      textAlign: TextAlign.start,
-                      style: TextStyle(
-                        fontSize: Responsive.sp(context, 13.5),
-                        color: const Color(0xFF475569),
-                      ),
-                    ),
-                    if (dateLine2.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        dateLine2,
-                        textAlign: TextAlign.start,
-                        style: TextStyle(
-                          fontSize: Responsive.sp(context, 13.5),
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ],
-                );
-              },
+            flex: 15,
+            child: Text(
+              user.lastLogin.isNotEmpty ? user.lastLogin : '-',
+              style: TextStyle(
+                color: const Color(0xFF475569),
+                fontSize: Responsive.sp(context, 13.5),
+                fontWeight: FontWeight.w400,
+              ),
             ),
-            // child: Text(
-            //   user.lastLogin,
-            //   style: TextStyle(
-            //     color: const Color(0xFF475569),
-            //     fontSize: Responsive.sp(context, 13.5),
-            //     fontWeight: FontWeight.w400,
-            //   ),
-            // ),
           ),
 
-          // STATUS Column (Plain colored text as shown in screenshot)
+          // STATUS Column (10%)
           Expanded(
-            flex: 2,
+            flex: 10,
             child: Text(
               textAlign: TextAlign.center,
               user.status,
@@ -290,9 +266,9 @@ class UsersTable extends StatelessWidget {
             ),
           ),
 
-          // ACTION Column (3-dots vertical icon)
+          // ACTION Column (5%)
           Expanded(
-            flex: 1,
+            flex: 5,
             child: Align(
               alignment: Alignment.centerRight,
               child: InkWell(

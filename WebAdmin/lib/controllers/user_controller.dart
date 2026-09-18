@@ -2,16 +2,22 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/user_model.dart';
 import 'package:admin_app/service/user_service.dart';
+import 'package:admin_app/utils/api_manager.dart';
 
 class UserController extends GetxController {
   // Reactive list of all users
   final RxList<UserModel> users = <UserModel>[].obs;
 
+  // Reactive list of dynamic roles from API
+  final RxList<RoleModel> roles = <RoleModel>[].obs;
+
   // Summary state from API
   final Rxn<UserSummaryModel> summary = Rxn<UserSummaryModel>();
 
-  // Loading & Error states
+  // Loading, Submitting & Error states
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingRoles = false.obs;
+  final RxBool isSubmitting = false.obs;
   final RxString errorMessage = ''.obs;
 
   // Search and Filter states
@@ -32,6 +38,31 @@ class UserController extends GetxController {
         ? Get.find<UserService>()
         : Get.put(UserService());
     fetchUsers();
+    fetchRoles();
+  }
+
+  /// Calls getRoleList API from ApiManager (via UserService) and updates roles list.
+  Future<void> fetchRoles() async {
+    isLoadingRoles.value = true;
+    try {
+      final result = await _userService.getRoleList();
+      if (result.isTokenExpired) {
+        errorMessage.value = 'Session expired. Please log in again.';
+        Get.offAllNamed('/login');
+        return;
+      }
+      if (result.success || result.code == 200) {
+        if (result.roles.isNotEmpty) {
+          roles.assignAll(result.roles);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[UserController] Error fetching roles: $e');
+      }
+    } finally {
+      isLoadingRoles.value = false;
+    }
   }
 
   /// Calls getUserList API from ApiManager (via UserService) and updates user list & summary.
@@ -182,12 +213,14 @@ class UserController extends GetxController {
         extendedData.add(
           UserModel(
             id: '${extendedData.length + 1}',
+            userName: u.userName,
             name: u.name,
             email: u.email,
             role: u.role,
             lastLogin: u.lastLogin,
             status: u.status,
             mobNo: u.mobNo,
+            isOnline: u.isOnline,
           ),
         );
       }
@@ -199,10 +232,25 @@ class UserController extends GetxController {
   // Filtered Users Getter
   List<UserModel> get filteredUsers {
     return users.where((user) {
+      final query = searchQuery.value.trim().toLowerCase();
+      final cleanQueryDigits = query.replaceAll(RegExp(r'\D'), '');
+
       final matchesSearch =
-          searchQuery.value.isEmpty ||
-          user.name.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-          user.email.toLowerCase().contains(searchQuery.value.toLowerCase());
+          query.isEmpty ||
+          user.name.toLowerCase().contains(query) ||
+          user.userName.toLowerCase().contains(query) ||
+          user.email.toLowerCase().contains(query) ||
+          user.mobNo.toLowerCase().contains(query) ||
+          (user.contact != null &&
+              user.contact!.toLowerCase().contains(query)) ||
+          (cleanQueryDigits.isNotEmpty &&
+              (user.mobNo
+                      .replaceAll(RegExp(r'\D'), '')
+                      .contains(cleanQueryDigits) ||
+                  (user.contact != null &&
+                      user.contact!
+                          .replaceAll(RegExp(r'\D'), '')
+                          .contains(cleanQueryDigits))));
 
       final matchesRole =
           selectedRole.value == 'All' ||
@@ -212,7 +260,11 @@ class UserController extends GetxController {
       final matchesStatus =
           selectedStatus.value == 'All' ||
           selectedStatus.value == 'Select Status' ||
-          user.status == selectedStatus.value;
+          selectedStatus.value == 'Online Status' ||
+          (selectedStatus.value == 'Online' &&
+              user.isOnline.toLowerCase() == 'true') ||
+          (selectedStatus.value == 'Offline' &&
+              user.isOnline.toLowerCase() != 'true');
 
       return matchesSearch && matchesRole && matchesStatus;
     }).toList();
@@ -254,6 +306,13 @@ class UserController extends GetxController {
   void setSelectedRole(String role) {
     selectedRole.value = role;
     currentPage.value = 1;
+    final matchedRole = roles.firstWhereOrNull((r) => r.roleName == role);
+    print("Selected Role: $role, roleKey: ${matchedRole?.roleKey ?? 'N/A'}");
+    if (kDebugMode) {
+      debugPrint(
+        '[UserController] Selected Role: $role | roleKey: ${matchedRole?.roleKey}',
+      );
+    }
   }
 
   void setSelectedStatus(String status) {
@@ -272,31 +331,69 @@ class UserController extends GetxController {
     currentPage.value = 1;
   }
 
-  void addUser({
+  /// Calls userAdd API endpoint (users/v1/add) via UserService with email, fullname, mobile, static rolekey and status
+  Future<bool> addUser({
     required String name,
     required String email,
-    String? contact,
-    required String role,
-    required String status,
-    required String mobNo,
-  }) {
-    final newUser = UserModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-      email: email,
-      contact: contact,
-      role: role,
-      lastLogin: '28-08-2026 11:20 AM',
-      status: status,
-      mobNo: mobNo,
-    );
-    users.insert(0, newUser);
-    Get.snackbar(
-      'Success',
-      'User "$name" added successfully!',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 3),
-    );
+    required String mobile,
+    String? role,
+    String? status,
+  }) async {
+    isSubmitting.value = true;
+    try {
+      final int statusInt = status == 'Inactive' ? 0 : 1;
+
+      final result = await _userService.addUser(
+        email: email,
+        fullname: name,
+        mobile: mobile,
+        rolekey: ApiManager.staticRoleKey,
+        status: statusInt,
+      );
+
+      if (result.isTokenExpired) {
+        Get.snackbar(
+          'Session Expired',
+          'Please log in again.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        Get.offAllNamed('/login');
+        return false;
+      }
+
+      if (result.success) {
+        Get.snackbar(
+          'Success',
+          result.message.isNotEmpty
+              ? result.message
+              : 'User "$name" added successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+        await fetchUsers();
+        return true;
+      } else {
+        Get.snackbar(
+          'Error',
+          result.message.isNotEmpty ? result.message : 'Failed to add user',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 4),
+        );
+        return false;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[UserController] Error adding user: $e');
+      }
+      Get.snackbar(
+        'Error',
+        'An error occurred while adding user',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    } finally {
+      isSubmitting.value = false;
+    }
   }
 
   void deleteUser(String id) {

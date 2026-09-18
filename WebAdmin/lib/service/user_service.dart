@@ -26,6 +26,36 @@ class UserListResult {
   });
 }
 
+class RoleListResult {
+  final bool success;
+  final String message;
+  final int code;
+  final List<RoleModel> roles;
+  final bool isTokenExpired;
+
+  RoleListResult({
+    required this.success,
+    required this.message,
+    required this.code,
+    required this.roles,
+    this.isTokenExpired = false,
+  });
+}
+
+class UserAddResult {
+  final bool success;
+  final String message;
+  final int code;
+  final bool isTokenExpired;
+
+  UserAddResult({
+    required this.success,
+    required this.message,
+    required this.code,
+    this.isTokenExpired = false,
+  });
+}
+
 class UserService extends GetxService {
   final Dio dio = Dio(
     BaseOptions(
@@ -218,6 +248,315 @@ class UserService extends GetxService {
       message: 'Failed to parse response data',
       code: responseStatusCode ?? 500,
       users: [],
+    );
+  }
+
+  /// Calls the userAdd API endpoint (users/v1/add).
+  Future<UserAddResult> addUser({
+    required String email,
+    required String fullname,
+    required String mobile,
+    String rolekey = ApiManager.staticRoleKey,
+    int status = 1,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+
+    if (activeToken.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[UserService] Auth token is empty in addUser');
+      }
+      return UserAddResult(
+        success: false,
+        message: 'Authentication token missing',
+        code: 401,
+        isTokenExpired: true,
+      );
+    }
+
+    final String targetUrl = "${ApiManager.baseUrl}${ApiManager.userAdd}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {
+      "email": email,
+      "fullname": fullname,
+      "mobile": mobile,
+      "rolekey": rolekey,
+      "status": status,
+    };
+
+    dynamic responseData;
+    int? responseStatusCode;
+
+    if (kDebugMode) {
+      debugPrint(
+        '[UserService] Calling userAdd endpoint: $targetUrl with payload: $payload',
+      );
+    }
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+        responseStatusCode = httpResponse.statusCode;
+        if (httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[UserService] Web userAdd request exception: $e');
+        }
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.userAdd,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        responseStatusCode = response.statusCode;
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        responseStatusCode = e.response?.statusCode;
+        if (kDebugMode) {
+          debugPrint(
+            '[UserService] DioException in userAdd: $responseStatusCode',
+          );
+        }
+        if (e.response?.data != null) {
+          if (e.response!.data is Map<String, dynamic>) {
+            responseData = e.response!.data;
+          } else if (e.response!.data is String) {
+            try {
+              responseData = jsonDecode(e.response!.data);
+            } catch (_) {}
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[UserService] Unexpected error in userAdd: $e');
+        }
+      }
+    }
+
+    if (_isTokenExpired(responseStatusCode, responseData)) {
+      return UserAddResult(
+        success: false,
+        message: 'Session expired',
+        code: 401,
+        isTokenExpired: true,
+      );
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      final bool success = responseData['success'] == true ||
+          responseData['status'] == true ||
+          responseData['status'] == 1 ||
+          responseData['code'] == 200 ||
+          responseData['code'] == 201 ||
+          responseStatusCode == 200 ||
+          responseStatusCode == 201;
+      final String message = responseData['message']?.toString() ??
+          responseData['msg']?.toString() ??
+          'User added successfully';
+      final int code = responseData['code'] is int
+          ? responseData['code']
+          : (responseStatusCode ?? 200);
+
+      return UserAddResult(
+        success: success,
+        message: message,
+        code: code,
+      );
+    }
+
+    final isSuccessStatus = responseStatusCode != null &&
+        responseStatusCode >= 200 &&
+        responseStatusCode < 300;
+
+    return UserAddResult(
+      success: isSuccessStatus,
+      message:
+          isSuccessStatus ? 'User added successfully' : 'Failed to add user',
+      code: responseStatusCode ?? 500,
+    );
+  }
+
+  /// Calls the roleList API endpoint (roles/v1/list) via GET request with Auth Token.
+  Future<RoleListResult> getRoleList({String? token}) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+
+    if (activeToken.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[UserService] Auth token is empty in getRoleList');
+      }
+      return RoleListResult(
+        success: false,
+        message: 'Authentication token missing',
+        code: 401,
+        roles: [],
+        isTokenExpired: true,
+      );
+    }
+
+    final String targetUrl = "${ApiManager.baseUrl}${ApiManager.roleList}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    dynamic responseData;
+    int? responseStatusCode;
+
+    if (kDebugMode) {
+      debugPrint('[UserService] Calling roleList endpoint: $targetUrl');
+    }
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.get(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+        );
+        responseStatusCode = httpResponse.statusCode;
+        if (httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[UserService] Web getRoleList request exception: $e');
+        }
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.get(
+          ApiManager.roleList,
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        responseStatusCode = response.statusCode;
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic> || response.data is List) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        responseStatusCode = e.response?.statusCode;
+        if (kDebugMode) {
+          debugPrint('[UserService] DioException in getRoleList: $responseStatusCode');
+        }
+        if (e.response?.data != null) {
+          if (e.response!.data is Map<String, dynamic> ||
+              e.response!.data is List) {
+            responseData = e.response!.data;
+          } else if (e.response!.data is String) {
+            try {
+              responseData = jsonDecode(e.response!.data);
+            } catch (_) {}
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[UserService] Unexpected error in getRoleList: $e');
+        }
+      }
+    }
+
+    if (_isTokenExpired(responseStatusCode, responseData)) {
+      return RoleListResult(
+        success: false,
+        message: 'Session expired',
+        code: 401,
+        roles: [],
+        isTokenExpired: true,
+      );
+    }
+
+    RoleModel parseRoleItem(dynamic item) {
+      if (item is Map<String, dynamic>) {
+        return RoleModel.fromJson(item);
+      } else if (item is String) {
+        return RoleModel(roleKey: item, roleName: item);
+      }
+      return RoleModel(roleKey: '', roleName: item?.toString() ?? '');
+    }
+
+    List<RoleModel> rolesList = [];
+
+    if (responseData is Map<String, dynamic>) {
+      final bool success =
+          responseData['success'] == true || responseData['code'] == 200;
+      final String message =
+          responseData['message']?.toString() ?? 'success';
+      final int code =
+          responseData['code'] is int ? responseData['code'] : 200;
+
+      dynamic dataObj = responseData['data'] ?? responseData['roles'];
+      if (dataObj is Map<String, dynamic> && dataObj.containsKey('roles')) {
+        dataObj = dataObj['roles'];
+      }
+
+      if (dataObj is List) {
+        rolesList = dataObj
+            .map((r) => parseRoleItem(r))
+            .where((r) => r.roleName.isNotEmpty)
+            .toList();
+      }
+
+      return RoleListResult(
+        success: success,
+        message: message,
+        code: code,
+        roles: rolesList,
+      );
+    } else if (responseData is List) {
+      rolesList = responseData
+          .map((r) => parseRoleItem(r))
+          .where((r) => r.roleName.isNotEmpty)
+          .toList();
+
+      return RoleListResult(
+        success: true,
+        message: 'success',
+        code: 200,
+        roles: rolesList,
+      );
+    }
+
+    return RoleListResult(
+      success: false,
+      message: 'Failed to parse response data',
+      code: responseStatusCode ?? 500,
+      roles: [],
     );
   }
 

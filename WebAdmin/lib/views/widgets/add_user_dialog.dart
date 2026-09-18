@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
@@ -69,7 +69,7 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Add New User',
+                      'Add/Edit User',
                       style: TextStyle(
                         fontSize: Responsive.sp(context, 18),
                         fontWeight: FontWeight.bold,
@@ -221,9 +221,9 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        // Contact Field
+                        // Contact / Mobile Field
                         Text(
-                          'Contact',
+                          'Mobile Number',
                           style: TextStyle(
                             fontSize: Responsive.sp(context, 13),
                             fontWeight: FontWeight.w600,
@@ -240,74 +240,16 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                             fontSize: Responsive.sp(context, 14),
                             color: const Color(0xFF1E293B),
                           ),
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
+                              ? 'Mobile number is required'
+                              : null,
                           decoration: InputDecoration(
-                            hintText: '202 555 0111',
+                            hintText: '8972062925',
                             hintStyle: TextStyle(
                               fontSize: Responsive.sp(context, 14),
                               color: const Color(0xFF94A3B8),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFCBD5E1),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFCF4340),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Select Role Dropdown
-                        Text(
-                          'Select Role',
-                          style: TextStyle(
-                            fontSize: Responsive.sp(context, 13),
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF475569),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedRole,
-                          hint: Text(
-                            'Select Role',
-                            style: TextStyle(
-                              fontSize: Responsive.sp(context, 14),
-                              color: const Color(0xFF94A3B8),
-                            ),
-                          ),
-                          style: TextStyle(
-                            fontSize: Responsive.sp(context, 14),
-                            color: const Color(0xFF1E293B),
-                          ),
-                          icon: Icon(
-                            Icons.keyboard_arrow_down,
-                            color: const Color(0xFF64748B),
-                            size: Responsive.sp(context, 20),
-                          ),
-                          items: ['Driver', 'Support Admin']
-                              .map(
-                                (role) => DropdownMenuItem(
-                                  value: role,
-                                  child: Text(role),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (val) {
-                            setState(() => _selectedRole = val);
-                          },
-                          validator: (value) =>
-                              value == null ? 'Please select a role' : null,
-                          decoration: InputDecoration(
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 14,
                               vertical: 12,
@@ -338,6 +280,79 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 20),
+
+                        // Select Role Dropdown
+                        Text(
+                          'Select Role',
+                          style: TextStyle(
+                            fontSize: Responsive.sp(context, 13),
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF475569),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Obx(() {
+                          final roleItems =
+                              controller.roles.map((r) => r.roleName).toList();
+                          final validValue = roleItems.contains(_selectedRole)
+                              ? _selectedRole
+                              : null;
+
+                          return DropdownButtonFormField<String>(
+                            initialValue: validValue,
+                            hint: Text(
+                              'Select Role',
+                              style: TextStyle(
+                                fontSize: Responsive.sp(context, 14),
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                            style: TextStyle(
+                              fontSize: Responsive.sp(context, 14),
+                              color: const Color(0xFF1E293B),
+                            ),
+                            icon: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: const Color(0xFF64748B),
+                              size: Responsive.sp(context, 20),
+                            ),
+                            items: roleItems
+                                .map(
+                                  (role) => DropdownMenuItem(
+                                    value: role,
+                                    child: Text(role),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) {
+                              setState(() => _selectedRole = val);
+                              final matchedRole = controller.roles
+                                  .firstWhereOrNull((r) => r.roleName == val);
+                              print(
+                                "Selected Role (Drawer): $val, roleKey: ${matchedRole?.roleKey ?? 'N/A'}",
+                              );
+                            },
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFCBD5E1),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFCF4340),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
                         const SizedBox(height: 20),
 
                         // Select Status Dropdown
@@ -368,7 +383,7 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                             color: const Color(0xFF64748B),
                             size: Responsive.sp(context, 20),
                           ),
-                          items: ['Active', 'Inactive', 'Pending']
+                          items: ['Active', 'Inactive']
                               .map(
                                 (status) => DropdownMenuItem(
                                   value: status,
@@ -379,8 +394,6 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                           onChanged: (val) {
                             setState(() => _selectedStatus = val);
                           },
-                          validator: (value) =>
-                              value == null ? 'Please select a status' : null,
                           decoration: InputDecoration(
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -398,18 +411,6 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                                 color: Color(0xFFCF4340),
                               ),
                             ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEF4444),
-                              ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEF4444),
-                              ),
-                            ),
                           ),
                         ),
                         const SizedBox(height: 28),
@@ -418,40 +419,66 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  controller.addUser(
-                                    name: _nameController.text.trim(),
-                                    email: _emailController.text.trim(),
-                                    contact: _contactController.text.trim(),
-                                    role: _selectedRole!,
-                                    status: _selectedStatus!,
-                                    mobNo: _mobNoController.text.trim(),
-                                  );
-                                  Navigator.of(context).pop();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFCF4340),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                            Obx(() {
+                              final isSubmitting =
+                                  controller.isSubmitting.value;
+                              return ElevatedButton(
+                                onPressed: isSubmitting
+                                    ? null
+                                    : () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          final mobileNum =
+                                              _contactController.text
+                                                  .trim()
+                                                  .isNotEmpty
+                                              ? _contactController.text.trim()
+                                              : _mobNoController.text.trim();
+
+                                          final success = await controller
+                                              .addUser(
+                                                name: _nameController.text
+                                                    .trim(),
+                                                email: _emailController.text
+                                                    .trim(),
+                                                mobile: mobileNum,
+                                                role: _selectedRole,
+                                                status: _selectedStatus,
+                                              );
+                                          if (success && context.mounted) {
+                                            Navigator.of(context).pop();
+                                          }
+                                        }
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFCF4340),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 14,
+                                  ),
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 14,
-                                ),
-                              ),
-                              child: Text(
-                                'Submit',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: Responsive.sp(context, 14),
-                                ),
-                              ),
-                            ),
+                                child: isSubmitting
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Submit',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: Responsive.sp(context, 14),
+                                        ),
+                                      ),
+                              );
+                            }),
                             const SizedBox(width: 12),
                             ElevatedButton(
                               onPressed: () => Navigator.of(context).pop(),

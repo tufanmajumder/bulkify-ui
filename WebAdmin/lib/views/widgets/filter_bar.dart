@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
@@ -166,9 +166,21 @@ class FilterBar extends StatelessWidget {
                     ),
                   ),
 
-                  // Role Dropdown
-                  Obx(
-                    () => Container(
+                  // Select Role Dropdown
+                  Obx(() {
+                    final dynamicRoles = controller.roles
+                        .map((r) => r.roleName)
+                        .toList();
+                    final List<String> roleItems = [
+                      'Select Role',
+                      ...dynamicRoles,
+                    ];
+                    final currentRole =
+                        roleItems.contains(controller.selectedRole.value)
+                        ? controller.selectedRole.value
+                        : 'Select Role';
+
+                    return Container(
                       height: controlHeight,
                       width: isMobile ? (constraints.maxWidth - 40) : 190.0,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -182,14 +194,17 @@ class FilterBar extends StatelessWidget {
                           isExpanded: true,
                           value: controller.selectedRole.value == 'All'
                               ? 'Select Role'
-                              : controller.selectedRole.value,
+                              : currentRole,
                           icon: Icon(
                             Icons.keyboard_arrow_down_rounded,
                             color: mutedTextColor,
                             size: 20,
                           ),
                           style: TextStyle(
-                            color: controller.selectedRole.value == 'All'
+                            color:
+                                (controller.selectedRole.value == 'All' ||
+                                    controller.selectedRole.value ==
+                                        'Select Role')
                                 ? mutedTextColor
                                 : const Color(0xFF475569),
                             fontSize: fontSize,
@@ -202,28 +217,25 @@ class FilterBar extends StatelessWidget {
                               );
                             }
                           },
-                          items:
-                              <String>[
-                                'Select Role',
-                                'Driver',
-                                'Support Admin',
-                              ].map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: TextStyle(
-                                      color: value == 'Select Role'
-                                          ? mutedTextColor
-                                          : const Color(0xFF475569),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
+                          items: roleItems.map<DropdownMenuItem<String>>((
+                            String value,
+                          ) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                value,
+                                style: TextStyle(
+                                  color: value == 'Select Role'
+                                      ? mutedTextColor
+                                      : const Color(0xFF475569),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
 
                   // Status Dropdown
                   Obx(
@@ -239,8 +251,11 @@ class FilterBar extends StatelessWidget {
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           isExpanded: true,
-                          value: controller.selectedStatus.value == 'All'
-                              ? 'Select Status'
+                          value:
+                              (controller.selectedStatus.value == 'All' ||
+                                  controller.selectedStatus.value ==
+                                      'Select Status')
+                              ? 'Online Status'
                               : controller.selectedStatus.value,
                           icon: Icon(
                             Icons.keyboard_arrow_down_rounded,
@@ -248,7 +263,12 @@ class FilterBar extends StatelessWidget {
                             size: 20,
                           ),
                           style: TextStyle(
-                            color: controller.selectedStatus.value == 'All'
+                            color:
+                                (controller.selectedStatus.value == 'All' ||
+                                    controller.selectedStatus.value ==
+                                        'Select Status' ||
+                                    controller.selectedStatus.value ==
+                                        'Online Status')
                                 ? mutedTextColor
                                 : const Color(0xFF475569),
                             fontSize: fontSize,
@@ -257,18 +277,18 @@ class FilterBar extends StatelessWidget {
                           onChanged: (String? newValue) {
                             if (newValue != null) {
                               controller.setSelectedStatus(
-                                newValue == 'Select Status' ? 'All' : newValue,
+                                newValue == 'Online Status' ? 'All' : newValue,
                               );
                             }
                           },
-                          items: <String>['Select Status', 'Active', 'Inactive']
+                          items: <String>['Online Status', 'Online', 'Offline']
                               .map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
                                   child: Text(
                                     value,
                                     style: TextStyle(
-                                      color: value == 'Select Status'
+                                      color: value == 'Online Status'
                                           ? mutedTextColor
                                           : const Color(0xFF475569),
                                     ),
