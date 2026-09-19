@@ -9,6 +9,8 @@ class PaymentModel {
   final String time;
   final String status;
   final String amount;
+  final String terminal;
+  final String channel;
 
   PaymentModel({
     required this.orderId,
@@ -21,6 +23,8 @@ class PaymentModel {
     required this.time,
     required this.status,
     required this.amount,
+    this.terminal = 'Bulkify-Ride-USR001',
+    this.channel = 'bulkifyb2b.com',
   }) : date = _formatDate(date);
 
   static String _formatDate(String raw) {

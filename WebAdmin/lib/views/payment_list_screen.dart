@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:admin_app/controllers/payment_controller.dart';
 import 'package:admin_app/models/payment_model.dart';
 import 'package:admin_app/utils/responsive.dart';
+import 'package:admin_app/views/payment_details_screen.dart';
 import 'package:admin_app/views/widgets/header.dart';
 import 'package:admin_app/views/widgets/sidebar.dart';
 
@@ -18,7 +19,7 @@ class PaymentListScreen extends StatelessWidget {
       body: Row(
         children: [
           // Sidebar
-          const Sidebar(activeRoute: '/payment-details'),
+          const Sidebar(activeRoute: '/payments'),
 
           // Main Content Area
           Expanded(
@@ -556,27 +557,27 @@ class PaymentListScreen extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Expanded(flex: 5, child: _buildHeaderCell('ORDER ID')),
-                      Expanded(flex: 5, child: _buildHeaderCell('PAYMENT ID')),
-                      Expanded(flex: 5, child: _buildHeaderCell('UTR/RRN')),
+                      Expanded(flex: 5, child: _buildHeaderCell(context, 'ORDER ID')),
+                      Expanded(flex: 5, child: _buildHeaderCell(context, 'PAYMENT ID')),
+                      Expanded(flex: 5, child: _buildHeaderCell(context, 'UTR/RRN')),
                       Expanded(
                         flex: 5,
-                        child: _buildHeaderCell('CUSTOMER DETAILS'),
+                        child: _buildHeaderCell(context, 'CUSTOMER DETAILS'),
                       ),
-                      Expanded(flex: 4, child: _buildHeaderCell('CREATED ON')),
-                      Expanded(flex: 4, child: _buildHeaderCell('STATUS')),
+                      Expanded(flex: 4, child: _buildHeaderCell(context, 'CREATED ON')),
+                      Expanded(flex: 4, child: _buildHeaderCell(context, 'STATUS')),
                       Expanded(
                         flex: 4,
                         child: Align(
                           alignment: Alignment.centerRight,
-                          child: _buildHeaderCell('AMOUNT'),
+                          child: _buildHeaderCell(context, 'AMOUNT'),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Align(
                           alignment: Alignment.centerRight,
-                          child: _buildHeaderCell('ACTION'),
+                          child: _buildHeaderCell(context, 'ACTION'),
                         ),
                       ),
                     ],
@@ -627,14 +628,14 @@ class PaymentListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderCell(String text) {
+  Widget _buildHeaderCell(BuildContext context, String text) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 12,
+      style: TextStyle(
+        fontSize: Responsive.sp(context, 12),
         fontWeight: FontWeight.w700,
-        color: Color(0xFF475569),
-        letterSpacing: 0.5,
+        color: const Color(0xFF475569),
+        letterSpacing: 0.6,
       ),
     );
   }
@@ -644,135 +645,30 @@ class PaymentListScreen extends StatelessWidget {
     PaymentController controller,
     PaymentModel item,
   ) {
-    final double fontSize = Responsive.sp(context, 13);
+    final double fontSize = Responsive.sp(context, 13.5);
+    final double subFontSize = Responsive.sp(context, 11.5);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 1. ORDER ID
-          Expanded(
-            flex: 5,
-            child: Text(
-              item.orderId,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-          ),
-
-          // 2. PAYMENT ID
-          Expanded(
-            flex: 5,
-            child: Text(
-              item.paymentId,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-          ),
-
-          // 3. UTR/RRN (UTR on top, Payment Method subtext)
-          Expanded(
-            flex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  item.utrRrn,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.paymentMethod,
-                  style: TextStyle(
-                    fontSize: fontSize - 2,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 4. CUSTOMER DETAILS (Name on top, NA subtext)
-          Expanded(
-            flex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  item.customerName,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "-",
-                  //item.customerSubtext,
-                  style: TextStyle(
-                    fontSize: fontSize - 2,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 5. CREATED ON (Date line 1, Time line 2)
-          Expanded(
-            flex: 4,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  item.date,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    color: const Color(0xFF475569),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.time,
-                  style: TextStyle(
-                    fontSize: fontSize - 2,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 6. STATUS
-          Expanded(flex: 4, child: _buildStatusCell(item.status)),
-
-          // 7. AMOUNT (Right Aligned)
-          Expanded(
-            flex: 4,
-            child: Align(
-              alignment: Alignment.centerRight,
+    return InkWell(
+      onTap: () {
+        Get.to(
+          () => PaymentDetailsScreen(payment: item),
+          routeName: '/payment-details',
+          arguments: item,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 1. ORDER ID
+            Expanded(
+              flex: 5,
               child: Text(
-                item.amount,
+                item.orderId,
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w500,
@@ -780,55 +676,162 @@ class PaymentListScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),
 
-          // 8. ACTION Menu
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: PopupMenuButton<String>(
-                icon: const Icon(
-                  Icons.more_vert_rounded,
-                  size: 18,
-                  color: Color(0xFF64748B),
+            // 2. PAYMENT ID
+            Expanded(
+              flex: 5,
+              child: Text(
+                item.paymentId,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF475569),
                 ),
-                onSelected: (val) {
-                  // Get.snackbar(
-                  //   'Payment Action',
-                  //   '$val for ${item.orderId}',
-                  //   snackPosition: SnackPosition.BOTTOM,
-                  //   margin: const EdgeInsets.all(16),
-                  // );
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'View Details',
-                    child: Text('View Details'),
+              ),
+            ),
+
+            // 3. UTR/RRN (UTR on top, Payment Method subtext)
+            Expanded(
+              flex: 5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    item.utrRrn,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF475569),
+                    ),
                   ),
-                  // const PopupMenuItem(
-                  //   value: 'Copy UTR',
-                  //   child: Text('Copy UTR'),
-                  // ),
-                  // const PopupMenuItem(
-                  //   value: 'Download Receipt',
-                  //   child: Text('Download Receipt'),
-                  // ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.paymentMethod,
+                    style: TextStyle(
+                      fontSize: subFontSize,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            // 4. CUSTOMER DETAILS (Name on top, NA subtext)
+            Expanded(
+              flex: 5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    item.customerName,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    "-",
+                    style: TextStyle(
+                      fontSize: subFontSize,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 5. CREATED ON (Date line 1, Time line 2)
+            Expanded(
+              flex: 4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    item.date,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.time,
+                    style: TextStyle(
+                      fontSize: subFontSize,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 6. STATUS
+            Expanded(flex: 4, child: _buildStatusCell(context, item.status)),
+
+            // 7. AMOUNT (Right Aligned)
+            Expanded(
+              flex: 4,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  item.amount,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+              ),
+            ),
+
+            // 8. ACTION Menu
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: PopupMenuButton<String>(
+                  icon: const Icon(
+                    Icons.more_vert_rounded,
+                    size: 18,
+                    color: Color(0xFF64748B),
+                  ),
+                  onSelected: (val) {
+                    if (val == 'View Details') {
+                      Get.to(
+                        () => PaymentDetailsScreen(payment: item),
+                        routeName: '/payment-details',
+                        arguments: item,
+                      );
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'View Details',
+                      child: Text('View Details'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatusCell(String status) {
+  Widget _buildStatusCell(BuildContext context, String status) {
     Color color;
 
     switch (status.toLowerCase()) {
       case 'success':
-        color = const Color(0xFF10B981);
+        color = const Color(0xFF22C55E);
         break;
       case 'pending':
         color = const Color(0xFFF97316);
@@ -845,7 +848,11 @@ class PaymentListScreen extends StatelessWidget {
 
     return Text(
       status,
-      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: color),
+      style: TextStyle(
+        fontSize: Responsive.sp(context, 13.5),
+        fontWeight: FontWeight.w500,
+        color: color,
+      ),
     );
   }
 

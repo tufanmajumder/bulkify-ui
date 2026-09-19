@@ -341,7 +341,7 @@ class UserController extends GetxController {
   }) async {
     isSubmitting.value = true;
     try {
-      final int statusInt = status == 'Inactive' ? 0 : 1;
+      final int statusInt = 2;
 
       final result = await _userService.addUser(
         email: email,

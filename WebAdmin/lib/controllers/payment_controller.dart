@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/payment_model.dart';
+import 'package:admin_app/views/payment_details_screen.dart';
 
 class PaymentController extends GetxController {
   final RxList<PaymentModel> payments = <PaymentModel>[].obs;
@@ -361,6 +362,14 @@ class PaymentController extends GetxController {
           ],
         );
       },
+    );
+  }
+
+  void viewPaymentDetails(PaymentModel item) {
+    Get.to(
+      () => PaymentDetailsScreen(payment: item),
+      routeName: '/payment-details',
+      arguments: item,
     );
   }
 }

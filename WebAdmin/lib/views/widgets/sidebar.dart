@@ -77,6 +77,7 @@ class _SidebarState extends State<Sidebar> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
+        clipBehavior: Clip.hardEdge,
         width: currentWidth,
         height: double.infinity,
         decoration: BoxDecoration(
@@ -154,7 +155,7 @@ class _SidebarState extends State<Sidebar> {
                   onTap: () {
                     Get.offAll(
                       () => const PaymentListScreen(),
-                      routeName: '/payment-details',
+                      routeName: '/payments',
                     );
                   },
                 ),
@@ -285,27 +286,32 @@ class _SidebarState extends State<Sidebar> {
                 ]
               : [],
         ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.white : const Color(0xFF64748B),
-              size: 22,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFF475569),
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+        child: OverflowBox(
+          minWidth: 0,
+          maxWidth: 180,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                size: 22,
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : const Color(0xFF475569),
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

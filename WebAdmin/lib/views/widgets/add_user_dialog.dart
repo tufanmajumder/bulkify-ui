@@ -293,8 +293,9 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                         ),
                         const SizedBox(height: 6),
                         Obx(() {
-                          final roleItems =
-                              controller.roles.map((r) => r.roleName).toList();
+                          final roleItems = controller.roles
+                              .map((r) => r.roleName)
+                              .toList();
                           final validValue = roleItems.contains(_selectedRole)
                               ? _selectedRole
                               : null;
@@ -383,7 +384,7 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                             color: const Color(0xFF64748B),
                             size: Responsive.sp(context, 20),
                           ),
-                          items: ['Active', 'Inactive']
+                          items: ['Pending']
                               .map(
                                 (status) => DropdownMenuItem(
                                   value: status,
