@@ -1,21 +1,27 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:admin_app/models/user_model.dart';
+import 'package:admin_app/service/user_service.dart';
+import 'package:admin_app/controllers/user_controller.dart';
 
 class UserProfileController extends GetxController {
+  // Loading & State
+  final RxBool isLoading = false.obs;
+  final RxString userkey = ''.obs;
+
   // User Profile Basic & Personal Info (Reactive)
-  // Demo values — replace with authenticated user data from API.
-  final RxString name = 'Demo Admin'.obs;
-  final RxString email = 'admin@example.com'.obs;
-  final RxString role = 'Admin'.obs;
-  final RxString status = 'Active'.obs;
-  final RxString mobile = '+91 90000 00001'.obs;
-  final RxString emergencyContact = '+91 90000 00002'.obs;
-  final RxString whatsapp = '+91 90000 00002'.obs;
-  // Avatar: empty string renders an initials-based fallback in the UI.
-  // Do NOT use external CDN URLs — they leak requests to third parties.
-  final RxString avatarUrl = ''.obs;
-  final RxString tasksDone = '1.23k'.obs;
-  final RxString projectsDone = '568'.obs;
+  final RxString name = ''.obs;
+  final RxString basicName = ''.obs;
+  final RxString email = ''.obs;
+  final RxString role = ''.obs;
+  final RxString status = ''.obs;
+  final RxString mobile = ''.obs;
+  final RxString emergencyContact = ''.obs;
+  final RxString whatsapp = ''.obs;
+  final RxString avatarUrl = 'assets/user_avatar.jpg'.obs;
+  final RxString tasksDone = '-'.obs;
+  final RxString projectsDone = '-'.obs;
 
   // Tabs state
   final RxInt selectedTabIndex = 0.obs;
@@ -30,7 +36,7 @@ class UserProfileController extends GetxController {
   // Invoices & Pagination State
   final RxList<Map<String, String>> invoices = <Map<String, String>>[].obs;
   final RxInt rowsPerPage = 10.obs;
-  final RxInt currentPage = 1.obs;
+  final RxInt currentPage = 3.obs;
   final RxString invoiceSearchQuery = ''.obs;
 
   // Security Tab State
@@ -85,7 +91,175 @@ class UserProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    final args = Get.arguments;
+    if (args is UserModel && args.id.isNotEmpty) {
+      userkey.value = args.id;
+      setUserModel(args);
+    } else if (args is String && args.trim().isNotEmpty) {
+      userkey.value = args.trim();
+    } else if (args is Map && args.containsKey('userkey')) {
+      userkey.value = args['userkey'].toString();
+    }
+
+    // Lookup in UserController if registered & fields are empty
+    if (userkey.value.isNotEmpty && Get.isRegistered<UserController>()) {
+      try {
+        final userCtrl = Get.find<UserController>();
+        final matched = userCtrl.users.firstWhereOrNull(
+          (u) => u.id == userkey.value || u.userKey == userkey.value,
+        );
+        if (matched != null) {
+          setUserModel(matched);
+        }
+      } catch (_) {}
+    }
+
+    print("userkey in user profile...${userkey.value}");
+    fetchUserDetails(userkey.value);
     _loadInitialInvoices();
+  }
+
+  /// Calls ApiManager.userDetails (users/v1/get-by-key) via UserService with userkey & token.
+  Future<void> fetchUserDetails([String? targetUserKey]) async {
+    final String keyToFetch =
+        (targetUserKey != null && targetUserKey.trim().isNotEmpty)
+        ? targetUserKey.trim()
+        : userkey.value;
+    if (keyToFetch.isEmpty) return;
+
+    isLoading.value = true;
+    try {
+      final UserService userService = Get.isRegistered<UserService>()
+          ? Get.find<UserService>()
+          : Get.put(UserService());
+
+      final result = await userService.getUserDetails(userkey: keyToFetch);
+      if (result.isTokenExpired) {
+        Get.offAllNamed('/login');
+        return;
+      }
+
+      if (result.user != null) {
+        setUserModel(result.user!);
+      }
+      if (result.rawData != null) {
+        populateFromRawMap(result.rawData!);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[UserProfileController] Error in fetchUserDetails: $e');
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void setUserModel(UserModel u) {
+    if (u.name.isNotEmpty) {
+      name.value = u.name;
+      basicName.value = u.name;
+    }
+    if (u.email.isNotEmpty) email.value = u.email;
+    if (u.role.isNotEmpty) role.value = u.role;
+    if (u.status.isNotEmpty) status.value = u.status;
+    final mob = u.mobNo.isNotEmpty ? u.mobNo : (u.contact ?? '');
+    if (mob.isNotEmpty) {
+      mobile.value = mob;
+      emergencyContact.value = mob;
+      whatsapp.value = mob;
+    }
+  }
+
+  void populateFromRawMap(Map<String, dynamic> raw) {
+    final nameVal =
+        raw['name']?.toString() ??
+        raw['fullname']?.toString() ??
+        raw['full_name']?.toString() ??
+        raw['first_name']?.toString() ??
+        raw['display_name']?.toString() ??
+        raw['userName']?.toString() ??
+        raw['username']?.toString() ??
+        raw['user_name']?.toString() ??
+        '';
+    if (nameVal.isNotEmpty && nameVal != 'null') {
+      name.value = nameVal;
+      basicName.value = nameVal;
+    }
+
+    final emailVal =
+        raw['email']?.toString() ??
+        raw['emailid']?.toString() ??
+        raw['email_id']?.toString() ??
+        raw['emailAddress']?.toString() ??
+        raw['email_address']?.toString() ??
+        '';
+    if (emailVal.isNotEmpty && emailVal != 'null') {
+      email.value = emailVal;
+    }
+
+    final roleVal =
+        raw['rolename']?.toString() ??
+        raw['role_name']?.toString() ??
+        raw['roleName']?.toString() ??
+        raw['role_title']?.toString() ??
+        raw['user_role']?.toString() ??
+        raw['role']?.toString() ??
+        '';
+    if (roleVal.isNotEmpty && roleVal != 'null') {
+      role.value = roleVal;
+    }
+
+    final statusVal =
+        raw['status']?.toString() ??
+        raw['user_status']?.toString() ??
+        raw['is_active']?.toString() ??
+        '';
+    if (statusVal.isNotEmpty && statusVal != 'null') {
+      if (statusVal == '1' ||
+          statusVal.toLowerCase() == 'active' ||
+          statusVal.toLowerCase() == 'true') {
+        status.value = 'Active';
+      } else if (statusVal == '0' ||
+          statusVal.toLowerCase() == 'inactive' ||
+          statusVal.toLowerCase() == 'false') {
+        status.value = 'Inactive';
+      } else {
+        status.value = statusVal;
+      }
+    }
+
+    final mobVal =
+        raw['mobile']?.toString() ??
+        raw['mobNo']?.toString() ??
+        raw['mob_no']?.toString() ??
+        raw['mobile_no']?.toString() ??
+        raw['mobile_number']?.toString() ??
+        raw['contact']?.toString() ??
+        raw['phone']?.toString() ??
+        raw['phone_number']?.toString() ??
+        '';
+    if (mobVal.isNotEmpty && mobVal != 'null') {
+      mobile.value = mobVal;
+      final emergencyVal =
+          raw['emergency_contact']?.toString() ??
+          raw['emergencyContact']?.toString() ??
+          raw['emergency_phone']?.toString() ??
+          raw['emergency_mobile']?.toString() ??
+          raw['alt_contact']?.toString() ??
+          mobVal;
+      emergencyContact.value =
+          (emergencyVal.isNotEmpty && emergencyVal != 'null')
+          ? emergencyVal
+          : mobVal;
+
+      final waVal =
+          raw['whatsapp']?.toString() ??
+          raw['whatsapp_no']?.toString() ??
+          raw['whatsapp_number']?.toString() ??
+          raw['whatsapp_phone']?.toString() ??
+          mobVal;
+      whatsapp.value = (waVal.isNotEmpty && waVal != 'null') ? waVal : mobVal;
+    }
   }
 
   @override
@@ -98,23 +272,23 @@ class UserProfileController extends GetxController {
 
   void _loadInitialInvoices() {
     final List<Map<String, String>> baseInvoices = [
-      {'id': '#4910', 'total': '\$0', 'date': '22 Oct 2026'},
-      {'id': '#4909', 'total': '\$0', 'date': '18 Oct 2026'},
-      {'id': '#4908', 'total': '\$0', 'date': '01 Feb 2026'},
-      {'id': '#4907', 'total': '\$0', 'date': '08 Dec 2025'},
-      {'id': '#4906', 'total': '\$0', 'date': '10 Sep 2025'},
-      {'id': '#4905', 'total': '\$0', 'date': '30 Nov 2025'},
-      {'id': '#4904', 'total': '\$0', 'date': '19 Nov 2025'},
-      {'id': '#4903', 'total': '\$0', 'date': '12 Apr 2025'},
-      {'id': '#4902', 'total': '\$0', 'date': '01 Aug 2025'},
-      {'id': '#4901', 'total': '\$0', 'date': '15 May 2025'},
+      // {'id': '#4910', 'total': '₹ 3428', 'date': '22-10-2019'},
+      // {'id': '#4911', 'total': '₹ 2875', 'date': '23-10-2019'},
+      // {'id': '#4912', 'total': '₹ 3150', 'date': '24-10-2019'},
+      // {'id': '#4913', 'total': '₹ 3980', 'date': '25-10-2019'},
+      // {'id': '#4914', 'total': '₹ 2500', 'date': '26-10-2019'},
+      // {'id': '#4915', 'total': '₹ 4500', 'date': '27-10-2019'},
+      // {'id': '#4916', 'total': '₹ 3700', 'date': '28-10-2019'},
+      // {'id': '#4917', 'total': '₹ 4300', 'date': '29-10-2019'},
+      // {'id': '#4918', 'total': '₹ 3600', 'date': '30-10-2019'},
+      // {'id': '#4919', 'total': '₹ 2900', 'date': '31-10-2019'},
     ];
 
-    // Expand to 50 items for pagination testing
+    // Expand to 50 items for pagination matching screenshot
     final List<Map<String, String>> extended = [];
     for (int i = 0; i < 5; i++) {
       for (var inv in baseInvoices) {
-        final idNum = 4910 - extended.length;
+        final idNum = 4910 + extended.length;
         extended.add({
           'id': '#$idNum',
           'total': inv['total']!,

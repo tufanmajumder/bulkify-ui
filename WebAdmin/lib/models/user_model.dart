@@ -69,6 +69,8 @@ class UserModel {
   final String mobNo;
   final String isOnline;
 
+  String get userKey => id;
+
   UserModel({
     required this.id,
     required this.userName,

@@ -57,33 +57,35 @@ class UserProfileScreen extends StatelessWidget {
                                 ],
                               );
                             }
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  flex: 4,
-                                  child: _buildProfileSummaryCard(
-                                    context,
-                                    controller,
+                            return IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    flex: 4,
+                                    child: _buildProfileSummaryCard(
+                                      context,
+                                      controller,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: spacingHeight),
-                                Expanded(
-                                  flex: 3,
-                                  child: _buildBasicInfoCard(
-                                    context,
-                                    controller,
+                                  SizedBox(width: spacingHeight),
+                                  Expanded(
+                                    flex: 3,
+                                    child: _buildBasicInfoCard(
+                                      context,
+                                      controller,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: spacingHeight),
-                                Expanded(
-                                  flex: 3,
-                                  child: _buildPersonalInfoCard(
-                                    context,
-                                    controller,
+                                  SizedBox(width: spacingHeight),
+                                  Expanded(
+                                    flex: 3,
+                                    child: _buildPersonalInfoCard(
+                                      context,
+                                      controller,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             );
                           },
                         ),
@@ -186,31 +188,31 @@ class UserProfileScreen extends StatelessWidget {
                         SizedBox(height: spacingHeight * 1.5),
 
                         // Footer
-                        Container(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: RichText(
-                              textAlign: TextAlign.right,
-                              text: TextSpan(
-                                style: TextStyle(
-                                  fontSize: Responsive.sp(context, 13),
-                                  color: const Color(0xFF64748B),
-                                ),
-                                children: const [
-                                  TextSpan(text: '© Developed by '),
-                                  TextSpan(
-                                    text: 'Digital Trident Solutions',
-                                    style: TextStyle(
-                                      color: Color(0xFFCF4340),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        // Container(
+                        //   alignment: Alignment.centerRight,
+                        //   child: Padding(
+                        //     padding: const EdgeInsets.only(bottom: 12.0),
+                        //     child: RichText(
+                        //       textAlign: TextAlign.right,
+                        //       text: TextSpan(
+                        //         style: TextStyle(
+                        //           fontSize: Responsive.sp(context, 13),
+                        //           color: const Color(0xFF64748B),
+                        //         ),
+                        //         children: const [
+                        //           TextSpan(text: '© Developed by '),
+                        //           TextSpan(
+                        //             text: 'Digital Trident Solutions',
+                        //             style: TextStyle(
+                        //               color: Color(0xFFCF4340),
+                        //               fontWeight: FontWeight.w600,
+                        //             ),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -249,30 +251,36 @@ class UserProfileScreen extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Top Row: Avatar (Left) + Stats Grid (Right)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // User Avatar with GetX Obx
+              // User Avatar
               Obx(
                 () => Container(
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
                     color: const Color(0xFFCBD5E1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
                       controller.avatarUrl.value,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: const Color(0xFF475569),
-                        child: const Icon(
-                          Icons.person,
-                          size: 40,
-                          color: Colors.white,
+                      errorBuilder: (context, error, stackTrace) => Image.network(
+                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, err, st) => Container(
+                          color: const Color(0xFF475569),
+                          child: const Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -281,51 +289,53 @@ class UserProfileScreen extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // Stats Grid
+              // Stats Grid (2x2)
               Expanded(
                 child: Obx(
-                  () => Row(
+                  () => Column(
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildStatItem(
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatItem(
                               context,
                               Icons.check_box_outlined,
                               controller.tasksDone.value,
                               'Task Done',
                             ),
-                            const SizedBox(height: 12),
-                            _buildStatItem(
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildStatItem(
+                              context,
+                              Icons.check_box_outlined,
+                              controller.tasksDone.value,
+                              'Task Done',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatItem(
                               context,
                               Icons.business_center_outlined,
                               controller.projectsDone.value,
                               'Project Done',
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildStatItem(
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildStatItem(
                               context,
-                              Icons.star_outline_rounded,
-                              '4.9',
-                              'Rating',
+                              Icons.business_center_outlined,
+                              controller.projectsDone.value,
+                              'Project Done',
                             ),
-                            const SizedBox(height: 12),
-                            _buildStatItem(
-                              context,
-                              Icons.timer_outlined,
-                              '98%',
-                              'On Time Rate',
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -333,73 +343,59 @@ class UserProfileScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Action Buttons: Edit (Modal Dialog) & Suspend Toggle
+          // Bottom Row: Action Buttons (Edit & Suspend)
           Row(
             children: [
-              ElevatedButton.icon(
+              ElevatedButton(
                 onPressed: () => _showEditProfileDialog(context, controller),
-                icon: const Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  'Edit Profile',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: Responsive.sp(context, 13),
-                  ),
-                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFCF4340),
                   elevation: 0,
+                  minimumSize: const Size(44, 32),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                    horizontal: 16,
+                    vertical: 6,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: Text(
+                  'Edit',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: Responsive.sp(context, 12),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Obx(() {
                 final isSuspended = controller.status.value == 'Suspended';
-                return ElevatedButton.icon(
+                return ElevatedButton(
                   onPressed: () => controller.toggleSuspendStatus(),
-                  icon: Icon(
-                    isSuspended
-                        ? Icons.play_arrow_rounded
-                        : Icons.block_rounded,
-                    size: 16,
-                    color: isSuspended
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFFEF4444),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    elevation: 0,
+                    minimumSize: const Size(56, 32),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
-                  label: Text(
+                  child: Text(
                     isSuspended ? 'Activate' : 'Suspend',
                     style: TextStyle(
                       color: isSuspended
                           ? const Color(0xFF10B981)
-                          : const Color(0xFFEF4444),
-                      fontWeight: FontWeight.w600,
-                      fontSize: Responsive.sp(context, 13),
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isSuspended
-                        ? const Color(0xFFD1FAE5)
-                        : const Color(0xFFFEE2E2),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                          : const Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                      fontSize: Responsive.sp(context, 12),
                     ),
                   ),
                 );
@@ -435,7 +431,7 @@ class UserProfileScreen extends StatelessWidget {
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: Responsive.sp(context, 14),
+                  fontSize: Responsive.sp(context, 13.5),
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1E293B),
                 ),
@@ -489,42 +485,9 @@ class UserProfileScreen extends StatelessWidget {
               controller.emergencyContact.value,
             ),
             const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Status',
-                  style: TextStyle(
-                    fontSize: Responsive.sp(context, 13),
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: controller.status.value == 'Active'
-                        ? const Color(0xFFD1FAE5)
-                        : const Color(0xFFFEE2E2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    controller.status.value,
-                    style: TextStyle(
-                      fontSize: Responsive.sp(context, 12),
-                      fontWeight: FontWeight.w600,
-                      color: controller.status.value == 'Active'
-                          ? const Color(0xFF059669)
-                          : const Color(0xFFDC2626),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _buildInfoRow(context, 'Status', controller.status.value),
             const SizedBox(height: 12),
-            _buildInfoRow(context, 'Name', controller.name.value),
+            _buildInfoRow(context, 'Name', controller.basicName.value),
           ],
         ),
       ),
@@ -779,7 +742,7 @@ class UserProfileScreen extends StatelessWidget {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: const Color(0xFFFAFAFA),
                           border: Border(
                             top: BorderSide(color: borderColor),
                             bottom: BorderSide(color: borderColor),
@@ -791,32 +754,22 @@ class UserProfileScreen extends StatelessWidget {
                               flex: 3,
                               child: _buildHeaderCell(
                                 context,
-                                '#',
-                                hasDivider: true,
+                                'INVOICE NUMBER',
                               ),
                             ),
                             Expanded(
                               flex: 3,
-                              child: _buildHeaderCell(
-                                context,
-                                'TOTAL',
-                                hasDivider: true,
-                              ),
+                              child: _buildHeaderCell(context, 'TOTAL'),
                             ),
                             Expanded(
                               flex: 3,
-                              child: _buildHeaderCell(
-                                context,
-                                'ISSUED DATE',
-                                hasDivider: true,
-                              ),
+                              child: _buildHeaderCell(context, 'ISSUED DATE'),
                             ),
                             Expanded(
                               flex: 2,
-                              child: _buildHeaderCell(
-                                context,
-                                'ACTION',
-                                hasDivider: false,
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: _buildHeaderCell(context, 'ACTION'),
                               ),
                             ),
                           ],
@@ -893,30 +846,35 @@ class UserProfileScreen extends StatelessWidget {
                                   // Actions
                                   Expanded(
                                     flex: 2,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.visibility_outlined,
-                                            size: 18,
-                                            color: Color(0xFF64748B),
-                                          ),
-                                          tooltip: 'View Invoice',
-                                          onPressed: () => controller
-                                              .viewInvoice(inv['id']!),
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: PopupMenuButton<String>(
+                                        icon: const Icon(
+                                          Icons.more_vert_rounded,
+                                          size: 18,
+                                          color: Color(0xFF64748B),
                                         ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete_outline_rounded,
-                                            size: 18,
-                                            color: Color(0xFFEF4444),
+                                        onSelected: (val) {
+                                          controller.viewInvoice(inv['id']!);
+                                          // if (val == 'View Details') {
+                                          //   controller.viewInvoice(inv['id']!);
+                                          // } else if (val == 'Delete') {
+                                          //   controller.deleteInvoice(
+                                          //     inv['id']!,
+                                          //   );
+                                          // }
+                                        },
+                                        itemBuilder: (context) => [
+                                          const PopupMenuItem<String>(
+                                            value: 'View Details',
+                                            child: Text('View Details'),
                                           ),
-                                          tooltip: 'Delete Invoice',
-                                          onPressed: () => controller
-                                              .deleteInvoice(inv['id']!),
-                                        ),
-                                      ],
+                                          // const PopupMenuItem<String>(
+                                          //   value: 'Delete',
+                                          //   child: Text('Delete'),
+                                          // ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1566,32 +1524,15 @@ class UserProfileScreen extends StatelessWidget {
     );
   }
 
-  // Helper UI Widgets
-  Widget _buildHeaderCell(
-    BuildContext context,
-    String text, {
-    required bool hasDivider,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: Responsive.sp(context, 12),
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF475569),
-            letterSpacing: 0.6,
-          ),
-        ),
-        if (hasDivider)
-          Container(
-            height: 14,
-            width: 1,
-            margin: const EdgeInsets.only(right: 20),
-            color: const Color(0xFFE2E8F0),
-          ),
-      ],
+  Widget _buildHeaderCell(BuildContext context, String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: Responsive.sp(context, 12),
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF64748B),
+        letterSpacing: 0.6,
+      ),
     );
   }
 

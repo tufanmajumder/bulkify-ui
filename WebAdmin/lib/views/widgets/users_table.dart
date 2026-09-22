@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
 import 'package:admin_app/models/user_model.dart';
 import 'package:admin_app/utils/responsive.dart';
+import 'package:admin_app/views/user_profile_screen.dart';
 
 class UsersTable extends StatelessWidget {
   const UsersTable({super.key});
@@ -271,17 +272,44 @@ class UsersTable extends StatelessWidget {
             flex: 5,
             child: Align(
               alignment: Alignment.centerRight,
-              child: InkWell(
-                onTap: () {},
-                borderRadius: BorderRadius.circular(4),
-                child: const Padding(
-                  padding: EdgeInsets.all(4.0),
-                  child: Icon(
-                    Icons.more_vert_rounded,
-                    color: Color(0xFF64748B),
-                    size: 18,
-                  ),
+              child: PopupMenuButton<String>(
+                icon: const Icon(
+                  Icons.more_vert_rounded,
+                  color: Color(0xFF64748B),
+                  size: 18,
                 ),
+                tooltip: 'Show Options',
+                onSelected: (val) {
+                  if (val == 'View Details') {
+                    Get.to(
+                      () => const UserProfileScreen(),
+                      routeName: '/user-profile',
+                      arguments: user,
+                    );
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem<String>(
+                    value: 'View Details',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: Color(0xFF64748B),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'View Details',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF334155),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
