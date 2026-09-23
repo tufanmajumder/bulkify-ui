@@ -1,3 +1,4 @@
+import 'package:admin_app/utils/color_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/order_controller.dart';
@@ -308,7 +309,7 @@ class OrderListScreen extends StatelessWidget {
                     Obx(
                       () => PopupMenuButton<int>(
                         onSelected: (rows) => controller.setRowsPerPage(rows),
-                        itemBuilder: (context) => [10, 20, 50].map((r) {
+                        itemBuilder: (context) => [2, 5, 10, 20, 50].map((r) {
                           return PopupMenuItem<int>(
                             value: r,
                             child: Text('$r rows per page'),
@@ -791,9 +792,15 @@ class OrderListScreen extends StatelessWidget {
             },
           ),
 
-          // Pagination Footer (Matching Image)
-          Obx(
-            () => Container(
+          // Pagination Footer
+          Obx(() {
+            final start = controller.startEntryIndex;
+            final end = controller.endEntryIndex;
+            final currentPage = controller.currentPage.value;
+            final isLoading = controller.isLoading.value;
+            final hasMorePage = controller.hasMorePage.value;
+
+            return Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: borderColor)),
@@ -811,7 +818,7 @@ class OrderListScreen extends StatelessWidget {
                       children: [
                         const TextSpan(text: 'Showing '),
                         TextSpan(
-                          text: '${controller.startEntryIndex}',
+                          text: '$start',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF475569),
@@ -819,27 +826,24 @@ class OrderListScreen extends StatelessWidget {
                         ),
                         const TextSpan(text: ' to '),
                         TextSpan(
-                          text: '${controller.endEntryIndex}',
+                          text: '$end',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF475569),
                           ),
                         ),
-                        TextSpan(
-                          text:
-                              ' of ${controller.filteredOrders.length} entries',
-                        ),
+                        TextSpan(text: ' entries (Page $currentPage)'),
                       ],
                     ),
                   ),
 
-                  // Page Buttons (<<, <, 1, 2, ..., >, >>)
+                  // Page Buttons (<<, <, 1, 2, ..., >)
                   Row(
                     children: [
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_double_arrow_left_rounded,
-                        onTap: controller.currentPage.value > 1
+                        onTap: currentPage > 1 && !isLoading
                             ? () => controller.goToFirstPage()
                             : null,
                       ),
@@ -847,36 +851,33 @@ class OrderListScreen extends StatelessWidget {
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_arrow_left_rounded,
-                        onTap: controller.currentPage.value > 1
+                        onTap: currentPage > 1 && !isLoading
                             ? () => controller.previousPage()
                             : null,
                       ),
                       const SizedBox(width: 6),
-                      ...controller.visiblePageNumbers.map((pageNum) {
-                        final isSelected =
-                            controller.currentPage.value == pageNum;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6.0),
-                          child: _buildPageNumBtn(
-                            context,
-                            '$pageNum',
-                            isSelected,
-                            onTap: () => controller.setPage(pageNum),
-                          ),
-                        );
-                      }),
+                      ...List.generate(
+                        hasMorePage ? currentPage + 1 : currentPage,
+                        (index) {
+                          final pageNum = index + 1;
+                          final isSelected = pageNum == currentPage;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6.0),
+                            child: _buildPageNumBtn(
+                              context,
+                              '$pageNum',
+                              isSelected,
+                              onTap: isLoading || isSelected
+                                  ? () {}
+                                  : () => controller.setPage(pageNum),
+                            ),
+                          );
+                        },
+                      ),
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_arrow_right_rounded,
-                        onTap: controller.hasMorePage.value
-                            ? () => controller.nextPage()
-                            : null,
-                      ),
-                      const SizedBox(width: 6),
-                      _buildPageNavBtn(
-                        context,
-                        Icons.keyboard_double_arrow_right_rounded,
-                        onTap: controller.hasMorePage.value
+                        onTap: hasMorePage && !isLoading
                             ? () => controller.nextPage()
                             : null,
                       ),
@@ -884,8 +885,8 @@ class OrderListScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );
@@ -894,7 +895,12 @@ class OrderListScreen extends StatelessWidget {
   // Payment Status Bullet Cell
   Widget _buildPaymentStatusCell(BuildContext context, String status) {
     final isPending = status.toLowerCase() == 'unpaid';
-    final color = isPending ? const Color(0xFFF97316) : const Color(0xFF10B981);
+    final pendingNot = status.toLowerCase() == 'pending';
+    final color = isPending
+        ? const Color(0xFFF97316)
+        : pendingNot
+        ? ColorManager.avatarGoldenAmber
+        : const Color(0xFF10B981);
 
     return Text(
       status,

@@ -71,7 +71,14 @@ class FilterBar extends StatelessWidget {
                               controller.setRowsPerPage(newValue);
                             }
                           },
-                          items: <int>[5, 10, 20, 50]
+                          items: (<int>{
+                            2,
+                            5,
+                            10,
+                            20,
+                            50,
+                            controller.rowsPerPage.value,
+                          }.toList()..sort())
                               .map<DropdownMenuItem<int>>((int value) {
                                 return DropdownMenuItem<int>(
                                   value: value,

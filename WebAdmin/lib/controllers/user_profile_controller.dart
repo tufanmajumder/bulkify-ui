@@ -114,8 +114,15 @@ class UserProfileController extends GetxController {
       } catch (_) {}
     }
 
-    print("userkey in user profile...${userkey.value}");
-    fetchUserDetails(userkey.value);
+    if (kDebugMode) {
+      debugPrint('[UserProfileController] userkey: ${userkey.value}');
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (userkey.value.isNotEmpty) {
+        fetchUserDetails(userkey.value);
+      }
+    });
     _loadInitialInvoices();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_profile_controller.dart';
+import 'package:admin_app/models/user_model.dart';
 import 'package:admin_app/utils/responsive.dart';
 import 'widgets/header.dart';
 import 'widgets/sidebar.dart';
@@ -12,6 +13,19 @@ class UserProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Instantiate or retrieve UserProfileController via GetX
     final UserProfileController controller = Get.put(UserProfileController());
+
+    final dynamic args = Get.arguments;
+    if (args != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (args is UserModel &&
+            args.id.isNotEmpty &&
+            controller.userkey.value != args.id) {
+          controller.userkey.value = args.id;
+          controller.setUserModel(args);
+          controller.fetchUserDetails(args.id);
+        }
+      });
+    }
 
     final isMobileOrTablet =
         Responsive.isMobile(context) || Responsive.isTablet(context);

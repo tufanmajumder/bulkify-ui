@@ -42,11 +42,11 @@ class OrderService extends GetxService {
       'Authorization': 'Bearer $activeToken',
     };
 
-    final Map<String, dynamic> payload = {"page": page, "per_page": perPage};
+    final Map<String, dynamic> payload = {"page": page, "perpage": perPage};
 
     final Map<String, dynamic> queryParams = {
       'page': page.toString(),
-      'per_page': perPage.toString(),
+      'perpage': perPage.toString(),
     };
 
     dynamic responseData;
@@ -253,7 +253,7 @@ class OrderService extends GetxService {
 
   Future<OrderListResult> getOrderListResult({
     int page = 1,
-    int perPage = 10,
+    int perPage = 1,
     String? status,
     String? token,
   }) async {
@@ -262,8 +262,9 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('[OrderService] Token missing — session expired');
+      }
       return OrderListResult(
         orders: [],
         hasMorePage: false,
@@ -278,11 +279,11 @@ class OrderService extends GetxService {
       'Authorization': 'Bearer $activeToken',
     };
 
-    final Map<String, dynamic> payload = {"page": page, "per_page": perPage};
+    final Map<String, dynamic> payload = {"page": page, "perpage": perPage};
 
     final Map<String, dynamic> queryParams = {
       'page': page.toString(),
-      'per_page': perPage.toString(),
+      'perpage': perPage.toString(),
     };
 
     dynamic responseData;
@@ -467,7 +468,7 @@ class OrderService extends GetxService {
 
   /// Calls getOrderDetails API endpoint (zoho/v1/salesorder/get) with {"salesorder_id": salesorderId}
   Future<Map<String, dynamic>?> getOrderDetails({
-    required String salesorderId,
+    required String orderKey,
     String? token,
   }) async {
     final String activeToken = (token != null && token.trim().isNotEmpty)
@@ -481,11 +482,11 @@ class OrderService extends GetxService {
       'Authorization': 'Bearer $activeToken',
     };
 
-    final Map<String, dynamic> payload = {"salesorder_id": salesorderId};
+    final Map<String, dynamic> payload = {"orderkey": orderKey};
 
     if (kDebugMode) {
       debugPrint(
-        '[OrderService] Fetching details for salesorder_id: $salesorderId from $targetUrl',
+        '[OrderService] Fetching details for salesorder_id: $orderKey from $targetUrl',
       );
     }
 
@@ -642,7 +643,9 @@ class OrderService extends GetxService {
     if (rawBytes == null || rawBytes.isEmpty) return null;
 
     if (kDebugMode) {
-      debugPrint('[OrderService] Processing rawBytes (${rawBytes.length} bytes)');
+      debugPrint(
+        '[OrderService] Processing rawBytes (${rawBytes.length} bytes)',
+      );
     }
 
     // 1. Direct PDF magic header check (%PDF-)

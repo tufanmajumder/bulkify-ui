@@ -1,3 +1,4 @@
+﻿import 'package:admin_app/utils/color_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
@@ -145,6 +146,7 @@ class UsersTable extends StatelessWidget {
     UserModel user,
   ) {
     final bool isActive = user.status.toLowerCase() == 'active';
+    final status = user.status.toLowerCase();
     final horizontalPadding = 20.0;
     final verticalPadding = 16.0;
     final borderColor = const Color(0xFFF1F5F9);
@@ -260,6 +262,8 @@ class UsersTable extends StatelessWidget {
               style: TextStyle(
                 color: isActive
                     ? const Color(0xFF22C55E)
+                    : status == 'pending'
+                    ? ColorManager.avatarGoldenAmber
                     : const Color(0xFFEF4444),
                 fontSize: Responsive.sp(context, 13.5),
                 fontWeight: FontWeight.w500,

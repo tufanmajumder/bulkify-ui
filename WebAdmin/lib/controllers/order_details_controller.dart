@@ -149,7 +149,7 @@ class OrderDetailsController extends GetxController {
     final args = Get.arguments;
     if (args is OrderModel) {
       selectedOrder.value = args;
-      salesorderId = args.salesorderId.isNotEmpty ? args.salesorderId : args.id;
+      salesorderId = args.orderkey;
       if (args.id.isNotEmpty && args.id != '-') {
         orderNo.value = args.id;
       }
@@ -186,6 +186,7 @@ class OrderDetailsController extends GetxController {
   }
 
   Future<void> fetchOrderDetails(String salesorderId) async {
+    print("salesorderId...$salesorderId");
     final cleanId = salesorderId.trim();
     if (cleanId.isEmpty) return;
 
@@ -194,7 +195,7 @@ class OrderDetailsController extends GetxController {
 
     try {
       final responseMap = await _orderService.getOrderDetails(
-        salesorderId: cleanId,
+        orderKey: cleanId,
       );
       if (responseMap != null) {
         _populateFromApiResponse(responseMap);
@@ -275,11 +276,12 @@ class OrderDetailsController extends GetxController {
 
     // 1. Summary details (if key is missing, make blank "")
     final num =
+        data['ordernumber'] ??
+        data['order_number'] ??
         data['salesorder_number'] ??
         data['salesorder_no'] ??
-        data['order_number'] ??
-        data['ordernumber'] ??
-        data['salesorder_id'] ??
+        data['salesorderid'] ??
+        data['orderkey'] ??
         data['order_id'] ??
         data['id'];
 
@@ -291,22 +293,38 @@ class OrderDetailsController extends GetxController {
     }
 
     final dateVal =
+        data['orderdate'] ??
+        data['order_date'] ??
         data['date'] ??
         data['salesorder_date'] ??
         data['created_time'] ??
         data['created_at'];
     date.value = dateVal != null ? formatDateOnly(dateVal.toString()) : '';
 
-    final timeVal = data['time'] ?? data['created_time'] ?? data['created_at'];
+    final timeVal =
+        data['time'] ??
+        data['orderdate'] ??
+        data['order_date'] ??
+        data['created_time'] ??
+        data['created_at'];
     time.value = timeVal != null ? _formatTimeOnly(timeVal.toString()) : '';
 
     customer.value =
-        (data['customer_name'] ??
+        (data['customername'] ??
+                data['customer_name'] ??
                 data['customerName'] ??
                 data['customer'] ??
                 data['name'])
             ?.toString() ??
         '';
+
+    // 2. Shipping Address (if key missing -> blank "")
+    final shipMap =
+        data['shiptoaddress'] ??
+        data['shipping_address'] ??
+        data['shippingAddress'] ??
+        data['shipping'] ??
+        data['delivery_address'];
 
     company.value =
         (data['company_name'] ??
@@ -314,12 +332,14 @@ class OrderDetailsController extends GetxController {
                 data['company'] ??
                 data['restaurant_name'] ??
                 data['restaurantname'] ??
-                data['resturentname'])
+                data['resturentname'] ??
+                (shipMap is Map ? shipMap['company_name'] : null))
             ?.toString() ??
         '';
 
     paymentMethod.value =
-        (data['paid_status'] ??
+        (data['paymentstatus'] ??
+                data['paid_status'] ??
                 data['payment_status'] ??
                 data['payment_mode'] ??
                 data['payment_method'] ??
@@ -328,44 +348,41 @@ class OrderDetailsController extends GetxController {
         '';
 
     shipmentStatus.value =
-        (data['shipped_status'] ??
+        (data['shippingstatus'] ??
+                data['shipped_status'] ??
                 data['shipment_status'] ??
+                data['orderstatus'] ??
                 data['status'] ??
                 data['salesorder_status'] ??
                 data['order_status'])
             ?.toString() ??
         '';
 
-    // 2. Shipping Address (if key missing -> blank "")
-    final shipMap =
-        data['shipping_address'] ??
-        data['shippingAddress'] ??
-        data['shipping'] ??
-        data['delivery_address'];
     if (shipMap is Map) {
       shippingName.value =
           (shipMap['attention'] ??
                   shipMap['name'] ??
                   shipMap['customer_name'] ??
-                  shipMap['recipient_name'])
+                  shipMap['recipient_name'] ??
+                  data['customername'] ??
+                  data['customer_name'])
               ?.toString() ??
           '';
       shippingPhone.value =
-          (shipMap['phone'] ?? shipMap['mobile'] ?? shipMap['contact'])
+          (shipMap['phone'] ??
+                  shipMap['mobile'] ??
+                  shipMap['contact'] ??
+                  data['mobilenumber'] ??
+                  data['phonenumber'])
               ?.toString() ??
           '';
-      shippingAddress.value =
-          (shipMap['address'] ??
-                  shipMap['street'] ??
-                  shipMap['address_1'] ??
-                  _buildAddressString(shipMap))
-              ?.toString() ??
-          '';
+      shippingAddress.value = _buildAddressString(shipMap);
       shippingPincode.value =
           (shipMap['zip'] ??
                   shipMap['pincode'] ??
                   shipMap['zip_code'] ??
-                  shipMap['postal_code'])
+                  shipMap['postal_code'] ??
+                  data['pincode'])
               ?.toString() ??
           '';
     } else if (shipMap is String) {
@@ -374,36 +391,42 @@ class OrderDetailsController extends GetxController {
       shippingPhone.value = '';
       shippingPincode.value = '';
     } else {
-      shippingName.value = '';
-      shippingPhone.value = '';
+      shippingName.value = data['customername']?.toString() ?? '';
+      shippingPhone.value = data['mobilenumber']?.toString() ?? '';
       shippingAddress.value = '';
-      shippingPincode.value = '';
+      shippingPincode.value = data['pincode']?.toString() ?? '';
     }
 
     // 3. Billing Address (if key missing -> blank "")
     final billMap =
-        data['billing_address'] ?? data['billingAddress'] ?? data['billing'];
+        data['billtoaddress'] ??
+        data['billing_address'] ??
+        data['billingAddress'] ??
+        data['billing'];
     if (billMap is Map) {
       billingName.value =
-          (billMap['attention'] ?? billMap['name'] ?? billMap['customer_name'])
+          (billMap['attention'] ??
+                  billMap['name'] ??
+                  billMap['customer_name'] ??
+                  data['customername'] ??
+                  data['customer_name'])
               ?.toString() ??
           '';
       billingPhone.value =
-          (billMap['phone'] ?? billMap['mobile'] ?? billMap['contact'])
+          (billMap['phone'] ??
+                  billMap['mobile'] ??
+                  billMap['contact'] ??
+                  data['mobilenumber'] ??
+                  data['phonenumber'])
               ?.toString() ??
           '';
-      billingAddress.value =
-          (billMap['address'] ??
-                  billMap['street'] ??
-                  billMap['address_1'] ??
-                  _buildAddressString(billMap))
-              ?.toString() ??
-          '';
+      billingAddress.value = _buildAddressString(billMap);
       billingPincode.value =
           (billMap['zip'] ??
                   billMap['pincode'] ??
                   billMap['zip_code'] ??
-                  billMap['postal_code'])
+                  billMap['postal_code'] ??
+                  data['pincode'])
               ?.toString() ??
           '';
     } else if (billMap is String) {
@@ -412,18 +435,52 @@ class OrderDetailsController extends GetxController {
       billingPhone.value = '';
       billingPincode.value = '';
     } else {
-      billingName.value = '';
-      billingPhone.value = '';
+      billingName.value = data['customername']?.toString() ?? '';
+      billingPhone.value = data['mobilenumber']?.toString() ?? '';
       billingAddress.value = '';
-      billingPincode.value = '';
+      billingPincode.value = data['pincode']?.toString() ?? '';
     }
 
     // 4. Price Breakdown (if key missing -> blank "")
-    subtotal.value = _formatPriceVal(
-      data['sub_total'] ??
-          data['subtotal'] ??
-          data['sub_total_inclusive_of_tax'],
-    );
+    double calculatedSubtotal = 0.0;
+    final itemsRaw =
+        data['items'] ??
+        data['line_items'] ??
+        data['order_items'] ??
+        data['products'];
+    if (itemsRaw is List) {
+      for (final item in itemsRaw) {
+        if (item is Map) {
+          final itemTot =
+              double.tryParse(
+                (item['item_sub_total'] ??
+                        item['item_total'] ??
+                        item['total'] ??
+                        item['rate'] ??
+                        '0')
+                    .toString(),
+              ) ??
+              0.0;
+          calculatedSubtotal += itemTot;
+        }
+      }
+    }
+
+    final rawSubtotal =
+        data['sub_total'] ??
+        data['subtotal'] ??
+        data['item_sub_total'] ??
+        data['sub_total_inclusive_of_tax'];
+    if (rawSubtotal != null &&
+        rawSubtotal.toString().trim().isNotEmpty &&
+        rawSubtotal.toString().trim() != 'null') {
+      subtotal.value = _formatPriceVal(rawSubtotal);
+    } else if (calculatedSubtotal > 0) {
+      subtotal.value = _formatPriceVal(calculatedSubtotal);
+    } else {
+      subtotal.value = '';
+    }
+
     shippingFee.value = _formatPriceVal(
       data['shipping_charge'] ??
           data['shipping_fee'] ??
@@ -437,14 +494,17 @@ class OrderDetailsController extends GetxController {
       data['discount'] ?? data['discount_total'] ?? data['discount_amount'],
     );
     couponDiscount.value = _formatPriceVal(
-      data['coupon_discount'] ?? data['coupon_amount'],
+      data['coupondiscount'] ??
+          data['coupon_discount'] ??
+          data['coupon_amount'],
     );
     if (data['coupon_code'] != null || data['coupon_name'] != null) {
       couponCode.value = (data['coupon_code'] ?? data['coupon_name'])
           .toString();
     }
     tax.value = _formatPriceVal(
-      data['tax_total'] ??
+      data['taxamount'] ??
+          data['tax_total'] ??
           data['tax_total_formatted'] ??
           data['tax'] ??
           data['tax_amount'],
@@ -467,7 +527,8 @@ class OrderDetailsController extends GetxController {
           (t['tax_name'] ?? t['name'] ?? t['tax_type'] ?? t['tax_label'] ?? '')
               .toString()
               .toUpperCase();
-      final amtVal = t['tax_amount_formatted'] ??
+      final amtVal =
+          t['tax_amount_formatted'] ??
           t['tax_amount'] ??
           t['amount'] ??
           t['val'];
@@ -570,53 +631,43 @@ class OrderDetailsController extends GetxController {
     }
 
     grandTotal.value = _formatPriceVal(
-      data['total'] ?? data['grand_total'] ?? data['amount'],
+      data['finalamount'] ??
+          data['grandtotal'] ??
+          data['total'] ??
+          data['grand_total'] ??
+          data['amount'],
     );
 
     // Extract invoice_id & invoice_number from data['invoices'] list or top-level keys
     invoiceId.value = '';
     invoiceNumber.value = '';
 
-    final invoicesList =
-        data['invoices'] ?? data['invoices_list'] ?? data['invoice'];
+    final invoicesList = data['invoices'];
     if (invoicesList is List && invoicesList.isNotEmpty) {
       for (final inv in invoicesList) {
         if (inv is Map) {
-          final id = (inv['invoice_id'] ?? inv['id'] ?? '').toString().trim();
+          final id = (inv['invoiceid']).toString().trim();
           if (id.isNotEmpty && id != 'null') {
             invoiceId.value = id;
-            invoiceNumber.value =
-                (inv['invoice_number'] ??
-                        inv['number'] ??
-                        inv['invoice_id'] ??
-                        id)
-                    .toString()
-                    .trim();
+            invoiceNumber.value = (inv['invoicenumber']).toString().trim();
             break;
           }
         }
       }
     } else if (invoicesList is Map) {
-      final id = (invoicesList['invoice_id'] ?? invoicesList['id'] ?? '')
-          .toString()
-          .trim();
+      final id = (invoicesList['invoiceid']).toString().trim();
       if (id.isNotEmpty && id != 'null') {
         invoiceId.value = id;
-        invoiceNumber.value =
-            (invoicesList['invoice_number'] ?? invoicesList['number'] ?? id)
-                .toString()
-                .trim();
+        invoiceNumber.value = (invoicesList['invoicenumber']).toString().trim();
       }
     }
 
     if (invoiceId.value.isEmpty &&
-        data['invoice_id'] != null &&
-        data['invoice_id'].toString().trim().isNotEmpty &&
-        data['invoice_id'].toString().trim() != 'null') {
-      invoiceId.value = data['invoice_id'].toString().trim();
-      invoiceNumber.value = (data['invoice_number'] ?? data['invoice_id'] ?? '')
-          .toString()
-          .trim();
+        data['invoiceid'] != null &&
+        data['invoiceid'].toString().trim().isNotEmpty &&
+        data['invoiceid'].toString().trim() != 'null') {
+      invoiceId.value = data['invoiceid'].toString().trim();
+      invoiceNumber.value = (data['invoicenumber']).toString().trim();
     }
 
     // 5. Documents (if key missing -> empty list)
@@ -674,52 +725,52 @@ class OrderDetailsController extends GetxController {
     documents.assignAll(parsedDocs);
 
     // 6. Payment Transactions (if key missing -> empty list)
-    final txList =
-        data['payments'] ??
-        data['transactions'] ??
-        data['payment_transactions'];
+    double totalBankFee = 0.0;
+    bool hasBankCharges = false;
+
+    final txList = data['payments'];
     if (txList is List && txList.isNotEmpty) {
       transactions.assignAll(
         txList.map((tx) {
           if (tx is Map) {
+            final bcRaw =
+                tx['bankcharges'] ??
+                tx['bank_charges'] ??
+                tx['bank_charge'] ??
+                tx['bankfee'];
+            if (bcRaw != null) {
+              final cleanStr = bcRaw
+                  .toString()
+                  .replaceAll('₹', '')
+                  .replaceAll(',', '')
+                  .replaceAll(RegExp(r'\s+'), '')
+                  .trim();
+              final parsed = double.tryParse(cleanStr);
+              if (parsed != null) {
+                totalBankFee += parsed;
+                hasBankCharges = true;
+              }
+            }
             return PaymentTransactionModel(
-              issuedBy:
-                  (tx['issued_by'] ??
-                          tx['issuedBy'] ??
-                          tx['payment_mode'] ??
-                          tx['gateway'] ??
-                          tx['bank'] ??
-                          '')
-                      .toString(),
+              issuedBy: (tx['issuedby'] ?? tx['issued_by'] ?? "-").toString(),
               createdOn: formatDateOnly(
-                (tx['created_on'] ??
-                        tx['created_time'] ??
-                        tx['date'] ??
-                        tx['created_at'] ??
-                        '')
+                (tx['paymentdate'] ??
+                        tx['payment_date'] ??
+                        tx['created_on'] ??
+                        "-")
                     .toString(),
               ),
               paymentId:
-                  (tx['payment_id'] ??
-                          tx['transaction_id'] ??
-                          tx['payment_number'] ??
-                          '')
-                      .toString(),
+                  (tx['paymentid'] ?? tx['payment_id'] ?? "-").toString(),
               paymentMethod:
-                  (tx['payment_method'] ??
-                          tx['payment_type'] ??
-                          tx['type'] ??
-                          '')
-                      .toString(),
+                  (tx['paymentmode'] ?? tx['payment_mode'] ?? "-").toString(),
               rrnUtr:
-                  (tx['rrn_utr'] ??
-                          tx['rrn'] ??
-                          tx['utr'] ??
-                          tx['reference_number'] ??
-                          '')
+                  (tx['transactionref'] ?? tx['rrn_utr'] ?? tx['rrn'] ?? "-")
                       .toString(),
-              status: (tx['status'] ?? tx['payment_status'] ?? '').toString(),
-              amount: _formatPriceVal(tx['amount'] ?? tx['total']),
+              status: (tx['paymentstatus'] ?? tx['status'] ?? "-").toString(),
+              amount: _formatPriceVal(
+                tx['paymentamount'] ?? tx['amount'] ?? "-",
+              ),
             );
           }
           return PaymentTransactionModel(
@@ -735,6 +786,10 @@ class OrderDetailsController extends GetxController {
       );
     } else {
       transactions.clear();
+    }
+
+    if (hasBankCharges) {
+      bankFee.value = _formatPriceVal(totalBankFee);
     }
 
     // 7. Order Items (if key missing -> empty list)

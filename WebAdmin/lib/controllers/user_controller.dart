@@ -27,7 +27,8 @@ class UserController extends GetxController {
 
   // Pagination states
   final RxInt currentPage = 1.obs;
-  final RxInt rowsPerPage = 10.obs;
+  final RxInt rowsPerPage = 2.obs;
+  final RxBool hasMorePage = false.obs;
 
   late final UserService _userService;
 
@@ -66,12 +67,17 @@ class UserController extends GetxController {
   }
 
   /// Calls getUserList API from ApiManager (via UserService) and updates user list & summary.
-  Future<void> fetchUsers() async {
+  Future<void> fetchUsers({int page = 1, int? perpage}) async {
     isLoading.value = true;
     errorMessage.value = '';
 
+    final int targetPerPage = perpage ?? rowsPerPage.value;
+
     try {
-      final result = await _userService.getUserList();
+      final result = await _userService.getUserList(
+        page: page,
+        perpage: targetPerPage,
+      );
 
       if (result.isTokenExpired) {
         errorMessage.value = 'Session expired. Please log in again.';
@@ -83,13 +89,16 @@ class UserController extends GetxController {
         if (result.summary != null) {
           summary.value = result.summary;
         }
-        if (result.users.isNotEmpty) {
-          users.assignAll(result.users);
+        users.assignAll(result.users);
+        if (result.pageContext != null) {
+          currentPage.value = result.pageContext!.page;
+          rowsPerPage.value = result.pageContext!.perpage;
+          hasMorePage.value = result.pageContext!.hasMorePage;
         } else {
-          // If backend returns empty list, fall back to initial data for demo/preview
-          _loadInitialUsers();
+          currentPage.value = page;
+          rowsPerPage.value = targetPerPage;
+          hasMorePage.value = false;
         }
-        currentPage.value = 1;
       } else {
         errorMessage.value = result.message;
         if (users.isEmpty) {
@@ -271,41 +280,33 @@ class UserController extends GetxController {
   }
 
   // Paginated Users Getter
-  List<UserModel> get paginatedUsers {
-    final filtered = filteredUsers;
-    if (filtered.isEmpty) return [];
-
-    final startIndex = (currentPage.value - 1) * rowsPerPage.value;
-    if (startIndex >= filtered.length) {
-      return [];
-    }
-    final endIndex = (startIndex + rowsPerPage.value).clamp(0, filtered.length);
-    return filtered.sublist(startIndex, endIndex);
-  }
+  List<UserModel> get paginatedUsers => filteredUsers;
 
   int get totalPages {
-    if (filteredUsers.isEmpty) return 1;
-    return (filteredUsers.length / rowsPerPage.value).ceil();
+    if (hasMorePage.value) {
+      return currentPage.value + 1;
+    }
+    return currentPage.value > 0 ? currentPage.value : 1;
   }
 
-  int get startEntryIndex => filteredUsers.isEmpty
-      ? 0
-      : (currentPage.value - 1) * rowsPerPage.value + 1;
+  int get startEntryIndex {
+    if (filteredUsers.isEmpty) return 0;
+    return (currentPage.value - 1) * rowsPerPage.value + 1;
+  }
 
   int get endEntryIndex {
-    final end = currentPage.value * rowsPerPage.value;
-    return end > filteredUsers.length ? filteredUsers.length : end;
+    if (filteredUsers.isEmpty) return 0;
+    return startEntryIndex + filteredUsers.length - 1;
   }
 
   // Controller Actions
   void setSearchQuery(String query) {
     searchQuery.value = query;
-    currentPage.value = 1;
+    fetchUsers(page: 1);
   }
 
   void setSelectedRole(String role) {
     selectedRole.value = role;
-    currentPage.value = 1;
     final matchedRole = roles.firstWhereOrNull((r) => r.roleName == role);
     print("Selected Role: $role, roleKey: ${matchedRole?.roleKey ?? 'N/A'}");
     if (kDebugMode) {
@@ -313,22 +314,35 @@ class UserController extends GetxController {
         '[UserController] Selected Role: $role | roleKey: ${matchedRole?.roleKey}',
       );
     }
+    fetchUsers(page: 1);
   }
 
   void setSelectedStatus(String status) {
     selectedStatus.value = status;
-    currentPage.value = 1;
+    fetchUsers(page: 1);
   }
 
   void setPage(int page) {
-    if (page >= 1 && page <= totalPages) {
-      currentPage.value = page;
+    if (page >= 1 && page != currentPage.value && !isLoading.value) {
+      fetchUsers(page: page, perpage: rowsPerPage.value);
+    }
+  }
+
+  void nextPage() {
+    if (hasMorePage.value && !isLoading.value) {
+      fetchUsers(page: currentPage.value + 1, perpage: rowsPerPage.value);
+    }
+  }
+
+  void prevPage() {
+    if (currentPage.value > 1 && !isLoading.value) {
+      fetchUsers(page: currentPage.value - 1, perpage: rowsPerPage.value);
     }
   }
 
   void setRowsPerPage(int rows) {
     rowsPerPage.value = rows;
-    currentPage.value = 1;
+    fetchUsers(page: 1, perpage: rows);
   }
 
   /// Calls userAdd API endpoint (users/v1/add) via UserService with email, fullname, mobile, static rolekey and status

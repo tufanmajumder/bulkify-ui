@@ -32,27 +32,31 @@ class OrderController extends GetxController {
     fetchOrders();
   }
 
-  Future<void> fetchOrders() async {
+  Future<void> fetchOrders({int? page, int? perPage}) async {
     isLoading.value = true;
+    final int targetPage = page ?? currentPage.value;
+    final int targetPerPage = perPage ?? rowsPerPage.value;
     try {
       final token = await AuthService.getAuthToken();
       print("token....$token");
       if (token.trim().isEmpty) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('[OrderController] No token — redirecting to login');
+        }
         await _handleTokenExpired();
         return;
       }
 
       final result = await _orderService.getOrderListResult(
-        page: currentPage.value,
-        perPage: rowsPerPage.value,
+        page: targetPage,
+        perPage: targetPerPage,
         token: token,
       );
 
       if (result.isTokenExpired) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('[OrderController] Token expired — redirecting to login');
+        }
         await _handleTokenExpired();
         return;
       }
@@ -64,6 +68,8 @@ class OrderController extends GetxController {
       }
 
       orders.assignAll(result.orders);
+      currentPage.value = targetPage;
+      rowsPerPage.value = targetPerPage;
       hasMorePage.value = result.hasMorePage;
     } catch (e) {
       if (kDebugMode) debugPrint('[OrderController] Error fetching orders: $e');
@@ -127,47 +133,39 @@ class OrderController extends GetxController {
   void setSearchQuery(String query) {
     if (isLoading.value) return;
     searchQuery.value = query;
-    currentPage.value = 1;
-    fetchOrders();
+    fetchOrders(page: 1);
   }
 
   void nextPage() {
     if (!isLoading.value && hasMorePage.value) {
-      currentPage.value++;
-      fetchOrders();
+      fetchOrders(page: currentPage.value + 1);
     }
   }
 
   void previousPage() {
     if (!isLoading.value && currentPage.value > 1) {
-      currentPage.value--;
-      fetchOrders();
+      fetchOrders(page: currentPage.value - 1);
     }
   }
 
+  void prevPage() => previousPage();
+
   void goToFirstPage() {
     if (!isLoading.value && currentPage.value > 1) {
-      currentPage.value = 1;
-      fetchOrders();
+      fetchOrders(page: 1);
     }
   }
 
   void setPage(int page) {
     if (!isLoading.value && page >= 1 && page != currentPage.value) {
-      final maxAllowed = hasMorePage.value
-          ? currentPage.value + 1
-          : currentPage.value;
-      if (page <= maxAllowed) {
-        currentPage.value = page;
-        fetchOrders();
-      }
+      fetchOrders(page: page);
     }
   }
 
   void setRowsPerPage(int rows) {
-    rowsPerPage.value = rows;
-    currentPage.value = 1;
-    fetchOrders();
+    if (!isLoading.value) {
+      fetchOrders(page: 1, perPage: rows);
+    }
   }
 
   void exportOrders() {

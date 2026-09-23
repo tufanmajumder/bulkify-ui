@@ -8,11 +8,35 @@ import 'package:admin_app/models/user_model.dart';
 import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/utils/api_manager.dart';
 
+class PageContextModel {
+  final int page;
+  final int perpage;
+  final bool hasMorePage;
+
+  PageContextModel({this.page = 1, this.perpage = 2, this.hasMorePage = false});
+
+  factory PageContextModel.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic val) {
+      if (val is int) return val;
+      if (val is double) return val.toInt();
+      if (val != null) return int.tryParse(val.toString()) ?? 1;
+      return 1;
+    }
+
+    return PageContextModel(
+      page: parseInt(json['page']),
+      perpage: parseInt(json['perpage']),
+      hasMorePage: json['hasmorepage'] == true || json['has_more_page'] == true,
+    );
+  }
+}
+
 class UserListResult {
   final bool success;
   final String message;
   final int code;
   final UserSummaryModel? summary;
+  final PageContextModel? pageContext;
   final List<UserModel> users;
   final bool isTokenExpired;
 
@@ -21,6 +45,7 @@ class UserListResult {
     required this.message,
     required this.code,
     this.summary,
+    this.pageContext,
     required this.users,
     this.isTokenExpired = false,
   });
@@ -89,7 +114,11 @@ class UserService extends GetxService {
   );
 
   /// Calls the getUserList API endpoint (users/v1/list).
-  Future<UserListResult> getUserList({String? token}) async {
+  Future<UserListResult> getUserList({
+    int page = 1,
+    int perpage = 2,
+    String? token,
+  }) async {
     final String activeToken = (token != null && token.trim().isNotEmpty)
         ? token.trim()
         : await AuthService.getAuthToken();
@@ -113,32 +142,39 @@ class UserService extends GetxService {
       'Accept': 'application/json',
       'Authorization': 'Bearer $activeToken',
     };
+    final Map<String, dynamic> requestPayload = {
+      'page': page,
+      'perpage': perpage,
+    };
 
     dynamic responseData;
     int? responseStatusCode;
 
     if (kDebugMode) {
-      debugPrint('[UserService] Calling getUserList endpoint: $targetUrl');
+      debugPrint(
+        '[UserService] Calling getUserList endpoint (POST): $targetUrl with payload: $requestPayload',
+      );
     }
 
-    // Web request direct call
+    // Web request direct call (POST with JSON payload)
     if (kIsWeb) {
       try {
-        http.Response httpResponse = await http.post(
+        final httpResponse = await http.post(
           Uri.parse(targetUrl),
           headers: requestHeaders,
+          body: jsonEncode(requestPayload),
         );
 
-        if (httpResponse.statusCode < 200 ||
-            httpResponse.statusCode >= 300 ||
-            httpResponse.body.isEmpty) {
-          httpResponse = await http.get(
-            Uri.parse(targetUrl),
-            headers: requestHeaders,
+        responseStatusCode = httpResponse.statusCode;
+
+        if (kDebugMode) {
+          debugPrint(
+            '[UserService] Web getUserList response status: ${httpResponse.statusCode}',
+          );
+          debugPrint(
+            '[UserService] Web getUserList response body: ${httpResponse.body}',
           );
         }
-
-        responseStatusCode = httpResponse.statusCode;
 
         if (httpResponse.statusCode >= 200 &&
             httpResponse.statusCode < 500 &&
@@ -152,66 +188,56 @@ class UserService extends GetxService {
       }
     }
 
-    // Mobile / Fallback Dio call
-    if (responseData == null) {
-      try {
-        final response = await dio.post(
-          ApiManager.getUserList,
-          options: Options(
-            contentType: Headers.jsonContentType,
-            headers: requestHeaders,
-          ),
-        );
-        responseStatusCode = response.statusCode;
-        if (response.data != null) {
-          if (response.data is Map<String, dynamic> || response.data is List) {
-            responseData = response.data;
-          } else if (response.data is String) {
-            responseData = jsonDecode(response.data);
-          }
-        }
-      } on DioException catch (e) {
-        responseStatusCode = e.response?.statusCode;
-        if (kDebugMode) {
-          debugPrint(
-            '[UserService] DioException in getUserList: $responseStatusCode',
-          );
-        }
-        try {
-          final response = await dio.get(
-            ApiManager.getUserList,
-            options: Options(
-              contentType: Headers.jsonContentType,
-              headers: requestHeaders,
-            ),
-          );
-          responseStatusCode = response.statusCode;
-          if (response.data != null) {
-            if (response.data is Map<String, dynamic> ||
-                response.data is List) {
-              responseData = response.data;
-            } else if (response.data is String) {
-              responseData = jsonDecode(response.data);
-            }
-          }
-        } catch (_) {
-          if (e.response?.data != null) {
-            if (e.response!.data is Map<String, dynamic> ||
-                e.response!.data is List) {
-              responseData = e.response!.data;
-            } else if (e.response!.data is String) {
-              try {
-                responseData = jsonDecode(e.response!.data);
-              } catch (_) {}
-            }
-          }
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[UserService] Unexpected error in getUserList: $e');
-        }
-      }
-    }
+    // Mobile / Fallback Dio call (POST with JSON payload)
+    // if (responseData == null) {
+    //   try {
+    //     final response = await dio.post(
+    //       ApiManager.getUserList,
+    //       data: requestPayload,
+    //       options: Options(
+    //         contentType: Headers.jsonContentType,
+    //         headers: requestHeaders,
+    //       ),
+    //     );
+    //     responseStatusCode = response.statusCode;
+    //     if (kDebugMode) {
+    //       debugPrint(
+    //         '[UserService] Dio getUserList response status: ${response.statusCode}',
+    //       );
+    //       debugPrint(
+    //         '[UserService] Dio getUserList response data: ${response.data}',
+    //       );
+    //     }
+    //     if (response.data != null) {
+    //       if (response.data is Map<String, dynamic> || response.data is List) {
+    //         responseData = response.data;
+    //       } else if (response.data is String) {
+    //         responseData = jsonDecode(response.data);
+    //       }
+    //     }
+    //   } on DioException catch (e) {
+    //     responseStatusCode = e.response?.statusCode;
+    //     if (kDebugMode) {
+    //       debugPrint(
+    //         '[UserService] DioException in getUserList POST: $responseStatusCode',
+    //       );
+    //     }
+    //     if (e.response?.data != null) {
+    //       if (e.response!.data is Map<String, dynamic> ||
+    //           e.response!.data is List) {
+    //         responseData = e.response!.data;
+    //       } else if (e.response!.data is String) {
+    //         try {
+    //           responseData = jsonDecode(e.response!.data);
+    //         } catch (_) {}
+    //       }
+    //     }
+    //   } catch (e) {
+    //     if (kDebugMode) {
+    //       debugPrint('[UserService] Unexpected error in getUserList: $e');
+    //     }
+    //   }
+    // }
 
     if (_isTokenExpired(responseStatusCode, responseData)) {
       return UserListResult(
@@ -230,6 +256,7 @@ class UserService extends GetxService {
 
       final dataObj = responseData['data'];
       UserSummaryModel? summary;
+      PageContextModel? pageContext;
       List<UserModel> usersList = [];
 
       if (dataObj is Map<String, dynamic>) {
@@ -237,6 +264,13 @@ class UserService extends GetxService {
             dataObj['summary'] is Map<String, dynamic>) {
           summary = UserSummaryModel.fromJson(
             dataObj['summary'] as Map<String, dynamic>,
+          );
+        }
+
+        if (dataObj.containsKey('pagecontext') &&
+            dataObj['pagecontext'] is Map<String, dynamic>) {
+          pageContext = PageContextModel.fromJson(
+            dataObj['pagecontext'] as Map<String, dynamic>,
           );
         }
 
@@ -261,6 +295,7 @@ class UserService extends GetxService {
         message: message,
         code: code,
         summary: summary,
+        pageContext: pageContext,
         users: usersList,
       );
     }
@@ -637,6 +672,9 @@ class UserService extends GetxService {
         );
         responseStatusCode = httpResponse.statusCode;
 
+        print("Response from post request: $baseUrlStr");
+        print("Response from post request: $payload");
+
         // If POST returns 405 Method Not Allowed or 404, fallback to GET
         if (httpResponse.statusCode == 405 || httpResponse.statusCode == 404) {
           httpResponse = await http.get(
@@ -751,13 +789,7 @@ class UserService extends GetxService {
           ? responseData['code']
           : (responseStatusCode ?? 200);
 
-      dynamic dataObj = responseData['data'] ??
-          responseData['user'] ??
-          responseData['userDetails'] ??
-          responseData['user_details'] ??
-          responseData['details'] ??
-          responseData['result'] ??
-          responseData;
+      dynamic dataObj = responseData['data'];
 
       if (dataObj is List && dataObj.isNotEmpty) {
         dataObj = dataObj.first;
