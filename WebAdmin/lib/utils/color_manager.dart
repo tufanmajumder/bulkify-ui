@@ -6,6 +6,9 @@ class ColorManager {
   static const primaryRed = Color(0xFFD44F48);
   static const iconBgRed = Color(0xFFFDEEEB);
   static const white = Color(0xFFF5F5F5);
+  static const blackCurrant = Color(0xFF2F2B3D);
+  static const cherryApple = Color(0xFFCA453C);
+  static const lazy = Color(0xFF808390);
 
   static const primary = Color(0xFF7367F0);
   static const primaryLight = Color(0xFF8C57FF);

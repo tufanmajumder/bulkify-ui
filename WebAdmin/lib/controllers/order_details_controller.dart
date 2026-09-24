@@ -733,11 +733,7 @@ class OrderDetailsController extends GetxController {
       transactions.assignAll(
         txList.map((tx) {
           if (tx is Map) {
-            final bcRaw =
-                tx['bankcharges'] ??
-                tx['bank_charges'] ??
-                tx['bank_charge'] ??
-                tx['bankfee'];
+            final bcRaw = tx['bankcharges'];
             if (bcRaw != null) {
               final cleanStr = bcRaw
                   .toString()
@@ -760,10 +756,10 @@ class OrderDetailsController extends GetxController {
                         "-")
                     .toString(),
               ),
-              paymentId:
-                  (tx['paymentid'] ?? tx['payment_id'] ?? "-").toString(),
-              paymentMethod:
-                  (tx['paymentmode'] ?? tx['payment_mode'] ?? "-").toString(),
+              paymentId: (tx['paymentid'] ?? tx['payment_id'] ?? "-")
+                  .toString(),
+              paymentMethod: (tx['paymentmode'] ?? tx['payment_mode'] ?? "-")
+                  .toString(),
               rrnUtr:
                   (tx['transactionref'] ?? tx['rrn_utr'] ?? tx['rrn'] ?? "-")
                       .toString(),

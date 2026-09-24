@@ -1,6 +1,8 @@
+import 'package:admin_app/utils/color_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:admin_app/controllers/payment_details_controller.dart';
 import 'package:admin_app/models/payment_model.dart';
 import 'package:admin_app/utils/responsive.dart';
 import 'widgets/header.dart';
@@ -13,22 +15,27 @@ class PaymentDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If payment was passed via arguments or constructor, use it. Otherwise fallback to default mock model matching screenshot.
-    final PaymentModel data = payment ??
-        (Get.arguments is PaymentModel ? Get.arguments as PaymentModel : null) ??
-        PaymentModel(
-          orderId: 'ORD1234567890',
-          paymentId: 'TENDEG50652536',
-          utrRrn: '235241252525255200',
-          paymentMethod: 'UPI',
-          customerName: 'Christian Teigland',
-          date: '05-10-2026',
-          time: '9:30 AM',
-          status: 'Success',
-          amount: '38623.00',
-          terminal: 'Bulkify-Ride-USR001',
-          channel: 'bulkifyb2b.com',
-        );
+    final PaymentDetailsController controller = Get.put(
+      PaymentDetailsController(),
+    );
+
+    // If passed via constructor or arguments, ensure controller fetches details
+    if (payment != null) {
+      if (controller.paymentDetail.value == null) {
+        controller.paymentDetail.value = payment;
+      }
+      if (payment!.paymentKey.isNotEmpty && !controller.isLoading.value) {
+        controller.fetchPaymentDetails(payment!.paymentKey);
+      }
+    } else if (Get.arguments is PaymentModel) {
+      final PaymentModel arg = Get.arguments as PaymentModel;
+      if (controller.paymentDetail.value == null) {
+        controller.paymentDetail.value = arg;
+      }
+      if (arg.paymentKey.isNotEmpty && !controller.isLoading.value) {
+        controller.fetchPaymentDetails(arg.paymentKey);
+      }
+    }
 
     final isMobileOrTablet =
         Responsive.isMobile(context) || Responsive.isTablet(context);
@@ -43,8 +50,7 @@ class PaymentDetailsScreen extends StatelessWidget {
           : null,
       body: Row(
         children: [
-          if (!isMobileOrTablet)
-            const Sidebar(activeRoute: '/payment-details'),
+          if (!isMobileOrTablet) const Sidebar(activeRoute: '/payment-details'),
           Expanded(
             child: Column(
               children: [
@@ -59,48 +65,123 @@ class PaymentDetailsScreen extends StatelessWidget {
                         _buildGoBackLink(context),
                         const SizedBox(height: 16),
 
-                        // Main Content Grid (Left Details + Right Timeline)
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isDesktop = constraints.maxWidth >= 1024;
+                        // Dynamic Content
+                        Obx(() {
+                          if (controller.isLoading.value &&
+                              controller.paymentDetail.value == null) {
+                            return const SizedBox(
+                              height: 300,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFFCF4340),
+                                ),
+                              ),
+                            );
+                          }
 
-                            if (isDesktop) {
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Left Column (Payment ID/Amount + Details Card)
-                                  Expanded(
-                                    flex: 7,
-                                    child: Column(
-                                      children: [
-                                        _buildHeaderCard(context, data),
-                                        const SizedBox(height: 20),
-                                        _buildDetailsCard(context, data),
-                                      ],
+                          if (controller.errorMessage.value.isNotEmpty &&
+                              controller.paymentDetail.value == null) {
+                            return SizedBox(
+                              height: 300,
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      controller.errorMessage.value,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF94A3B8),
+                                      ),
                                     ),
+                                    const SizedBox(height: 12),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        final pKey =
+                                            payment?.paymentKey ??
+                                            (Get.arguments is PaymentModel
+                                                ? (Get.arguments
+                                                          as PaymentModel)
+                                                      .paymentKey
+                                                : '');
+                                        if (pKey.isNotEmpty) {
+                                          controller.fetchPaymentDetails(pKey);
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFCF4340,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          final PaymentModel? data =
+                              controller.paymentDetail.value ?? payment;
+
+                          if (data == null) {
+                            return const SizedBox(
+                              height: 300,
+                              child: Center(
+                                child: Text(
+                                  'No payment details found',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF94A3B8),
                                   ),
-                                  const SizedBox(width: 20),
-                                  // Right Column (Timeline Card)
-                                  Expanded(
-                                    flex: 3,
-                                    child: _buildTimelineCard(context),
-                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isDesktop = constraints.maxWidth >= 1024;
+
+                              if (isDesktop) {
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Left Column (Payment ID/Amount + Details Card)
+                                    Expanded(
+                                      flex: 7,
+                                      child: Column(
+                                        children: [
+                                          _buildHeaderCard(context, data),
+                                          const SizedBox(height: 20),
+                                          _buildDetailsCard(context, data),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 20),
+                                    // Right Column (Timeline Card)
+                                    Expanded(
+                                      flex: 3,
+                                      child: _buildTimelineCard(context, data),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              // Mobile / Tablet vertical layout
+                              return Column(
+                                children: [
+                                  _buildHeaderCard(context, data),
+                                  const SizedBox(height: 20),
+                                  _buildDetailsCard(context, data),
+                                  const SizedBox(height: 20),
+                                  _buildTimelineCard(context, data),
                                 ],
                               );
-                            }
-
-                            // Mobile / Tablet vertical layout
-                            return Column(
-                              children: [
-                                _buildHeaderCard(context, data),
-                                const SizedBox(height: 20),
-                                _buildDetailsCard(context, data),
-                                const SizedBox(height: 20),
-                                _buildTimelineCard(context),
-                              ],
-                            );
-                          },
-                        ),
+                            },
+                          );
+                        }),
                       ],
                     ),
                   ),
@@ -131,16 +212,16 @@ class PaymentDetailsScreen extends StatelessWidget {
           children: const [
             Icon(
               Icons.chevron_left_rounded,
-              color: Color(0xFFCF4340),
-              size: 20,
+              color: ColorManager.cherryApple,
+              size: 22,
             ),
             SizedBox(width: 4),
             Text(
               'Go Back',
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFCF4340),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: ColorManager.cherryApple,
               ),
             ),
           ],
@@ -181,9 +262,11 @@ class PaymentDetailsScreen extends StatelessWidget {
               const Text(
                 'Payment ID',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF94A3B8),
+                  fontFamily: 'Public Sans',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xB32F2B3D),
+                  letterSpacing: 0,
                 ),
               ),
               const SizedBox(height: 6),
@@ -192,10 +275,11 @@ class PaymentDetailsScreen extends StatelessWidget {
                   Text(
                     data.paymentId,
                     style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
-                      letterSpacing: 0.3,
+                      fontFamily: 'Public Sans',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                      letterSpacing: 0,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -219,7 +303,7 @@ class PaymentDetailsScreen extends StatelessWidget {
                       child: Icon(
                         Icons.copy_rounded,
                         size: 16,
-                        color: Color(0xFF64748B),
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -234,9 +318,11 @@ class PaymentDetailsScreen extends StatelessWidget {
               Text(
                 rawAmount,
                 style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  fontFamily: 'Public Sans',
+                  fontSize: 30,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                  letterSpacing: 0,
                 ),
               ),
               const SizedBox(width: 12),
@@ -251,8 +337,9 @@ class PaymentDetailsScreen extends StatelessWidget {
                   child: Text(
                     '₹',
                     style: TextStyle(
+                      fontFamily: 'Inter',
                       fontSize: 22,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w400,
                       color: Color(0xFFCF4340),
                     ),
                   ),
@@ -288,9 +375,11 @@ class PaymentDetailsScreen extends StatelessWidget {
           const Text(
             'Details',
             style: TextStyle(
+              fontFamily: 'Public Sans',
               fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+              fontWeight: FontWeight.w500,
+              color: Color(0xE62F2B3D),
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 24),
@@ -304,19 +393,39 @@ class PaymentDetailsScreen extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: _buildDetailField('UTR/RRN', data.utrRrn)),
-                        Expanded(child: _buildDetailField('Payment Type', data.paymentMethod)),
-                        Expanded(child: _buildDetailField('Terminal', data.terminal)),
-                        Expanded(child: _buildDetailField('Channel', data.channel)),
+                        Expanded(
+                          child: _buildDetailField('UTR/RRN', data.utrRrn),
+                        ),
+                        Expanded(
+                          child: _buildDetailField(
+                            'Payment Type',
+                            data.paymentMethod,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildDetailField('Terminal', data.terminal),
+                        ),
+                        Expanded(
+                          child: _buildDetailField('Channel', data.channel),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: _buildDetailField('Customer Details', data.customerName)),
-                        Expanded(child: _buildDetailField('Created On', data.date)),
-                        Expanded(child: _buildDetailField('Created Time', data.time)),
+                        Expanded(
+                          child: _buildDetailField(
+                            'Customer Details',
+                            data.customerName,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildDetailField('Created On', data.date),
+                        ),
+                        Expanded(
+                          child: _buildDetailField('Created Time', data.time),
+                        ),
                         Expanded(
                           child: _buildDetailField(
                             'Status',
@@ -335,16 +444,47 @@ class PaymentDetailsScreen extends StatelessWidget {
                 runSpacing: 20,
                 spacing: 20,
                 children: [
-                  SizedBox(width: (width - 20) / 2, child: _buildDetailField('UTR/RRN', data.utrRrn)),
-                  SizedBox(width: (width - 20) / 2, child: _buildDetailField('Payment Type', data.paymentMethod)),
-                  SizedBox(width: (width - 20) / 2, child: _buildDetailField('Terminal', data.terminal)),
-                  SizedBox(width: (width - 20) / 2, child: _buildDetailField('Channel', data.channel)),
-                  SizedBox(width: (width - 20) / 2, child: _buildDetailField('Customer Details', data.customerName)),
-                  SizedBox(width: (width - 20) / 2, child: _buildDetailField('Created On', data.date)),
-                  SizedBox(width: (width - 20) / 2, child: _buildDetailField('Created Time', data.time)),
                   SizedBox(
                     width: (width - 20) / 2,
-                    child: _buildDetailField('Status', data.status, isStatus: true),
+                    child: _buildDetailField('UTR/RRN', data.utrRrn),
+                  ),
+                  SizedBox(
+                    width: (width - 20) / 2,
+                    child: _buildDetailField(
+                      'Payment Type',
+                      data.paymentMethod,
+                    ),
+                  ),
+                  SizedBox(
+                    width: (width - 20) / 2,
+                    child: _buildDetailField('Terminal', data.terminal),
+                  ),
+                  SizedBox(
+                    width: (width - 20) / 2,
+                    child: _buildDetailField('Channel', data.channel),
+                  ),
+                  SizedBox(
+                    width: (width - 20) / 2,
+                    child: _buildDetailField(
+                      'Customer Details',
+                      data.customerName,
+                    ),
+                  ),
+                  SizedBox(
+                    width: (width - 20) / 2,
+                    child: _buildDetailField('Created On', data.date),
+                  ),
+                  SizedBox(
+                    width: (width - 20) / 2,
+                    child: _buildDetailField('Created Time', data.time),
+                  ),
+                  SizedBox(
+                    width: (width - 20) / 2,
+                    child: _buildDetailField(
+                      'Status',
+                      data.status,
+                      isStatus: true,
+                    ),
                   ),
                 ],
               );
@@ -355,7 +495,11 @@ class PaymentDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailField(String label, String value, {bool isStatus = false}) {
+  Widget _buildDetailField(
+    String label,
+    String value, {
+    bool isStatus = false,
+  }) {
     Color valueColor = const Color(0xFF1E293B);
     if (isStatus) {
       switch (value.toLowerCase()) {
@@ -369,7 +513,7 @@ class PaymentDetailsScreen extends StatelessWidget {
           valueColor = const Color(0xFFEF4444);
           break;
         default:
-          valueColor = const Color(0xFF64748B);
+          valueColor = Colors.black;
       }
     }
 
@@ -379,17 +523,19 @@ class PaymentDetailsScreen extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF94A3B8),
+            fontFamily: 'Public Sans',
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: Color(0xB32F2B3D),
+            letterSpacing: 0,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           value.isEmpty ? '-' : value,
           style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
             color: valueColor,
           ),
         ),
@@ -398,12 +544,12 @@ class PaymentDetailsScreen extends StatelessWidget {
   }
 
   // Card 3: Timeline Card
-  Widget _buildTimelineCard(BuildContext context) {
+  Widget _buildTimelineCard(BuildContext context, PaymentModel data) {
     final List<Map<String, String>> steps = [
-      {'title': 'Payment Created', 'time': 'Tuesday 11:29 AM'},
-      {'title': 'Payment Authorized', 'time': 'Tuesday 11:29 AM'},
-      {'title': 'Payment Captured', 'time': 'Tuesday 11:29 AM'},
-      {'title': 'Payment Successful', 'time': 'Tuesday 11:29 AM'},
+      // {'title': 'Payment Created', 'time': timestampText},
+      // {'title': 'Payment Authorized', 'time': timestampText},
+      // {'title': 'Payment Captured', 'time': timestampText},
+      // {'title': 'Payment ${data.status}', 'time': timestampText},
     ];
 
     return Container(
@@ -427,72 +573,75 @@ class PaymentDetailsScreen extends StatelessWidget {
           const Text(
             'Timeline',
             style: TextStyle(
+              fontFamily: 'Public Sans',
               fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+              fontWeight: FontWeight.w500,
+              color: Color(0xE62F2B3D),
             ),
           ),
           const SizedBox(height: 16),
           const Divider(color: Color(0xFFE2E8F0), height: 1),
           const SizedBox(height: 20),
-          Column(
-            children: List.generate(steps.length, (index) {
-              final step = steps[index];
-              final isLast = index == steps.length - 1;
+          steps.isEmpty
+              ? Center(child: Text("No timeline found!"))
+              : Column(
+                  children: List.generate(steps.length, (index) {
+                    final step = steps[index];
+                    final isLast = index == steps.length - 1;
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Dot and line indicator
-                  Column(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF22C55E),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      if (!isLast)
-                        Container(
-                          width: 2,
-                          height: 42,
-                          color: const Color(0xFF22C55E),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-
-                  // Event details
-                  Expanded(
-                    child: Column(
+                    return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          step['title']!,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF334155),
+                        // Dot and line indicator
+                        Column(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF22C55E),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            if (!isLast)
+                              Container(
+                                width: 2,
+                                height: 42,
+                                color: const Color(0xFF22C55E),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+
+                        // Event details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                step['title']!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF334155),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                step['time']!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              ),
+                              if (!isLast) const SizedBox(height: 16),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          step['time']!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                        if (!isLast) const SizedBox(height: 16),
                       ],
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ),
+                    );
+                  }),
+                ),
         ],
       ),
     );

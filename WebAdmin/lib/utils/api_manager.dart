@@ -20,4 +20,6 @@ class ApiManager {
   static const String staticRoleKey = "8e13d862-6073-443b-9e3e-64ab84e25005";
   static const String roleList = "roles/v1/list";
   static const String userDetails = "users/v1/get-by-key";
+  static const String paymentList = "payments/v1/list";
+  static const String paymentDetails = "payments/v1/get-by-key";
 }

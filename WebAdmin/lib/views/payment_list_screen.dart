@@ -1,3 +1,4 @@
+import 'package:admin_app/utils/color_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/payment_controller.dart';
@@ -35,10 +36,6 @@ class PaymentListScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Top 4 Analytics Stat Cards
-                        // _buildStatCardsRow(context, controller),
-                        // const SizedBox(height: 20),
-
                         // Main Card Container with Action Bar + Table + Footer
                         _buildMainContentCard(context, controller),
                       ],
@@ -47,241 +44,6 @@ class PaymentListScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 1. Top Stat Cards (4 Cards)
-  Widget _buildStatCardsRow(
-    BuildContext context,
-    PaymentController controller,
-  ) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double width = constraints.maxWidth;
-        int crossAxisCount = 4;
-        if (width < 600) {
-          crossAxisCount = 1;
-        } else if (width < 1100) {
-          crossAxisCount = 2;
-        }
-
-        if (crossAxisCount == 4) {
-          return Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  title: 'Completed',
-                  value: controller.completedCount.value,
-                  badge: controller.completedChange.value,
-                  badgeIsNegative: true,
-                  subtitle: 'Last week analytics',
-                  icon: Icons.done_all_rounded,
-                  iconBg: const Color(0xFFDCFCE7),
-                  iconColor: const Color(0xFF22C55E),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  title: 'Pending Payment',
-                  value: controller.pendingPaymentCount.value,
-                  badge: controller.pendingChange.value,
-                  badgeIsNegative: false,
-                  subtitle: 'Last week analytics',
-                  icon: Icons.edit_calendar_outlined,
-                  iconBg: const Color(0xFFFEF3C7),
-                  iconColor: const Color(0xFFF59E0B),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  title: 'Refund',
-                  value: controller.refundCount.value,
-                  badge: controller.refundChange.value,
-                  badgeIsNegative: false,
-                  subtitle: 'Last week analytics',
-                  icon: Icons.account_balance_wallet_outlined,
-                  iconBg: const Color(0xFFF3E8FF),
-                  iconColor: const Color(0xFF8B5CF6),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  title: 'Failed',
-                  value: controller.failedCount.value,
-                  badge: controller.failedChange.value,
-                  badgeIsNegative: false,
-                  subtitle: 'Total Users',
-                  icon: Icons.error_outline_rounded,
-                  iconBg: const Color(0xFFFEE2E2),
-                  iconColor: const Color(0xFFEF4444),
-                ),
-              ),
-            ],
-          );
-        }
-
-        return Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            SizedBox(
-              width: (width - (crossAxisCount - 1) * 16) / crossAxisCount,
-              child: _buildStatCard(
-                context,
-                title: 'Completed',
-                value: controller.completedCount.value,
-                badge: controller.completedChange.value,
-                badgeIsNegative: true,
-                subtitle: 'Last week analytics',
-                icon: Icons.done_all_rounded,
-                iconBg: const Color(0xFFDCFCE7),
-                iconColor: const Color(0xFF22C55E),
-              ),
-            ),
-            SizedBox(
-              width: (width - (crossAxisCount - 1) * 16) / crossAxisCount,
-              child: _buildStatCard(
-                context,
-                title: 'Pending Payment',
-                value: controller.pendingPaymentCount.value,
-                badge: controller.pendingChange.value,
-                badgeIsNegative: false,
-                subtitle: 'Last week analytics',
-                icon: Icons.edit_calendar_outlined,
-                iconBg: const Color(0xFFFEF3C7),
-                iconColor: const Color(0xFFF59E0B),
-              ),
-            ),
-            SizedBox(
-              width: (width - (crossAxisCount - 1) * 16) / crossAxisCount,
-              child: _buildStatCard(
-                context,
-                title: 'Refund',
-                value: controller.refundCount.value,
-                badge: controller.refundChange.value,
-                badgeIsNegative: false,
-                subtitle: 'Last week analytics',
-                icon: Icons.account_balance_wallet_outlined,
-                iconBg: const Color(0xFFF3E8FF),
-                iconColor: const Color(0xFF8B5CF6),
-              ),
-            ),
-            SizedBox(
-              width: (width - (crossAxisCount - 1) * 16) / crossAxisCount,
-              child: _buildStatCard(
-                context,
-                title: 'Failed',
-                value: controller.failedCount.value,
-                badge: controller.failedChange.value,
-                badgeIsNegative: false,
-                subtitle: 'Total Users',
-                icon: Icons.error_outline_rounded,
-                iconBg: const Color(0xFFFEE2E2),
-                iconColor: const Color(0xFFEF4444),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Individual Stat Card Widget
-  Widget _buildStatCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required String badge,
-    required bool badgeIsNegative,
-    required String subtitle,
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      badge,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: badgeIsNegative
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF10B981),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: iconColor, size: 22),
           ),
         ],
       ),
@@ -410,11 +172,10 @@ class PaymentListScreen extends StatelessWidget {
             ),
             onChanged: (val) {
               if (val != null) {
-                controller.rowsPerPage.value = val;
-                controller.currentPage.value = 1;
+                controller.setRowsPerPage(val);
               }
             },
-            items: [10, 25, 50].map((int val) {
+            items: [2, 10, 25, 50].map((int val) {
               return DropdownMenuItem<int>(value: val, child: Text('$val'));
             }).toList(),
           ),
@@ -432,13 +193,15 @@ class PaymentListScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
-        children: const [
+        children: [
           Text(
             'Export',
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF475569),
+              fontFamily: 'Public Sans',
+              fontSize: Responsive.sp(Get.context!, 15),
+              fontWeight: FontWeight.w400,
+              color: ColorManager.lazy,
+              letterSpacing: 0,
             ),
           ),
           SizedBox(width: 6),
@@ -557,17 +320,32 @@ class PaymentListScreen extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Expanded(flex: 5, child: _buildHeaderCell(context, 'ORDER ID')),
-                      Expanded(flex: 5, child: _buildHeaderCell(context, 'PAYMENT ID')),
-                      Expanded(flex: 5, child: _buildHeaderCell(context, 'UTR/RRN')),
+                      Expanded(
+                        flex: 5,
+                        child: _buildHeaderCell(context, 'ORDER ID'),
+                      ),
+                      Expanded(
+                        flex: 5,
+                        child: _buildHeaderCell(context, 'PAYMENT ID'),
+                      ),
+                      Expanded(
+                        flex: 5,
+                        child: _buildHeaderCell(context, 'UTR/RRN'),
+                      ),
                       Expanded(
                         flex: 5,
                         child: _buildHeaderCell(context, 'CUSTOMER DETAILS'),
                       ),
-                      Expanded(flex: 4, child: _buildHeaderCell(context, 'CREATED ON')),
-                      Expanded(flex: 4, child: _buildHeaderCell(context, 'STATUS')),
                       Expanded(
                         flex: 4,
+                        child: _buildHeaderCell(context, 'CREATED ON'),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: _buildHeaderCell(context, 'STATUS'),
+                      ),
+                      Expanded(
+                        flex: 3,
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: _buildHeaderCell(context, 'AMOUNT'),
@@ -600,15 +378,34 @@ class PaymentListScreen extends StatelessWidget {
                   final list = controller.paginatedPayments;
 
                   if (list.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(40.0),
+                    return Padding(
+                      padding: const EdgeInsets.all(40.0),
                       child: Center(
-                        child: Text(
-                          'No payment records found',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF94A3B8),
-                          ),
+                        child: Column(
+                          children: [
+                            Text(
+                              controller.errorMessage.value.isNotEmpty
+                                  ? controller.errorMessage.value
+                                  : 'No payment records found',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ),
+                            if (controller.errorMessage.value.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () => controller.fetchPayments(
+                                  page: controller.currentPage.value,
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFCF4340),
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     );
@@ -662,7 +459,7 @@ class PaymentListScreen extends StatelessWidget {
           border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1. ORDER ID
             Expanded(
@@ -670,9 +467,11 @@ class PaymentListScreen extends StatelessWidget {
               child: Text(
                 item.orderId,
                 style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF475569),
+                  fontFamily: 'Public Sans',
+                  fontSize: Responsive.sp(context, 15),
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xB32F2B3D),
+                  letterSpacing: 0,
                 ),
               ),
             ),
@@ -683,9 +482,11 @@ class PaymentListScreen extends StatelessWidget {
               child: Text(
                 item.paymentId,
                 style: TextStyle(
-                  fontSize: fontSize,
+                  fontFamily: 'Public Sans',
+                  fontSize: Responsive.sp(context, 15),
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF475569),
+                  color: Color(0xB32F2B3D),
+                  letterSpacing: 0,
                 ),
               ),
             ),
@@ -700,25 +501,29 @@ class PaymentListScreen extends StatelessWidget {
                   Text(
                     item.utrRrn,
                     style: TextStyle(
-                      fontSize: fontSize,
+                      fontFamily: 'Public Sans',
+                      fontSize: Responsive.sp(context, 15),
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF475569),
+                      color: Color(0xB32F2B3D),
+                      letterSpacing: 0,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     item.paymentMethod,
                     style: TextStyle(
-                      fontSize: subFontSize,
+                      fontFamily: 'Public Sans',
+                      fontSize: Responsive.sp(context, 13),
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF94A3B8),
+                      color: Color(0xB32F2B3D),
+                      letterSpacing: 0,
                     ),
                   ),
                 ],
               ),
             ),
 
-            // 4. CUSTOMER DETAILS (Name on top, NA subtext)
+            // 4. CUSTOMER DETAILS (Name on top, subtext below)
             Expanded(
               flex: 5,
               child: Column(
@@ -728,20 +533,22 @@ class PaymentListScreen extends StatelessWidget {
                   Text(
                     item.customerName,
                     style: TextStyle(
-                      fontSize: fontSize,
+                      fontFamily: 'Public Sans',
+                      fontSize: Responsive.sp(context, 15),
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF475569),
+                      color: Color(0xB32F2B3D),
+                      letterSpacing: 0,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "-",
-                    style: TextStyle(
-                      fontSize: subFontSize,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
+                  // const SizedBox(height: 2),
+                  // Text(
+                  //   item.customerSubtext,
+                  //   style: TextStyle(
+                  //     fontSize: subFontSize,
+                  //     fontWeight: FontWeight.w400,
+                  //     color: const Color(0xFF94A3B8),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -756,16 +563,22 @@ class PaymentListScreen extends StatelessWidget {
                   Text(
                     item.date,
                     style: TextStyle(
-                      fontSize: fontSize,
-                      color: const Color(0xFF475569),
+                      fontFamily: 'Public Sans',
+                      fontSize: Responsive.sp(context, 15),
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xB32F2B3D),
+                      letterSpacing: 0,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     item.time,
                     style: TextStyle(
-                      fontSize: subFontSize,
-                      color: const Color(0xFF94A3B8),
+                      fontFamily: 'Public Sans',
+                      fontSize: Responsive.sp(context, 13),
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xB32F2B3D),
+                      letterSpacing: 0,
                     ),
                   ),
                 ],
@@ -773,19 +586,35 @@ class PaymentListScreen extends StatelessWidget {
             ),
 
             // 6. STATUS
-            Expanded(flex: 4, child: _buildStatusCell(context, item.status)),
+            Expanded(flex: 2, child: _buildStatusCell(context, item.status)),
 
             // 7. AMOUNT (Right Aligned)
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Align(
                 alignment: Alignment.centerRight,
-                child: Text(
-                  item.amount,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF475569),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "₹ ",
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                      TextSpan(
+                        text: item.amount.replaceAll('₹', '').trim(),
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -849,9 +678,11 @@ class PaymentListScreen extends StatelessWidget {
     return Text(
       status,
       style: TextStyle(
+        fontFamily: 'Public Sans',
         fontSize: Responsive.sp(context, 13.5),
         fontWeight: FontWeight.w500,
         color: color,
+        letterSpacing: 0,
       ),
     );
   }
@@ -861,8 +692,16 @@ class PaymentListScreen extends StatelessWidget {
     BuildContext context,
     PaymentController controller,
   ) {
-    return Obx(
-      () => Container(
+    return Obx(() {
+      final start = controller.startEntryIndex;
+      final end = controller.endEntryIndex;
+      final total = controller.displayTotalCount;
+      final currentPage = controller.currentPage.value;
+      final totalPages = controller.computedTotalPages;
+      final isLoading = controller.isLoading.value;
+      final hasMorePage = controller.hasMorePage.value;
+
+      return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
@@ -870,19 +709,19 @@ class PaymentListScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Showing 1 to 10 of 50 entries
+            // Entry counter display
             Text(
-              'Showing ${controller.startEntryIndex} to ${controller.endEntryIndex} of ${controller.filteredPayments.length} entries',
+              'Showing $start to $end of $total entries (Page $currentPage)',
               style: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
             ),
 
-            // Page Nav Buttons (<<, <, 1, 2, 3, 4, 5, >, >>)
+            // Page Navigation Buttons
             Row(
               children: [
                 _buildNavBtn(
                   context,
                   Icons.keyboard_double_arrow_left_rounded,
-                  onTap: controller.currentPage.value > 1
+                  onTap: currentPage > 1 && !isLoading
                       ? () => controller.setPage(1)
                       : null,
                 ),
@@ -890,28 +729,30 @@ class PaymentListScreen extends StatelessWidget {
                 _buildNavBtn(
                   context,
                   Icons.keyboard_arrow_left_rounded,
-                  onTap: controller.currentPage.value > 1
+                  onTap: currentPage > 1 && !isLoading
                       ? () => controller.previousPage()
                       : null,
                 ),
                 const SizedBox(width: 6),
-                ...List.generate(controller.totalPages, (index) {
+                ...List.generate(totalPages > 0 ? totalPages : 1, (index) {
                   final pageNum = index + 1;
-                  final isSelected = controller.currentPage.value == pageNum;
+                  final isSelected = pageNum == currentPage;
                   return Padding(
                     padding: const EdgeInsets.only(right: 6.0),
                     child: _buildNumBtn(
                       context,
                       '$pageNum',
                       isSelected,
-                      onTap: () => controller.setPage(pageNum),
+                      onTap: isLoading || isSelected
+                          ? () {}
+                          : () => controller.setPage(pageNum),
                     ),
                   );
                 }),
                 _buildNavBtn(
                   context,
                   Icons.keyboard_arrow_right_rounded,
-                  onTap: controller.currentPage.value < controller.totalPages
+                  onTap: (hasMorePage || currentPage < totalPages) && !isLoading
                       ? () => controller.nextPage()
                       : null,
                 ),
@@ -919,16 +760,16 @@ class PaymentListScreen extends StatelessWidget {
                 _buildNavBtn(
                   context,
                   Icons.keyboard_double_arrow_right_rounded,
-                  onTap: controller.currentPage.value < controller.totalPages
-                      ? () => controller.setPage(controller.totalPages)
+                  onTap: totalPages > currentPage && !isLoading
+                      ? () => controller.setPage(totalPages)
                       : null,
                 ),
               ],
             ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildNavBtn(

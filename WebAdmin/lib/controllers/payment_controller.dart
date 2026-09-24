@@ -1,13 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/payment_model.dart';
+import 'package:admin_app/service/payment_service.dart';
 import 'package:admin_app/views/payment_details_screen.dart';
 
 class PaymentController extends GetxController {
   final RxList<PaymentModel> payments = <PaymentModel>[].obs;
   final RxBool isLoading = false.obs;
+  final RxString errorMessage = ''.obs;
 
-  // Stat Summary Cards matching image
+  // Stat Summary Cards matching design
   final RxString completedCount = '19,860'.obs;
   final RxString completedChange = '(-14%)'.obs;
 
@@ -20,11 +23,14 @@ class PaymentController extends GetxController {
   final RxString failedCount = '21,459'.obs;
   final RxString failedChange = '(+29%)'.obs;
 
-  // Filters & Pagination
+  // Filters & Pagination State
   final RxString searchQuery = ''.obs;
   final RxString selectedStatus = 'All'.obs;
-  final RxInt currentPage = 3.obs; // Selected page 3 as in image
-  final RxInt rowsPerPage = 10.obs;
+  final RxInt currentPage = 1.obs;
+  final RxInt rowsPerPage = 2.obs;
+  final RxBool hasMorePage = false.obs;
+  final RxInt totalPayments = 0.obs;
+  final RxInt totalPages = 1.obs;
 
   final List<String> statusOptions = [
     'All',
@@ -34,155 +40,164 @@ class PaymentController extends GetxController {
     'Refund',
   ];
 
+  late final PaymentService _paymentService;
+
   @override
   void onInit() {
     super.onInit();
-    loadMockPayments();
+    _paymentService = Get.isRegistered<PaymentService>()
+        ? Get.find<PaymentService>()
+        : Get.put(PaymentService());
+    fetchPayments(page: 1);
+  }
+
+  /// Calls payments/v1/list API endpoint via PaymentService
+  Future<void> fetchPayments({int page = 1, int? perpage}) async {
+    isLoading.value = true;
+    errorMessage.value = '';
+    final int targetPerPage = perpage ?? rowsPerPage.value;
+    rowsPerPage.value = targetPerPage;
+
+    try {
+      final result = await _paymentService.getPaymentList(
+        page: page,
+        perpage: targetPerPage,
+      );
+
+      if (result.isTokenExpired) {
+        errorMessage.value = 'Session expired. Please log in again.';
+        Get.offAllNamed('/login');
+        return;
+      }
+
+      if (result.success || result.code == 200) {
+        if (result.payments.isNotEmpty) {
+          payments.assignAll(result.payments);
+        } else if (page == 1) {
+          payments.clear();
+        }
+
+        if (result.pageContext != null) {
+          currentPage.value = result.pageContext!.page;
+          hasMorePage.value = result.pageContext!.hasMorePage;
+          totalPayments.value = result.pageContext!.total > 0
+              ? result.pageContext!.total
+              : result.payments.length;
+          totalPages.value = result.pageContext!.totalPages > 0
+              ? result.pageContext!.totalPages
+              : (hasMorePage.value
+                    ? currentPage.value + 1
+                    : (currentPage.value > 0 ? currentPage.value : 1));
+        } else {
+          currentPage.value = page;
+          hasMorePage.value = result.payments.length >= targetPerPage;
+          totalPayments.value = result.payments.length;
+          totalPages.value = hasMorePage.value ? page + 1 : page;
+        }
+      } else {
+        errorMessage.value = result.message;
+        if (payments.isEmpty) {
+          loadMockPayments();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[PaymentController] Error fetching payments: $e');
+      }
+      errorMessage.value = 'Failed to load payments';
+      if (payments.isEmpty) {
+        loadMockPayments();
+      }
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void loadMockPayments() {
-    isLoading.value = true;
     final List<PaymentModel> list = [
-      PaymentModel(
-        orderId: 'ORD1234567890',
-        paymentId: 'pay123456582536',
-        utrRrn: '2352412563259',
-        paymentMethod: 'Bank Transfer',
-        customerName: 'Christian Teigland',
-        customerSubtext: 'NA',
-        date: '05-10-2026',
-        time: '9:30 AM',
-        status: 'Success',
-        amount: '₹ 25652.00',
-      ),
-      PaymentModel(
-        orderId: 'ORD1234567891',
-        paymentId: 'pay123456582537',
-        utrRrn: '2352412563260',
-        paymentMethod: 'Credit Card',
-        customerName: 'Emma Johnson',
-        customerSubtext: 'NA',
-        date: '05-10-2026',
-        time: '10:00 AM',
-        status: 'Success',
-        amount: '₹ 15000.00',
-      ),
-      PaymentModel(
-        orderId: 'ORD1234567892',
-        paymentId: 'pay123456582538',
-        utrRrn: '2352412563261',
-        paymentMethod: 'PayPal',
-        customerName: 'Michael Smith',
-        customerSubtext: 'NA',
-        date: '05-10-2026',
-        time: '10:30 AM',
-        status: 'Pending',
-        amount: '₹ 18000.00',
-      ),
-      PaymentModel(
-        orderId: 'ORD1234567893',
-        paymentId: 'pay123456582539',
-        utrRrn: '2352412563262',
-        paymentMethod: 'Debit Card',
-        customerName: 'Julia Roberts',
-        customerSubtext: 'NA',
-        date: '05-10-2026',
-        time: '11:00 AM',
-        status: 'Failed',
-        amount: '₹ 5000.00',
-      ),
-      PaymentModel(
-        orderId: 'ORD1234567894',
-        paymentId: 'pay123456582540',
-        utrRrn: '2352412563263',
-        paymentMethod: 'Net Banking',
-        customerName: 'David Brown',
-        customerSubtext: 'NA',
-        date: '05-10-2026',
-        time: '11:30 AM',
-        status: 'Success',
-        amount: '₹ 35000.00',
-      ),
-      PaymentModel(
-        orderId: 'ORD1234567895',
-        paymentId: 'pay123456582541',
-        utrRrn: '2352412563264',
-        paymentMethod: 'Cash',
-        customerName: 'Sophia Wilson',
-        customerSubtext: 'NA',
-        date: '05-10-2026',
-        time: '12:00 PM',
-        status: 'Success',
-        amount: '₹ 9000.00',
-      ),
-      PaymentModel(
-        orderId: 'ORD1234567896',
-        paymentId: 'pay123456582542',
-        utrRrn: '2352412563265',
-        paymentMethod: 'Cryptocurrency',
-        customerName: 'Liam Taylor',
-        customerSubtext: 'NA',
-        date: '05-10-2026',
-        time: '12:30 PM',
-        status: 'Success',
-        amount: '₹ 12000.00',
-      ),
+      // PaymentModel(
+      //   orderId: 'ORD1234567890',
+      //   paymentId: 'pay123456582536',
+      //   utrRrn: '2352412563259',
+      //   paymentMethod: 'Bank Transfer',
+      //   customerName: 'Christian Teigland',
+      //   customerSubtext: 'NA',
+      //   date: '05-10-2026',
+      //   time: '9:30 AM',
+      //   status: 'Success',
+      //   amount: '₹ 25652.00',
+      // ),
+      // PaymentModel(
+      //   orderId: 'ORD1234567891',
+      //   paymentId: 'pay123456582537',
+      //   utrRrn: '2352412563260',
+      //   paymentMethod: 'Credit Card',
+      //   customerName: 'Emma Johnson',
+      //   customerSubtext: 'NA',
+      //   date: '05-10-2026',
+      //   time: '10:00 AM',
+      //   status: 'Success',
+      //   amount: '₹ 15000.00',
+      // ),
+      // PaymentModel(
+      //   orderId: 'ORD1234567892',
+      //   paymentId: 'pay123456582538',
+      //   utrRrn: '2352412563261',
+      //   paymentMethod: 'PayPal',
+      //   customerName: 'Michael Smith',
+      //   customerSubtext: 'NA',
+      //   date: '05-10-2026',
+      //   time: '10:30 AM',
+      //   status: 'Pending',
+      //   amount: '₹ 18000.00',
+      // ),
+      // PaymentModel(
+      //   orderId: 'ORD1234567893',
+      //   paymentId: 'pay123456582539',
+      //   utrRrn: '2352412563262',
+      //   paymentMethod: 'Debit Card',
+      //   customerName: 'Julia Roberts',
+      //   customerSubtext: 'NA',
+      //   date: '05-10-2026',
+      //   time: '11:00 AM',
+      //   status: 'Failed',
+      //   amount: '₹ 5000.00',
+      // ),
+      // PaymentModel(
+      //   orderId: 'ORD1234567894',
+      //   paymentId: 'pay123456582540',
+      //   utrRrn: '2352412563263',
+      //   paymentMethod: 'Net Banking',
+      //   customerName: 'David Brown',
+      //   customerSubtext: 'NA',
+      //   date: '05-10-2026',
+      //   time: '11:30 AM',
+      //   status: 'Success',
+      //   amount: '₹ 35000.00',
+      // ),
     ];
-
-    // Generate total of 50 items for pagination demo
-    final List<String> names = [
-      'Olivia Martinez',
-      'James Anderson',
-      'Isabella Thomas',
-      'Benjamin White',
-      'Mia Harris',
-      'Ethan Martin',
-      'Charlotte Clark',
-      'Alexander Rodriguez',
-      'Amelia Lewis',
-      'Henry Walker',
-    ];
-    final List<String> methods = [
-      'UPI',
-      'Bank Transfer',
-      'Net Banking',
-      'Credit Card',
-      'Debit Card',
-    ];
-    final List<String> statuses = ['Success', 'Pending', 'Failed', 'Success'];
-
-    for (int i = 7; i < 50; i++) {
-      list.add(
-        PaymentModel(
-          orderId: 'ORD12345678${90 + i}',
-          paymentId: 'pay123456582${536 + i}',
-          utrRrn: '2352412563${259 + i}',
-          paymentMethod: methods[i % methods.length],
-          customerName: names[i % names.length],
-          customerSubtext: 'NA',
-          date: '05-10-2026',
-          time: '${(9 + (i % 8))}:30 AM',
-          status: statuses[i % statuses.length],
-          amount: '₹ ${(10000 + i * 450)}.00',
-        ),
-      );
-    }
 
     payments.assignAll(list);
-    isLoading.value = false;
+    totalPayments.value = list.length;
+    totalPages.value = (list.length / rowsPerPage.value).ceil();
+    hasMorePage.value = false;
   }
 
   // Filtered payments getter
   List<PaymentModel> get filteredPayments {
     return payments.where((p) {
-      final matchesSearch = searchQuery.value.isEmpty ||
-          p.orderId.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-          p.paymentId.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-          p.utrRrn.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-          p.customerName.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-          p.paymentMethod.toLowerCase().contains(searchQuery.value.toLowerCase());
+      final query = searchQuery.value.trim().toLowerCase();
+      final matchesSearch =
+          query.isEmpty ||
+          p.orderId.toLowerCase().contains(query) ||
+          p.paymentId.toLowerCase().contains(query) ||
+          p.utrRrn.toLowerCase().contains(query) ||
+          p.customerName.toLowerCase().contains(query) ||
+          p.paymentMethod.toLowerCase().contains(query);
 
-      final matchesStatus = selectedStatus.value == 'All' ||
+      final matchesStatus =
+          selectedStatus.value == 'All' ||
+          selectedStatus.value == 'Select Status' ||
           p.status.toLowerCase() == selectedStatus.value.toLowerCase();
 
       return matchesSearch && matchesStatus;
@@ -192,60 +207,88 @@ class PaymentController extends GetxController {
   // Paginated payments getter
   List<PaymentModel> get paginatedPayments {
     final filtered = filteredPayments;
-    int start = (currentPage.value - 1) * rowsPerPage.value;
-    if (start >= filtered.length) {
-      start = 0;
-    }
-    int end = start + rowsPerPage.value;
-    if (end > filtered.length) {
-      end = filtered.length;
-    }
     if (filtered.isEmpty) return [];
-    return filtered.sublist(start, end);
+
+    // If backend returns more items than rowsPerPage, slice locally for strict pagination display
+    if (filtered.length > rowsPerPage.value) {
+      int start = (currentPage.value - 1) * rowsPerPage.value;
+      if (start < 0 || start >= filtered.length) {
+        start = 0;
+      }
+      int end = start + rowsPerPage.value;
+      if (end > filtered.length) {
+        end = filtered.length;
+      }
+      return filtered.sublist(start, end);
+    }
+
+    return filtered;
   }
 
-  int get totalPages {
-    if (filteredPayments.isEmpty) return 1;
-    return (filteredPayments.length / rowsPerPage.value).ceil();
+  int get computedTotalPages {
+    final total = displayTotalCount;
+    if (total > 0 && rowsPerPage.value > 0) {
+      return (total / rowsPerPage.value).ceil();
+    }
+    if (hasMorePage.value) {
+      return currentPage.value + 1;
+    }
+    return currentPage.value > 0 ? currentPage.value : 1;
   }
 
-  int get startEntryIndex => filteredPayments.isEmpty
-      ? 0
-      : (currentPage.value - 1) * rowsPerPage.value + 1;
+  int get startEntryIndex {
+    if (filteredPayments.isEmpty) return 0;
+    return (currentPage.value - 1) * rowsPerPage.value + 1;
+  }
 
   int get endEntryIndex {
     if (filteredPayments.isEmpty) return 0;
-    final end = currentPage.value * rowsPerPage.value;
-    return end > filteredPayments.length ? filteredPayments.length : end;
+    final end = startEntryIndex + paginatedPayments.length - 1;
+    final total = displayTotalCount;
+    if (total > 0 && end > total) {
+      return total;
+    }
+    return end;
+  }
+
+  int get displayTotalCount {
+    if (totalPayments.value > 0) return totalPayments.value;
+    return filteredPayments.length;
   }
 
   void setSearchQuery(String val) {
     searchQuery.value = val;
-    currentPage.value = 1;
+    fetchPayments(page: 1);
   }
 
   void setStatusFilter(String? val) {
     if (val == null) return;
     selectedStatus.value = val;
-    currentPage.value = 1;
+    fetchPayments(page: 1);
   }
 
   void setPage(int page) {
-    if (page >= 1 && page <= totalPages) {
-      currentPage.value = page;
+    if (page >= 1 && page != currentPage.value && !isLoading.value) {
+      fetchPayments(page: page, perpage: rowsPerPage.value);
     }
   }
 
   void nextPage() {
-    if (currentPage.value < totalPages) {
-      currentPage.value++;
+    if ((hasMorePage.value || currentPage.value < computedTotalPages) &&
+        !isLoading.value) {
+      fetchPayments(page: currentPage.value + 1, perpage: rowsPerPage.value);
     }
   }
 
   void previousPage() {
-    if (currentPage.value > 1) {
-      currentPage.value--;
+    if (currentPage.value > 1 && !isLoading.value) {
+      fetchPayments(page: currentPage.value - 1, perpage: rowsPerPage.value);
     }
+  }
+
+  void setRowsPerPage(int rows) {
+    rowsPerPage.value = rows;
+    fetchPayments(page: 1, perpage: rows);
   }
 
   void initiateNewPayment(BuildContext context) {
@@ -332,10 +375,9 @@ class PaymentController extends GetxController {
                     0,
                     PaymentModel(
                       orderId: orderIdController.text.trim(),
-                      paymentId:
-                          'pay${DateTime.now().millisecondsSinceEpoch}',
-                      utrRrn:
-                          '${DateTime.now().microsecondsSinceEpoch}'.substring(0, 13),
+                      paymentId: 'pay${DateTime.now().millisecondsSinceEpoch}',
+                      utrRrn: '${DateTime.now().microsecondsSinceEpoch}'
+                          .substring(0, 13),
                       paymentMethod: 'Bank Transfer',
                       customerName: customerController.text.trim().isEmpty
                           ? 'Customer'

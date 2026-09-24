@@ -100,7 +100,9 @@ flutter:
       - asset: assets/fonts/PublicSans-Regular.ttf
         weight: 400
       - asset: assets/fonts/PublicSans-Medium.ttf
-        weight: 500
+        weight: 500      
+      - asset: assets/fonts/publicSans-Semibold.ttf
+        weight: 600
       # - asset: assets/fonts/public-sans.medium.ttf
       #   weight: 700
   - family: Inter
