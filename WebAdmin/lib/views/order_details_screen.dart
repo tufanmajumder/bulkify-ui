@@ -1083,7 +1083,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           vertical: 12,
                         ),
                         color: Colors.white,
-                        child: const Row(
+                        child: Row(
                           children: [
                             Expanded(
                               flex: 2,
@@ -1091,7 +1091,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'ISSUED BY',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11),
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1104,7 +1104,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'CREATED ON',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11),
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1117,7 +1117,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'PAYMENT ID',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11),
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1130,7 +1130,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'RRN/UTR',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11),
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1143,7 +1143,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'STATUS',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11),
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1156,7 +1156,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'AMOUNT',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11),
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1170,7 +1170,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11),
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1215,7 +1215,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           child: Text(
                                             tx.issuedBy,
                                             style: const TextStyle(
-                                              fontSize: 13,
+                                              fontSize: 12,
                                               color: Color(0xFF64748B),
                                             ),
                                           ),
@@ -1231,7 +1231,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                                     tx.createdOn,
                                                   ),
                                             style: const TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 11,
                                               color: Color(0xFF64748B),
                                               height: 1.3,
                                             ),
@@ -1246,7 +1246,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                               Text(
                                                 tx.paymentId,
                                                 style: const TextStyle(
-                                                  fontSize: 13,
+                                                  fontSize: 12,
                                                   color: Color(0xFF64748B),
                                                 ),
                                               ),
@@ -1254,7 +1254,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                               Text(
                                                 tx.paymentMethod,
                                                 style: const TextStyle(
-                                                  fontSize: 11,
+                                                  fontSize: 10,
                                                   color: Color(0xFF94A3B8),
                                                 ),
                                               ),
@@ -1266,7 +1266,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           child: Text(
                                             tx.rrnUtr,
                                             style: const TextStyle(
-                                              fontSize: 13,
+                                              fontSize: 12,
                                               color: Color(0xFF64748B),
                                             ),
                                           ),
@@ -1289,7 +1289,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                               child: Text(
                                                 tx.status,
                                                 style: const TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: 11,
                                                   fontWeight: FontWeight.w600,
                                                   color: Color(0xFF10B981),
                                                 ),
@@ -1302,7 +1302,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           child: _buildRupeeText(
                                             tx.amount,
                                             style: const TextStyle(
-                                              fontSize: 13,
+                                              fontSize: 12,
                                               color: Color(0xFF64748B),
                                             ),
                                           ),
@@ -1392,7 +1392,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           vertical: 12,
                         ),
                         color: Colors.white,
-                        child: const Row(
+                        child: Row(
                           children: [
                             Expanded(
                               flex: 5,
@@ -1400,7 +1400,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 'PRODUCT',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11.5),
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1414,7 +1414,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11.5),
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1428,7 +1428,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11.5),
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
@@ -1442,7 +1442,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: 14,
+                                  fontSize: Responsive.sp(context, 11.5),
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF2F2B3D),
                                   letterSpacing: 0.5,
