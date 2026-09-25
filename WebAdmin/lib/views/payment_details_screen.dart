@@ -238,7 +238,7 @@ class PaymentDetailsScreen extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -259,11 +259,11 @@ class PaymentDetailsScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Payment ID',
                 style: TextStyle(
                   fontFamily: 'Public Sans',
-                  fontSize: 14,
+                  fontSize: Responsive.sp(context, 12),
                   fontWeight: FontWeight.w400,
                   color: Color(0xB32F2B3D),
                   letterSpacing: 0,
@@ -274,9 +274,9 @@ class PaymentDetailsScreen extends StatelessWidget {
                 children: [
                   Text(
                     data.paymentId,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Public Sans',
-                      fontSize: 18,
+                      fontSize: Responsive.sp(Get.context!, 13),
                       fontWeight: FontWeight.w600,
                       color: Colors.black,
                       letterSpacing: 0,
@@ -317,9 +317,9 @@ class PaymentDetailsScreen extends StatelessWidget {
             children: [
               Text(
                 rawAmount,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Public Sans',
-                  fontSize: 30,
+                  fontSize: Responsive.sp(Get.context!, 18),
                   fontWeight: FontWeight.w500,
                   color: Colors.black,
                   letterSpacing: 0,
@@ -333,12 +333,12 @@ class PaymentDetailsScreen extends StatelessWidget {
                   color: const Color(0xFFFFECEB),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     '₹',
                     style: TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 22,
+                      fontSize: Responsive.sp(Get.context!, 18),
                       fontWeight: FontWeight.w400,
                       color: Color(0xFFCF4340),
                     ),
@@ -522,9 +522,9 @@ class PaymentDetailsScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Public Sans',
-            fontSize: 13,
+            fontSize: Responsive.sp(Get.context!, 12),
             fontWeight: FontWeight.w400,
             color: Color(0xB32F2B3D),
             letterSpacing: 0,
@@ -534,7 +534,7 @@ class PaymentDetailsScreen extends StatelessWidget {
         Text(
           value.isEmpty ? '-' : value,
           style: TextStyle(
-            fontSize: 15,
+            fontSize: Responsive.sp(Get.context!, 13),
             fontWeight: FontWeight.w400,
             color: valueColor,
           ),

@@ -27,7 +27,7 @@ class PaymentController extends GetxController {
   final RxString searchQuery = ''.obs;
   final RxString selectedStatus = 'All'.obs;
   final RxInt currentPage = 1.obs;
-  final RxInt rowsPerPage = 2.obs;
+  final RxInt rowsPerPage = 10.obs;
   final RxBool hasMorePage = false.obs;
   final RxInt totalPayments = 0.obs;
   final RxInt totalPages = 1.obs;
@@ -85,7 +85,9 @@ class PaymentController extends GetxController {
               : result.payments.length;
           totalPages.value = result.pageContext!.totalPages > 0
               ? result.pageContext!.totalPages
-              : (hasMorePage.value ? currentPage.value + 1 : (currentPage.value > 0 ? currentPage.value : 1));
+              : (hasMorePage.value
+                    ? currentPage.value + 1
+                    : (currentPage.value > 0 ? currentPage.value : 1));
         } else {
           currentPage.value = page;
           hasMorePage.value = result.payments.length >= targetPerPage;
@@ -185,14 +187,16 @@ class PaymentController extends GetxController {
   List<PaymentModel> get filteredPayments {
     return payments.where((p) {
       final query = searchQuery.value.trim().toLowerCase();
-      final matchesSearch = query.isEmpty ||
+      final matchesSearch =
+          query.isEmpty ||
           p.orderId.toLowerCase().contains(query) ||
           p.paymentId.toLowerCase().contains(query) ||
           p.utrRrn.toLowerCase().contains(query) ||
           p.customerName.toLowerCase().contains(query) ||
           p.paymentMethod.toLowerCase().contains(query);
 
-      final matchesStatus = selectedStatus.value == 'All' ||
+      final matchesStatus =
+          selectedStatus.value == 'All' ||
           selectedStatus.value == 'Select Status' ||
           p.status.toLowerCase() == selectedStatus.value.toLowerCase();
 
@@ -270,7 +274,8 @@ class PaymentController extends GetxController {
   }
 
   void nextPage() {
-    if ((hasMorePage.value || currentPage.value < computedTotalPages) && !isLoading.value) {
+    if ((hasMorePage.value || currentPage.value < computedTotalPages) &&
+        !isLoading.value) {
       fetchPayments(page: currentPage.value + 1, perpage: rowsPerPage.value);
     }
   }
@@ -370,10 +375,9 @@ class PaymentController extends GetxController {
                     0,
                     PaymentModel(
                       orderId: orderIdController.text.trim(),
-                      paymentId:
-                          'pay${DateTime.now().millisecondsSinceEpoch}',
-                      utrRrn:
-                          '${DateTime.now().microsecondsSinceEpoch}'.substring(0, 13),
+                      paymentId: 'pay${DateTime.now().millisecondsSinceEpoch}',
+                      utrRrn: '${DateTime.now().microsecondsSinceEpoch}'
+                          .substring(0, 13),
                       paymentMethod: 'Bank Transfer',
                       customerName: customerController.text.trim().isEmpty
                           ? 'Customer'

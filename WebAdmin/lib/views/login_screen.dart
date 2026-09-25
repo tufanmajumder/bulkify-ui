@@ -2,6 +2,7 @@
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/login_controller.dart';
+import 'package:admin_app/utils/asset_manager.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -370,7 +371,7 @@ class LoginScreen extends StatelessWidget {
 
   Widget _buildLogo() {
     return Image.asset(
-      'bulkifyLogo.png',
+      AssetManager.mainLogo,
       height: 40,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {

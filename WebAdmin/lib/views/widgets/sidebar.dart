@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/service/auth_service.dart';
+import 'package:admin_app/utils/asset_manager.dart';
 import 'package:admin_app/views/order_list_screen.dart';
 import 'package:admin_app/views/payment_list_screen.dart';
 import 'package:admin_app/views/users_screen.dart';
@@ -185,7 +186,7 @@ class _SidebarState extends State<Sidebar> {
         width: 44,
         child: Center(
           child: Image.asset(
-            'bulkifyShortLogo.png',
+            AssetManager.shortLogo,
             height: 32,
             width: 32,
             fit: BoxFit.contain,
@@ -205,7 +206,7 @@ class _SidebarState extends State<Sidebar> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Image.asset(
-          'bulkifyLogo.png',
+          AssetManager.mainLogo,
           height: 36,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => const Text(

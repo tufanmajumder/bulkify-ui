@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
+import 'package:admin_app/utils/asset_manager.dart';
 import 'package:admin_app/utils/responsive.dart';
 
 class StatCards extends StatelessWidget {
@@ -50,7 +51,7 @@ class StatCards extends StatelessWidget {
                 //percentage: '(-14%)',
                 isNegative: true,
                 //subtitle: 'Last week analytics',
-                icon: 'userCheck.png',
+                icon: AssetManager.userCheck,
                 iconBgColor: const Color(0xFFE8F8F0),
                 iconColor: const Color(0xFF22C55E),
               ),
@@ -62,7 +63,7 @@ class StatCards extends StatelessWidget {
                 //percentage: '(+42%)',
                 isNegative: false,
                 //subtitle: 'Last week analytics',
-                icon: 'userSearch.png',
+                icon: AssetManager.userSearch,
                 iconBgColor: const Color(0xFFFFF4E5),
                 iconColor: const Color(0xFFF97316),
               ),
@@ -74,7 +75,7 @@ class StatCards extends StatelessWidget {
                 //percentage: '(+18%)',
                 isNegative: false,
                 //subtitle: 'Last week analytics',
-                icon: 'userPlus.png',
+                icon: AssetManager.userPlus,
                 iconBgColor: const Color(0xFFFFEAEA),
                 iconColor: const Color(0xFFEF4444),
               ),
@@ -86,7 +87,7 @@ class StatCards extends StatelessWidget {
                 //percentage: '(+29%)',
                 isNegative: false,
                 //subtitle: 'Total Users',
-                icon: 'exportUser.png',
+                icon: AssetManager.exportUser,
                 iconBgColor: const Color(0xFFEFE8FF),
                 iconColor: const Color(0xFF8B5CF6),
               ),
