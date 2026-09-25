@@ -105,14 +105,26 @@ class OrderController extends GetxController {
     return filteredOrders;
   }
 
-  int get totalPages => (!isLoading.value && hasMorePage.value)
-      ? currentPage.value + 1
-      : currentPage.value;
+  bool get effectiveHasMorePage {
+    if (searchQuery.value.isNotEmpty) {
+      return (currentPage.value * rowsPerPage.value) < filteredOrders.length;
+    }
+    return hasMorePage.value;
+  }
 
-  List<int> get visiblePageNumbers {
-    final maxPage = (!isLoading.value && hasMorePage.value)
+  int get totalPages {
+    if (searchQuery.value.isNotEmpty) {
+      final count = filteredOrders.length;
+      if (count == 0) return 1;
+      return (count / rowsPerPage.value).ceil();
+    }
+    return (!isLoading.value && hasMorePage.value)
         ? currentPage.value + 1
         : currentPage.value;
+  }
+
+  List<int> get visiblePageNumbers {
+    final maxPage = totalPages;
     int startPage = (maxPage - 4).clamp(1, maxPage);
     List<int> pages = [];
     for (int i = startPage; i <= maxPage; i++) {
@@ -133,6 +145,7 @@ class OrderController extends GetxController {
   void setSearchQuery(String query) {
     if (isLoading.value) return;
     searchQuery.value = query;
+    currentPage.value = 1;
     fetchOrders(page: 1);
   }
 
@@ -153,6 +166,12 @@ class OrderController extends GetxController {
   void goToFirstPage() {
     if (!isLoading.value && currentPage.value > 1) {
       fetchOrders(page: 1);
+    }
+  }
+
+  void goToLastPage() {
+    if (!isLoading.value && hasMorePage.value) {
+      fetchOrders(page: totalPages);
     }
   }
 

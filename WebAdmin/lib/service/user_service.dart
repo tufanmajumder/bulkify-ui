@@ -116,7 +116,10 @@ class UserService extends GetxService {
   /// Calls the getUserList API endpoint (users/v1/list).
   Future<UserListResult> getUserList({
     int page = 1,
-    int perpage = 2,
+    int perpage = 100,
+    String? search,
+    String? role,
+    String? status,
     String? token,
   }) async {
     final String activeToken = (token != null && token.trim().isNotEmpty)
@@ -145,6 +148,9 @@ class UserService extends GetxService {
     final Map<String, dynamic> requestPayload = {
       'page': page,
       'perpage': perpage,
+      if (search != null && search.isNotEmpty) 'search': search,
+      if (role != null && role.isNotEmpty) 'role': role,
+      if (status != null && status.isNotEmpty) 'status': status,
     };
 
     dynamic responseData;
@@ -313,7 +319,7 @@ class UserService extends GetxService {
     required String email,
     required String fullname,
     required String mobile,
-    String rolekey = ApiManager.staticRoleKey,
+    required String rolekey,
     int status = 1,
     String? token,
   }) async {

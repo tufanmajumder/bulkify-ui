@@ -345,34 +345,34 @@ class OrderListScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => controller.exportOrders(),
-                      icon: const Icon(
-                        Icons.download_outlined,
-                        size: 18,
-                        color: Color(0xFF64748B),
-                      ),
-                      label: Text(
-                        'Export',
-                        style: TextStyle(
-                          color: const Color(0xFF64748B),
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF1F5F9),
-                        elevation: 0,
-                        minimumSize: const Size(0, 38),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
+                    // ElevatedButton.icon(
+                    //   onPressed: () => controller.exportOrders(),
+                    //   icon: const Icon(
+                    //     Icons.download_outlined,
+                    //     size: 18,
+                    //     color: Color(0xFF64748B),
+                    //   ),
+                    //   label: Text(
+                    //     'Export',
+                    //     style: TextStyle(
+                    //       color: const Color(0xFF64748B),
+                    //       fontSize: fontSize,
+                    //       fontWeight: FontWeight.w500,
+                    //     ),
+                    //   ),
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: const Color(0xFFF1F5F9),
+                    //     elevation: 0,
+                    //     minimumSize: const Size(0, 38),
+                    //     padding: const EdgeInsets.symmetric(
+                    //       horizontal: 16,
+                    //       vertical: 16,
+                    //     ),
+                    //     shape: RoundedRectangleBorder(
+                    //       borderRadius: BorderRadius.circular(8),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
 
@@ -583,7 +583,7 @@ class OrderListScreen extends StatelessWidget {
                                       textAlign: TextAlign.start,
                                       style: TextStyle(
                                         fontFamily: 'Public Sans',
-                                        fontSize: Responsive.sp(context, 14),
+                                        fontSize: Responsive.sp(context, 13),
                                         fontWeight: FontWeight.w600,
                                         color: ColorManager.cherryApple,
                                         letterSpacing: 0,
@@ -622,7 +622,7 @@ class OrderListScreen extends StatelessWidget {
                                                 fontFamily: 'Public Sans',
                                                 fontSize: Responsive.sp(
                                                   context,
-                                                  14,
+                                                  13,
                                                 ),
                                                 fontWeight: FontWeight.w400,
                                                 color: const Color(0xB32F2B3D),
@@ -638,7 +638,7 @@ class OrderListScreen extends StatelessWidget {
                                                   fontFamily: 'Public Sans',
                                                   fontSize: Responsive.sp(
                                                     context,
-                                                    12.5,
+                                                    11.5,
                                                   ),
                                                   fontWeight: FontWeight.w400,
                                                   color: const Color(
@@ -670,7 +670,7 @@ class OrderListScreen extends StatelessWidget {
                                             fontFamily: 'Public Sans',
                                             fontSize: Responsive.sp(
                                               context,
-                                              14,
+                                              13,
                                             ),
                                             fontWeight: FontWeight.w500,
                                             color: const Color(0xE62F2B3D),
@@ -686,7 +686,7 @@ class OrderListScreen extends StatelessWidget {
                                               fontFamily: 'Public Sans',
                                               fontSize: Responsive.sp(
                                                 context,
-                                                12.5,
+                                                11.5,
                                               ),
                                               fontWeight: FontWeight.w400,
                                               color: const Color(0xB32F2B3D),
@@ -713,7 +713,7 @@ class OrderListScreen extends StatelessWidget {
                                                   fontFamily: 'Inter',
                                                   fontSize: Responsive.sp(
                                                     context,
-                                                    14,
+                                                    13,
                                                   ),
                                                   fontWeight: FontWeight.w400,
                                                   color: const Color(
@@ -727,7 +727,7 @@ class OrderListScreen extends StatelessWidget {
                                                   fontFamily: 'Inter',
                                                   fontSize: Responsive.sp(
                                                     context,
-                                                    14,
+                                                    13,
                                                   ),
                                                   fontWeight: FontWeight.w400,
                                                   color: const Color(
@@ -817,7 +817,7 @@ class OrderListScreen extends StatelessWidget {
             final end = controller.endEntryIndex;
             final currentPage = controller.currentPage.value;
             final isLoading = controller.isLoading.value;
-            final hasMorePage = controller.hasMorePage.value;
+            final hasMorePage = controller.effectiveHasMorePage;
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -876,7 +876,7 @@ class OrderListScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       ...List.generate(
-                        hasMorePage ? currentPage + 1 : currentPage,
+                        controller.totalPages,
                         (index) {
                           final pageNum = index + 1;
                           final isSelected = pageNum == currentPage;
@@ -898,6 +898,14 @@ class OrderListScreen extends StatelessWidget {
                         Icons.keyboard_arrow_right_rounded,
                         onTap: hasMorePage && !isLoading
                             ? () => controller.nextPage()
+                            : null,
+                      ),
+                      const SizedBox(width: 6),
+                      _buildPageNavBtn(
+                        context,
+                        Icons.keyboard_double_arrow_right_rounded,
+                        onTap: hasMorePage && !isLoading
+                            ? () => controller.goToLastPage()
                             : null,
                       ),
                     ],
@@ -926,7 +934,7 @@ class OrderListScreen extends StatelessWidget {
       textAlign: TextAlign.start,
       style: TextStyle(
         fontFamily: 'Public Sans',
-        fontSize: Responsive.sp(context, 14),
+        fontSize: Responsive.sp(context, 13),
         fontWeight: FontWeight.w400,
         color: color,
       ),
@@ -964,7 +972,7 @@ class OrderListScreen extends StatelessWidget {
         status,
         style: TextStyle(
           fontFamily: 'Public Sans',
-          fontSize: Responsive.sp(context, 14),
+          fontSize: Responsive.sp(context, 13),
           fontWeight: FontWeight.w400,
           color: text,
         ),
@@ -990,7 +998,7 @@ class OrderListScreen extends StatelessWidget {
                   : TextAlign.start,
               style: TextStyle(
                 fontFamily: 'Public Sans',
-                fontSize: Responsive.sp(context, 13),
+                fontSize: Responsive.sp(context, 12),
                 fontWeight: FontWeight.w500,
                 color: const Color(0xE62F2B3D),
                 letterSpacing: 0,

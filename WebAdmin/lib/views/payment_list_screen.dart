@@ -98,7 +98,7 @@ class PaymentListScreen extends StatelessWidget {
                   children: [
                     _buildRowsPerPageDropdown(controller),
                     const SizedBox(width: 12),
-                    _buildExportBtn(),
+                    //_buildExportBtn(),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -126,7 +126,7 @@ class PaymentListScreen extends StatelessWidget {
                 children: [
                   _buildRowsPerPageDropdown(controller),
                   const SizedBox(width: 12),
-                  _buildExportBtn(),
+                  //_buildExportBtn(),
                 ],
               ),
 
@@ -429,7 +429,7 @@ class PaymentListScreen extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(
-        fontSize: Responsive.sp(context, 13),
+        fontSize: Responsive.sp(context, 12),
         fontWeight: FontWeight.w700,
         color: const Color(0xFF475569),
         letterSpacing: 0.6,
@@ -442,8 +442,8 @@ class PaymentListScreen extends StatelessWidget {
     PaymentController controller,
     PaymentModel item,
   ) {
-    final double fontSize = Responsive.sp(context, 14);
-    final double subFontSize = Responsive.sp(context, 12.5);
+    final double fontSize = Responsive.sp(context, 13);
+    final double subFontSize = Responsive.sp(context, 11.5);
 
     return InkWell(
       onTap: () {

@@ -27,8 +27,7 @@ class UserController extends GetxController {
 
   // Pagination states
   final RxInt currentPage = 1.obs;
-  final RxInt rowsPerPage = 2.obs;
-  final RxBool hasMorePage = false.obs;
+  final RxInt rowsPerPage = 10.obs;
 
   late final UserService _userService;
 
@@ -71,13 +70,8 @@ class UserController extends GetxController {
     isLoading.value = true;
     errorMessage.value = '';
 
-    final int targetPerPage = perpage ?? rowsPerPage.value;
-
     try {
-      final result = await _userService.getUserList(
-        page: page,
-        perpage: targetPerPage,
-      );
+      final result = await _userService.getUserList(page: 1, perpage: 500);
 
       if (result.isTokenExpired) {
         errorMessage.value = 'Session expired. Please log in again.';
@@ -90,14 +84,8 @@ class UserController extends GetxController {
           summary.value = result.summary;
         }
         users.assignAll(result.users);
-        if (result.pageContext != null) {
-          currentPage.value = result.pageContext!.page;
-          rowsPerPage.value = result.pageContext!.perpage;
-          hasMorePage.value = result.pageContext!.hasMorePage;
-        } else {
-          currentPage.value = page;
-          rowsPerPage.value = targetPerPage;
-          hasMorePage.value = false;
+        if (currentPage.value > totalPages) {
+          currentPage.value = 1;
         }
       } else {
         errorMessage.value = result.message;
@@ -119,101 +107,7 @@ class UserController extends GetxController {
   }
 
   void _loadInitialUsers() {
-    // Demo data uses clearly fictional identifiers (example.com, 90000XXXXX)
-    // to comply with data minimisation principles.
-    // Replace with a real API call when the Users API endpoint is available.
-    final List<UserModel> initialData = [
-      // UserModel(
-      //   id: '1',
-      //   name: 'Demo User 01',
-      //   email: 'user01@example.com',
-      //   role: 'Driver',
-      //   lastLogin: '20-08-2026 12:00 PM',
-      //   status: 'Active',
-      //   mobNo: '9000000001',
-      // ),
-      // UserModel(
-      //   id: '2',
-      //   name: 'Demo User 02',
-      //   email: 'user02@example.com',
-      //   role: 'Pilot',
-      //   lastLogin: '22-08-2026 03:00 PM',
-      //   status: 'Active',
-      //   mobNo: '9000000002',
-      // ),
-      // UserModel(
-      //   id: '3',
-      //   name: 'Demo User 03',
-      //   email: 'user03@example.com',
-      //   role: 'Scheduler',
-      //   lastLogin: '15-09-2026 3:00 PM',
-      //   status: 'Inactive',
-      //   mobNo: '9000000003',
-      // ),
-      // UserModel(
-      //   id: '4',
-      //   name: 'Demo User 04',
-      //   email: 'user04@example.com',
-      //   role: 'Manager',
-      //   lastLogin: '01-10-2026 9:00 AM',
-      //   status: 'Active',
-      //   mobNo: '9000000004',
-      // ),
-      // UserModel(
-      //   id: '5',
-      //   name: 'Demo User 05',
-      //   email: 'user05@example.com',
-      //   role: 'Designer',
-      //   lastLogin: '25-10-2026 1:30 PM',
-      //   status: 'Active',
-      //   mobNo: '9000000005',
-      // ),
-      // UserModel(
-      //   id: '6',
-      //   name: 'Demo User 06',
-      //   email: 'user06@example.com',
-      //   role: 'Developer',
-      //   lastLogin: '05-11-2026 4:15 PM',
-      //   status: 'Inactive',
-      //   mobNo: '9000000006',
-      // ),
-      // UserModel(
-      //   id: '7',
-      //   name: 'Demo User 07',
-      //   email: 'user07@example.com',
-      //   role: 'Analyst',
-      //   lastLogin: '10-12-2026 10:00 AM',
-      //   status: 'Active',
-      //   mobNo: '9000000007',
-      // ),
-      // UserModel(
-      //   id: '8',
-      //   name: 'Demo User 08',
-      //   email: 'user08@example.com',
-      //   role: 'Representative',
-      //   lastLogin: '20-01-2027 2:45 PM',
-      //   status: 'Active',
-      //   mobNo: '9000000008',
-      // ),
-      // UserModel(
-      //   id: '9',
-      //   name: 'Demo User 09',
-      //   email: 'user09@example.com',
-      //   role: 'Researcher',
-      //   lastLogin: '30-01-2027 11:00 AM',
-      //   status: 'Inactive',
-      //   mobNo: '9000000009',
-      // ),
-      // UserModel(
-      //   id: '10',
-      //   name: 'Demo User 10',
-      //   email: 'user10@example.com',
-      //   role: 'Admin',
-      //   lastLogin: '15-02-2027 10:30 AM',
-      //   status: 'Active',
-      //   mobNo: '9000000010',
-      // ),
-    ];
+    final List<UserModel> initialData = [];
 
     // Populate 50 entries to demonstrate real pagination
     final List<UserModel> extendedData = [];
@@ -264,7 +158,7 @@ class UserController extends GetxController {
       final matchesRole =
           selectedRole.value == 'All' ||
           selectedRole.value == 'Select Role' ||
-          user.role == selectedRole.value;
+          user.role.toLowerCase() == selectedRole.value.toLowerCase();
 
       final matchesStatus =
           selectedStatus.value == 'All' ||
@@ -279,15 +173,23 @@ class UserController extends GetxController {
     }).toList();
   }
 
-  // Paginated Users Getter
-  List<UserModel> get paginatedUsers => filteredUsers;
+  // Paginated Users Getter for the current page
+  List<UserModel> get paginatedUsers {
+    final list = filteredUsers;
+    if (list.isEmpty) return [];
+    final start = (currentPage.value - 1) * rowsPerPage.value;
+    if (start >= list.length) return [];
+    final end = (start + rowsPerPage.value).clamp(0, list.length);
+    return list.sublist(start, end);
+  }
 
   int get totalPages {
-    if (hasMorePage.value) {
-      return currentPage.value + 1;
-    }
-    return currentPage.value > 0 ? currentPage.value : 1;
+    final count = filteredUsers.length;
+    if (count == 0) return 1;
+    return (count / rowsPerPage.value).ceil();
   }
+
+  bool get hasMorePage => currentPage.value < totalPages;
 
   int get startEntryIndex {
     if (filteredUsers.isEmpty) return 0;
@@ -296,56 +198,59 @@ class UserController extends GetxController {
 
   int get endEntryIndex {
     if (filteredUsers.isEmpty) return 0;
-    return startEntryIndex + filteredUsers.length - 1;
+    final end = currentPage.value * rowsPerPage.value;
+    return end > filteredUsers.length ? filteredUsers.length : end;
   }
 
   // Controller Actions
   void setSearchQuery(String query) {
     searchQuery.value = query;
-    fetchUsers(page: 1);
+    currentPage.value = 1;
   }
 
   void setSelectedRole(String role) {
     selectedRole.value = role;
+    currentPage.value = 1;
     final matchedRole = roles.firstWhereOrNull((r) => r.roleName == role);
-    print("Selected Role: $role, roleKey: ${matchedRole?.roleKey ?? 'N/A'}");
     if (kDebugMode) {
       debugPrint(
         '[UserController] Selected Role: $role | roleKey: ${matchedRole?.roleKey}',
       );
     }
-    fetchUsers(page: 1);
   }
 
   void setSelectedStatus(String status) {
     selectedStatus.value = status;
-    fetchUsers(page: 1);
+    currentPage.value = 1;
   }
 
   void setPage(int page) {
-    if (page >= 1 && page != currentPage.value && !isLoading.value) {
-      fetchUsers(page: page, perpage: rowsPerPage.value);
+    if (page >= 1 &&
+        page <= totalPages &&
+        page != currentPage.value &&
+        !isLoading.value) {
+      currentPage.value = page;
     }
   }
 
   void nextPage() {
-    if (hasMorePage.value && !isLoading.value) {
-      fetchUsers(page: currentPage.value + 1, perpage: rowsPerPage.value);
+    if (currentPage.value < totalPages && !isLoading.value) {
+      currentPage.value = currentPage.value + 1;
     }
   }
 
   void prevPage() {
     if (currentPage.value > 1 && !isLoading.value) {
-      fetchUsers(page: currentPage.value - 1, perpage: rowsPerPage.value);
+      currentPage.value = currentPage.value - 1;
     }
   }
 
   void setRowsPerPage(int rows) {
     rowsPerPage.value = rows;
-    fetchUsers(page: 1, perpage: rows);
+    currentPage.value = 1;
   }
 
-  /// Calls userAdd API endpoint (users/v1/add) via UserService with email, fullname, mobile, static rolekey and status
+  /// Calls userAdd API endpoint (users/v1/add) via UserService with email, fullname, mobile, dynamic rolekey and status
   Future<bool> addUser({
     required String name,
     required String email,
@@ -357,11 +262,31 @@ class UserController extends GetxController {
     try {
       final int statusInt = 2;
 
+      String targetRoleKey = ApiManager.staticRoleKey;
+      if (role != null && role.isNotEmpty) {
+        final matchedRole = roles.firstWhereOrNull(
+          (r) =>
+              r.roleName.toLowerCase() == role.toLowerCase() ||
+              r.roleKey == role,
+        );
+        if (matchedRole != null && matchedRole.roleKey.isNotEmpty) {
+          targetRoleKey = matchedRole.roleKey;
+        } else {
+          targetRoleKey = role;
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint(
+          '[UserController] Adding user "$name" with role: "$role", resolved roleKey: "$targetRoleKey"',
+        );
+      }
+
       final result = await _userService.addUser(
         email: email,
         fullname: name,
         mobile: mobile,
-        rolekey: ApiManager.staticRoleKey,
+        rolekey: targetRoleKey,
         status: statusInt,
       );
 

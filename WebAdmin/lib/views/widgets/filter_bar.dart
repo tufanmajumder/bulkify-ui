@@ -71,62 +71,63 @@ class FilterBar extends StatelessWidget {
                               controller.setRowsPerPage(newValue);
                             }
                           },
-                          items: (<int>{
-                            2,
-                            5,
-                            10,
-                            20,
-                            50,
-                            controller.rowsPerPage.value,
-                          }.toList()..sort())
-                              .map<DropdownMenuItem<int>>((int value) {
+                          items:
+                              (<int>{
+                                2,
+                                5,
+                                10,
+                                20,
+                                50,
+                                controller.rowsPerPage.value,
+                              }.toList()..sort()).map<DropdownMenuItem<int>>((
+                                int value,
+                              ) {
                                 return DropdownMenuItem<int>(
                                   value: value,
                                   child: Text('$value'),
                                 );
-                              })
-                              .toList(),
+                              }).toList(),
                         ),
                       ),
                     ),
                   ),
 
                   // Export Button (Export ⬆)
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Get.snackbar(
-                        'Export',
-                        'Exporting user data...',
-                        snackPosition: SnackPosition.BOTTOM,
-                      );
-                    },
-                    icon: Text(
-                      'Export',
-                      style: TextStyle(
-                        color: const Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
-                        fontSize: fontSize,
-                      ),
-                    ),
-                    label: const Icon(
-                      Icons.download_outlined,
-                      size: 16,
-                      color: Color(0xFF64748B),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE8EBEF),
-                      side: BorderSide.none,
-                      elevation: 0,
-                      minimumSize: Size(0, controlHeight),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
+                  // OutlinedButton.icon(
+                  //   onPressed: () {
+                  //     Get.snackbar(
+                  //       'Export',
+                  //       'Exporting user data...',
+                  //       snackPosition: SnackPosition.BOTTOM,
+                  //     );
+                  //   },
+                  //   icon: Text(
+                  //     'Export',
+                  //     style: TextStyle(
+                  //       color: const Color(0xFF64748B),
+                  //       fontWeight: FontWeight.w500,
+                  //       fontSize: fontSize,
+                  //     ),
+                  //   ),
+                  //   label: const Icon(
+                  //     Icons.download_outlined,
+                  //     size: 16,
+                  //     color: Color(0xFF64748B),
+                  //   ),
+                  //   style: OutlinedButton.styleFrom(
+                  //     backgroundColor: const Color(0xFFE8EBEF),
+                  //     side: BorderSide.none,
+                  //     elevation: 0,
+                  //     minimumSize: Size(0, controlHeight),
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 14,
+                  //       vertical: 15,
+                  //     ),
+                  //     shape: RoundedRectangleBorder(
+                  //       borderRadius: BorderRadius.circular(8),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
 

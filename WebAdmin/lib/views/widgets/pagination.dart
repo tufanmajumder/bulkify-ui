@@ -72,7 +72,7 @@ class PaginationControls extends StatelessWidget {
 
                   // Numbered Page Buttons
                   ...List.generate(
-                    controller.hasMorePage.value ? currentPage + 1 : currentPage,
+                    controller.totalPages,
                     (index) {
                       final pageNum = index + 1;
                       final isSelected = pageNum == currentPage;
@@ -119,8 +119,19 @@ class PaginationControls extends StatelessWidget {
                     btnSize: btnSize,
                     icon: Icons.keyboard_arrow_right_rounded,
                     isDisabled:
-                        !controller.hasMorePage.value || controller.isLoading.value,
+                        !controller.hasMorePage || controller.isLoading.value,
                     onTap: controller.nextPage,
+                  ),
+                  const SizedBox(width: 6),
+
+                  // Last Page »
+                  _buildNavBtn(
+                    context: context,
+                    btnSize: btnSize,
+                    icon: Icons.keyboard_double_arrow_right_rounded,
+                    isDisabled:
+                        !controller.hasMorePage || controller.isLoading.value,
+                    onTap: () => controller.setPage(controller.totalPages),
                   ),
                 ],
               ),
