@@ -596,9 +596,9 @@ class OrderListScreen extends StatelessWidget {
                                     flex: 15,
                                     child: Builder(
                                       builder: (context) {
-                                        print(
-                                          "[OrderListScreen] Order ${order.id} Date & Time: $displayDate",
-                                        );
+                                        // print(
+                                        //   "[OrderListScreen] Order ${order.id} Date & Time: $displayDate",
+                                        // );
                                         final dateParts = displayDate.split(
                                           ' ',
                                         );
@@ -875,24 +875,21 @@ class OrderListScreen extends StatelessWidget {
                             : null,
                       ),
                       const SizedBox(width: 6),
-                      ...List.generate(
-                        controller.totalPages,
-                        (index) {
-                          final pageNum = index + 1;
-                          final isSelected = pageNum == currentPage;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 6.0),
-                            child: _buildPageNumBtn(
-                              context,
-                              '$pageNum',
-                              isSelected,
-                              onTap: isLoading || isSelected
-                                  ? () {}
-                                  : () => controller.setPage(pageNum),
-                            ),
-                          );
-                        },
-                      ),
+                      ...List.generate(controller.totalPages, (index) {
+                        final pageNum = index + 1;
+                        final isSelected = pageNum == currentPage;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6.0),
+                          child: _buildPageNumBtn(
+                            context,
+                            '$pageNum',
+                            isSelected,
+                            onTap: isLoading || isSelected
+                                ? () {}
+                                : () => controller.setPage(pageNum),
+                          ),
+                        );
+                      }),
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_arrow_right_rounded,
