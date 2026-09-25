@@ -122,7 +122,7 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                               ? 'Full name is required'
                               : null,
                           decoration: InputDecoration(
-                            hintText: 'John Doe',
+                            hintText: 'User Name',
                             hintStyle: TextStyle(
                               fontSize: Responsive.sp(context, 14),
                               color: const Color(0xFF94A3B8),
@@ -185,7 +185,7 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                             return null;
                           },
                           decoration: InputDecoration(
-                            hintText: 'john.doe@example.com',
+                            hintText: 'user@example.com',
                             hintStyle: TextStyle(
                               fontSize: Responsive.sp(context, 14),
                               color: const Color(0xFF94A3B8),
@@ -245,7 +245,7 @@ class _AddUserDrawerState extends State<AddUserDrawer> {
                               ? 'Mobile number is required'
                               : null,
                           decoration: InputDecoration(
-                            hintText: '8972062925',
+                            hintText: '99xxxxxx99',
                             hintStyle: TextStyle(
                               fontSize: Responsive.sp(context, 14),
                               color: const Color(0xFF94A3B8),
