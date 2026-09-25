@@ -1067,8 +1067,8 @@ class OrderDetailsScreen extends StatelessWidget {
           Divider(height: 1, color: Colors.grey.shade300),
           LayoutBuilder(
             builder: (context, constraints) {
-              final double tableWidth = constraints.maxWidth < 800
-                  ? 800.0
+              final double tableWidth = constraints.maxWidth < 450
+                  ? 450.0
                   : constraints.maxWidth;
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -1125,7 +1125,7 @@ class OrderDetailsScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 3,
+                              flex: 2,
                               child: Text(
                                 'RRN/UTR',
                                 style: TextStyle(
@@ -1215,7 +1215,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           child: Text(
                                             tx.issuedBy,
                                             style: const TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 13,
                                               color: Color(0xFF64748B),
                                             ),
                                           ),
@@ -1231,7 +1231,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                                     tx.createdOn,
                                                   ),
                                             style: const TextStyle(
-                                              fontSize: 11,
+                                              fontSize: 13,
                                               color: Color(0xFF64748B),
                                               height: 1.3,
                                             ),
@@ -1246,7 +1246,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                               Text(
                                                 tx.paymentId,
                                                 style: const TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: 13,
                                                   color: Color(0xFF64748B),
                                                 ),
                                               ),
@@ -1254,7 +1254,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                               Text(
                                                 tx.paymentMethod,
                                                 style: const TextStyle(
-                                                  fontSize: 10,
+                                                  fontSize: 11,
                                                   color: Color(0xFF94A3B8),
                                                 ),
                                               ),
@@ -1262,11 +1262,11 @@ class OrderDetailsScreen extends StatelessWidget {
                                           ),
                                         ),
                                         Expanded(
-                                          flex: 3,
+                                          flex: 2,
                                           child: Text(
                                             tx.rrnUtr,
                                             style: const TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 13,
                                               color: Color(0xFF64748B),
                                             ),
                                           ),
@@ -1289,7 +1289,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                               child: Text(
                                                 tx.status,
                                                 style: const TextStyle(
-                                                  fontSize: 11,
+                                                  fontSize: 13,
                                                   fontWeight: FontWeight.w600,
                                                   color: Color(0xFF10B981),
                                                 ),
@@ -1302,7 +1302,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           child: _buildRupeeText(
                                             tx.amount,
                                             style: const TextStyle(
-                                              fontSize: 12,
+                                              fontSize: 13,
                                               color: Color(0xFF64748B),
                                             ),
                                           ),
@@ -1376,8 +1376,8 @@ class OrderDetailsScreen extends StatelessWidget {
 
           LayoutBuilder(
             builder: (context, constraints) {
-              final double tableWidth = constraints.maxWidth < 700
-                  ? 700.0
+              final double tableWidth = constraints.maxWidth < 450
+                  ? 450.0
                   : constraints.maxWidth;
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
