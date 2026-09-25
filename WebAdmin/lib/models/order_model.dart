@@ -54,37 +54,15 @@ class OrderModel {
     final salesIdStr = salesIdRaw.toString().trim();
 
     // Extract ID ("ordernumber", "salesorder_number", "salesorderid", "orderkey")
-    final idRaw =
-        json['ordernumber'] ??
-        json['salesorder_number'] ??
-        json['salesorderid'] ??
-        json['salesorder_id'] ??
-        json['orderkey'] ??
-        json['order_number'] ??
-        json['orderNo'] ??
-        json['id'] ??
-        json['_id'] ??
-        json['order_id'] ??
-        json['orderId'] ??
-        '-';
+    final idRaw = json['ordernumber'] ?? '-';
     final idDisplay = idRaw.toString().trim();
 
     // Extract Date & Time ("orderdate", "created_time", "created_at", "date")
-    final dateRaw =
-        json['orderdate'] ??
-        json['created_time'] ??
-        json['created_at'] ??
-        json['salesorder_date'] ??
-        json['date'];
+    final dateRaw = json['orderdate'];
     final dateStr = _formatCreatedTime(dateRaw);
 
     // Extract Customer Name ("customername", "customer_name", "customerName", "name", "customer")
-    final customerRaw =
-        json['customername'] ??
-        json['customer_name'] ??
-        json['customerName'] ??
-        json['name'] ??
-        json['customer'];
+    final customerRaw = json['customername'];
     String customerStr = '-';
     if (customerRaw != null &&
         customerRaw.toString().trim().isNotEmpty &&
@@ -93,16 +71,7 @@ class OrderModel {
     }
 
     // Extract Company / Restaurant Name ("company_name", "restaurantname", "resturentname")
-    final companyRaw =
-        json['company_name'] ??
-        json['companyname'] ??
-        json['restaurantname'] ??
-        json['resturentname'] ??
-        json['company'] ??
-        json['restaurant_name'] ??
-        json['resturent_name'] ??
-        json['restaurantName'] ??
-        json['companyName'];
+    final companyRaw = json['companyname'];
     String companyStr = '';
     if (companyRaw != null &&
         companyRaw.toString().trim().isNotEmpty &&
@@ -117,57 +86,19 @@ class OrderModel {
     }
 
     // Extract Customer Email / Delivery Address ("customeremail", "customer_email", "deliveryaddress")
-    final emailRaw =
-        json['customeremail'] ??
-        json['customer_email'] ??
-        json['deliveryaddress'] ??
-        json['delivery_address'] ??
-        json['customerEmail'] ??
-        json['email'] ??
-        json['address'] ??
-        '-';
+    final emailRaw = json['customeremail'] ?? '-';
     String emailStr = emailRaw != null ? emailRaw.toString().trim() : '-';
 
     // Extract Payment Status ("paymentstatus", "payment_status", "paid_status")
-    final paymentRaw =
-        json['paymentstatus'] ??
-        json['payment_status'] ??
-        json['paid_status'] ??
-        '-';
+    final paymentRaw = json['paymentstatus'] ?? '-';
     String paymentStr = paymentRaw != null ? paymentRaw.toString().trim() : '-';
-    if (paymentStr.toLowerCase() == 'unpaid') {
-      paymentStr = 'Pending';
-    } else if (paymentStr.toLowerCase() == 'paid') {
-      paymentStr = 'Paid';
-    } else if (paymentStr.isNotEmpty && paymentStr != '-') {
-      paymentStr = paymentStr[0].toUpperCase() + paymentStr.substring(1);
-    }
 
     // Extract Order Status ("orderstatus", "order_status", "shippingstatus", "shipped_status", "status")
-    final statusRaw =
-        json['orderstatus'] ??
-        json['order_status'] ??
-        json['shippingstatus'] ??
-        json['shipped_status'] ??
-        json['status'] ??
-        '-';
+    final statusRaw = json['shippingstatus'] ?? '-';
     String statusStr = statusRaw != null ? statusRaw.toString().trim() : '-';
-    if (statusStr.toLowerCase() == 'open') {
-      statusStr = 'Ready to Pickup';
-    } else if (statusStr.toLowerCase() == 'invoiced') {
-      statusStr = 'Delivered';
-    } else if (statusStr.isNotEmpty && statusStr != '-') {
-      statusStr = statusStr[0].toUpperCase() + statusStr.substring(1);
-    }
 
     // Extract Amount ("finalamount", "grandtotal", "total", "amount")
-    final amountRaw =
-        json['finalamount'] ??
-        json['grandtotal'] ??
-        json['total'] ??
-        json['amount'] ??
-        json['grand_total'] ??
-        '0.00';
+    final amountRaw = json['finalamount'] ?? '0.00';
     String amountStr = '0.00';
     if (amountRaw != null) {
       final parsed = double.tryParse(amountRaw.toString().trim());

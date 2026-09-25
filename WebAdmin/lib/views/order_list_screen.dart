@@ -388,7 +388,7 @@ class OrderListScreen extends StatelessWidget {
                         decoration: InputDecoration(
                           hintText: 'Search Order',
                           hintStyle: TextStyle(
-                            fontSize: 13,
+                            fontSize: fontSize,
                             color: const Color(0xFF94A3B8),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -583,7 +583,7 @@ class OrderListScreen extends StatelessWidget {
                                       textAlign: TextAlign.start,
                                       style: TextStyle(
                                         fontFamily: 'Public Sans',
-                                        fontSize: Responsive.sp(context, 15),
+                                        fontSize: Responsive.sp(context, 14),
                                         fontWeight: FontWeight.w600,
                                         color: ColorManager.cherryApple,
                                         letterSpacing: 0,
@@ -622,7 +622,7 @@ class OrderListScreen extends StatelessWidget {
                                                 fontFamily: 'Public Sans',
                                                 fontSize: Responsive.sp(
                                                   context,
-                                                  15,
+                                                  14,
                                                 ),
                                                 fontWeight: FontWeight.w400,
                                                 color: const Color(0xB32F2B3D),
@@ -638,7 +638,7 @@ class OrderListScreen extends StatelessWidget {
                                                   fontFamily: 'Public Sans',
                                                   fontSize: Responsive.sp(
                                                     context,
-                                                    13,
+                                                    12.5,
                                                   ),
                                                   fontWeight: FontWeight.w400,
                                                   color: const Color(
@@ -670,7 +670,7 @@ class OrderListScreen extends StatelessWidget {
                                             fontFamily: 'Public Sans',
                                             fontSize: Responsive.sp(
                                               context,
-                                              15,
+                                              14,
                                             ),
                                             fontWeight: FontWeight.w500,
                                             color: const Color(0xE62F2B3D),
@@ -686,7 +686,7 @@ class OrderListScreen extends StatelessWidget {
                                               fontFamily: 'Public Sans',
                                               fontSize: Responsive.sp(
                                                 context,
-                                                13,
+                                                12.5,
                                               ),
                                               fontWeight: FontWeight.w400,
                                               color: const Color(0xB32F2B3D),
@@ -711,7 +711,10 @@ class OrderListScreen extends StatelessWidget {
                                                 text: "₹ ",
                                                 style: TextStyle(
                                                   fontFamily: 'Inter',
-                                                  fontSize: fontSize,
+                                                  fontSize: Responsive.sp(
+                                                    context,
+                                                    14,
+                                                  ),
                                                   fontWeight: FontWeight.w400,
                                                   color: const Color(
                                                     0xB32F2B3D,
@@ -722,7 +725,10 @@ class OrderListScreen extends StatelessWidget {
                                                 text: order.amount,
                                                 style: TextStyle(
                                                   fontFamily: 'Inter',
-                                                  fontSize: fontSize,
+                                                  fontSize: Responsive.sp(
+                                                    context,
+                                                    14,
+                                                  ),
                                                   fontWeight: FontWeight.w400,
                                                   color: const Color(
                                                     0xB32F2B3D,
@@ -920,7 +926,7 @@ class OrderListScreen extends StatelessWidget {
       textAlign: TextAlign.start,
       style: TextStyle(
         fontFamily: 'Public Sans',
-        fontSize: Responsive.sp(context, 13),
+        fontSize: Responsive.sp(context, 14),
         fontWeight: FontWeight.w400,
         color: color,
       ),
@@ -958,7 +964,7 @@ class OrderListScreen extends StatelessWidget {
         status,
         style: TextStyle(
           fontFamily: 'Public Sans',
-          fontSize: Responsive.sp(context, 15),
+          fontSize: Responsive.sp(context, 14),
           fontWeight: FontWeight.w400,
           color: text,
         ),

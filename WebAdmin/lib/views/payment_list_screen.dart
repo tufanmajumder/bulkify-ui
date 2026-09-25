@@ -334,7 +334,7 @@ class PaymentListScreen extends StatelessWidget {
                       ),
                       Expanded(
                         flex: 5,
-                        child: _buildHeaderCell(context, 'CUSTOMER DETAILS'),
+                        child: _buildHeaderCell(context, 'CUSTOMER'),
                       ),
                       Expanded(
                         flex: 4,
@@ -429,7 +429,7 @@ class PaymentListScreen extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(
-        fontSize: Responsive.sp(context, 12),
+        fontSize: Responsive.sp(context, 13),
         fontWeight: FontWeight.w700,
         color: const Color(0xFF475569),
         letterSpacing: 0.6,
@@ -442,8 +442,8 @@ class PaymentListScreen extends StatelessWidget {
     PaymentController controller,
     PaymentModel item,
   ) {
-    final double fontSize = Responsive.sp(context, 13.5);
-    final double subFontSize = Responsive.sp(context, 11.5);
+    final double fontSize = Responsive.sp(context, 14);
+    final double subFontSize = Responsive.sp(context, 12.5);
 
     return InkWell(
       onTap: () {
@@ -468,7 +468,7 @@ class PaymentListScreen extends StatelessWidget {
                 item.orderId,
                 style: TextStyle(
                   fontFamily: 'Public Sans',
-                  fontSize: Responsive.sp(context, 15),
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w400,
                   color: Color(0xB32F2B3D),
                   letterSpacing: 0,
@@ -483,7 +483,7 @@ class PaymentListScreen extends StatelessWidget {
                 item.paymentId,
                 style: TextStyle(
                   fontFamily: 'Public Sans',
-                  fontSize: Responsive.sp(context, 15),
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w400,
                   color: Color(0xB32F2B3D),
                   letterSpacing: 0,
@@ -502,7 +502,7 @@ class PaymentListScreen extends StatelessWidget {
                     item.utrRrn,
                     style: TextStyle(
                       fontFamily: 'Public Sans',
-                      fontSize: Responsive.sp(context, 15),
+                      fontSize: fontSize,
                       fontWeight: FontWeight.w400,
                       color: Color(0xB32F2B3D),
                       letterSpacing: 0,
@@ -513,7 +513,7 @@ class PaymentListScreen extends StatelessWidget {
                     item.paymentMethod,
                     style: TextStyle(
                       fontFamily: 'Public Sans',
-                      fontSize: Responsive.sp(context, 13),
+                      fontSize: subFontSize,
                       fontWeight: FontWeight.w400,
                       color: Color(0xB32F2B3D),
                       letterSpacing: 0,
@@ -534,7 +534,7 @@ class PaymentListScreen extends StatelessWidget {
                     item.customerName,
                     style: TextStyle(
                       fontFamily: 'Public Sans',
-                      fontSize: Responsive.sp(context, 15),
+                      fontSize: fontSize,
                       fontWeight: FontWeight.w400,
                       color: Color(0xB32F2B3D),
                       letterSpacing: 0,
@@ -564,7 +564,7 @@ class PaymentListScreen extends StatelessWidget {
                     item.date,
                     style: TextStyle(
                       fontFamily: 'Public Sans',
-                      fontSize: Responsive.sp(context, 15),
+                      fontSize: fontSize,
                       fontWeight: FontWeight.w400,
                       color: Color(0xB32F2B3D),
                       letterSpacing: 0,
@@ -575,7 +575,7 @@ class PaymentListScreen extends StatelessWidget {
                     item.time,
                     style: TextStyle(
                       fontFamily: 'Public Sans',
-                      fontSize: Responsive.sp(context, 13),
+                      fontSize: subFontSize,
                       fontWeight: FontWeight.w400,
                       color: Color(0xB32F2B3D),
                       letterSpacing: 0,
@@ -679,7 +679,7 @@ class PaymentListScreen extends StatelessWidget {
       status,
       style: TextStyle(
         fontFamily: 'Public Sans',
-        fontSize: Responsive.sp(context, 13.5),
+        fontSize: Responsive.sp(context, 14),
         fontWeight: FontWeight.w500,
         color: color,
         letterSpacing: 0,

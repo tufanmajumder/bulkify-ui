@@ -133,7 +133,7 @@ class UsersTable extends StatelessWidget {
       text,
       style: TextStyle(
         color: const Color(0xFF475569),
-        fontSize: Responsive.sp(context, 12),
+        fontSize: Responsive.sp(context, 13),
         fontWeight: FontWeight.w700,
         letterSpacing: 0.6,
       ),
@@ -181,7 +181,7 @@ class UsersTable extends StatelessWidget {
                     user.name,
                     style: TextStyle(
                       color: const Color(0xFF475569),
-                      fontSize: Responsive.sp(context, 13.5),
+                      fontSize: Responsive.sp(context, 14),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -197,7 +197,7 @@ class UsersTable extends StatelessWidget {
               user.email,
               style: TextStyle(
                 color: const Color(0xFF475569),
-                fontSize: Responsive.sp(context, 13.5),
+                fontSize: Responsive.sp(context, 14),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -219,7 +219,7 @@ class UsersTable extends StatelessWidget {
                   cleanMobile.isNotEmpty ? cleanMobile : '-',
                   style: TextStyle(
                     color: const Color(0xFF475569),
-                    fontSize: Responsive.sp(context, 13.5),
+                    fontSize: Responsive.sp(context, 14),
                     fontWeight: FontWeight.w400,
                   ),
                 );
@@ -234,7 +234,7 @@ class UsersTable extends StatelessWidget {
               user.role,
               style: TextStyle(
                 color: const Color(0xFF475569),
-                fontSize: Responsive.sp(context, 13.5),
+                fontSize: Responsive.sp(context, 14),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -247,7 +247,7 @@ class UsersTable extends StatelessWidget {
               user.lastLogin.isNotEmpty ? user.lastLogin : '-',
               style: TextStyle(
                 color: const Color(0xFF475569),
-                fontSize: Responsive.sp(context, 13.5),
+                fontSize: Responsive.sp(context, 14),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -265,7 +265,7 @@ class UsersTable extends StatelessWidget {
                     : status == 'pending'
                     ? ColorManager.avatarGoldenAmber
                     : const Color(0xFFEF4444),
-                fontSize: Responsive.sp(context, 13.5),
+                fontSize: Responsive.sp(context, 14),
                 fontWeight: FontWeight.w500,
               ),
             ),
