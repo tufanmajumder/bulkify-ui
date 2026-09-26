@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:admin_app/models/user_model.dart';
+import 'package:admin_app/models/user_profile_model.dart';
 import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/utils/api_manager.dart';
 
@@ -86,6 +87,7 @@ class UserDetailResult {
   final String message;
   final int code;
   final UserModel? user;
+  final UserProfileModel? profile;
   final Map<String, dynamic>? rawData;
   final bool isTokenExpired;
 
@@ -94,6 +96,7 @@ class UserDetailResult {
     required this.message,
     required this.code,
     this.user,
+    this.profile,
     this.rawData,
     this.isTokenExpired = false,
   });
@@ -634,6 +637,7 @@ class UserService extends GetxService {
         ? token.trim()
         : await AuthService.getAuthToken();
 
+    //print("authToken...$activeToken");
     if (activeToken.isEmpty) {
       if (kDebugMode) {
         debugPrint('[UserService] Auth token is empty in getUserDetails');
@@ -802,11 +806,17 @@ class UserService extends GetxService {
       }
 
       UserModel? userObj;
+      UserProfileModel? profileObj;
       Map<String, dynamic>? rawMap;
 
       if (dataObj is Map<String, dynamic>) {
         rawMap = dataObj;
         userObj = UserModel.fromJson(dataObj);
+        profileObj = UserProfileModel.fromJson(dataObj);
+      } else {
+        rawMap = responseData;
+        userObj = UserModel.fromJson(responseData);
+        profileObj = UserProfileModel.fromJson(responseData);
       }
 
       return UserDetailResult(
@@ -814,6 +824,7 @@ class UserService extends GetxService {
         message: message,
         code: code,
         user: userObj,
+        profile: profileObj,
         rawData: rawMap,
       );
     }

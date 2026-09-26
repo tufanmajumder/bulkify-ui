@@ -6,7 +6,6 @@ class ApiManager {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'https://bulkify.dts.ind.in/',
-    //defaultValue: 'https://manage-bulkify.dts.ind.in/',
   );
 
   static const String loginUrl = "core/v1/auth/initiate";

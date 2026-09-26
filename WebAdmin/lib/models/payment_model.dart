@@ -63,7 +63,7 @@ class PaymentModel {
       DateTime time = DateTime.parse(rawCreated);
       // 2. Format directly using UTC time (forces it to stay 12:24)
       String formattedTime = DateFormat('hh:mm:ss a').format(time.toUtc());
-      print(formattedTime);
+      //print(formattedTime);
       timeStr = formattedTime;
       dateStr = DateFormat(
         'dd-MM-yyyy',

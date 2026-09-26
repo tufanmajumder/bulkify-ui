@@ -2,26 +2,155 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/user_model.dart';
+import 'package:admin_app/models/user_profile_model.dart';
 import 'package:admin_app/service/user_service.dart';
 import 'package:admin_app/controllers/user_controller.dart';
+import 'package:intl/intl.dart';
 
 class UserProfileController extends GetxController {
   // Loading & State
   final RxBool isLoading = false.obs;
   final RxString userkey = ''.obs;
+  final Rx<UserProfileModel?> profileModel = Rx<UserProfileModel?>(null);
 
-  // User Profile Basic & Personal Info (Reactive)
-  final RxString name = ''.obs;
-  final RxString basicName = ''.obs;
-  final RxString email = ''.obs;
-  final RxString role = ''.obs;
-  final RxString status = ''.obs;
-  final RxString mobile = ''.obs;
-  final RxString emergencyContact = ''.obs;
-  final RxString whatsapp = ''.obs;
-  final RxString avatarUrl = 'assets/user_avatar.jpg'.obs;
+  // User Profile Basic & Personal Info (Reactive with image defaults)
+  final RxString name = '-'.obs;
+  final RxString basicName = '-'.obs;
+  final RxString email = '-'.obs;
+  final RxString role = '-'.obs;
+  final RxString status = '-'.obs;
+  final RxString mobile = '-'.obs;
+  final RxString country = '-'.obs;
+  final RxString createdOn = '-'.obs;
+  final RxString gender = '-'.obs;
+  final RxString dob = '-'.obs;
+  final RxString type = '-'.obs;
+  final RxString language = '-'.obs;
+  final RxString vehicleNo = '-'.obs;
+  final RxString portal = '-'.obs;
+
+  // Contact Information
+  final RxString emergencyContact = '-'.obs;
+  final RxString emergencyContactName = '-'.obs;
+  final RxString whatsapp = '-'.obs;
+
+  // Document Information
+  final RxString docType = '-'.obs;
+  final RxString docNumber = '-'.obs;
+  final RxString docExpiry = '-'.obs;
+
+  final RxString avatarUrl = ''.obs;
   final RxString tasksDone = '-'.obs;
   final RxString projectsDone = '-'.obs;
+
+  // Order Details Data List (Matching Reference Image)
+  final RxList<Map<String, String>> orderDetailsList = <Map<String, String>>[
+    // {
+    //   'ordNo': 'SO-00078',
+    //   'dateTime': '10-12-2026\n10:00 AM',
+    //   'custName': 'Christian Teigland',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 25652.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00079',
+    //   'dateTime': '10-12-2026\n11:00 AM',
+    //   'custName': 'Alex Wong',
+    //   'payment': 'Pending',
+    //   'amount': '₹ 15000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00080',
+    //   'dateTime': '10-12-2026\n12:00 PM',
+    //   'custName': 'Nina Kapoor',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 32000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00081',
+    //   'dateTime': '10-12-2026\n01:00 PM',
+    //   'custName': 'Rajesh Kumar',
+    //   'payment': 'Pending',
+    //   'amount': '₹ 20000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00082',
+    //   'dateTime': '10-12-2026\n02:00 PM',
+    //   'custName': 'Sara Ali',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 18000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00083',
+    //   'dateTime': '10-12-2026\n03:00 PM',
+    //   'custName': 'Michael Johnson',
+    //   'payment': 'Pending',
+    //   'amount': '₹ 22000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00084',
+    //   'dateTime': '10-12-2026\n04:00 PM',
+    //   'custName': 'Aisha Patel',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 35000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00085',
+    //   'dateTime': '10-12-2026\n05:00 PM',
+    //   'custName': 'Vikram Singh',
+    //   'payment': 'Pending',
+    //   'amount': '₹ 19000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00086',
+    //   'dateTime': '10-12-2026\n06:00 PM',
+    //   'custName': 'Priya Verma',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 21000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00087',
+    //   'dateTime': '10-12-2026\n07:00 PM',
+    //   'custName': 'Deepak Mehta',
+    //   'payment': 'Pending',
+    //   'amount': '₹ 24000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00088',
+    //   'dateTime': '10-12-2026\n08:00 PM',
+    //   'custName': 'Sofia Khan',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 27000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00089',
+    //   'dateTime': '10-12-2026\n09:00 PM',
+    //   'custName': 'Ravi Sharma',
+    //   'payment': 'Pending',
+    //   'amount': '₹ 16000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00090',
+    //   'dateTime': '10-12-2026\n10:00 PM',
+    //   'custName': 'Meera Joshi',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 30000.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00091',
+    //   'dateTime': '10-12-2026\n11:00 PM',
+    //   'custName': 'Anil Bhatia',
+    //   'payment': 'Pending',
+    //   'amount': '₹ 17500.00',
+    // },
+    // {
+    //   'ordNo': 'SO-00092',
+    //   'dateTime': '10-12-2026\n12:00 AM',
+    //   'custName': 'Simran Chawla',
+    //   'payment': 'Paid',
+    //   'amount': '₹ 22000.00',
+    // },
+  ].obs;
 
   // Tabs state
   final RxInt selectedTabIndex = 0.obs;
@@ -92,7 +221,10 @@ class UserProfileController extends GetxController {
   void onInit() {
     super.onInit();
     final args = Get.arguments;
-    if (args is UserModel && args.id.isNotEmpty) {
+    if (args is UserProfileModel) {
+      userkey.value = args.userKey;
+      setUserProfileModel(args);
+    } else if (args is UserModel && args.id.isNotEmpty) {
       userkey.value = args.id;
       setUserModel(args);
     } else if (args is String && args.trim().isNotEmpty) {
@@ -146,7 +278,9 @@ class UserProfileController extends GetxController {
         return;
       }
 
-      if (result.user != null) {
+      if (result.profile != null) {
+        setUserProfileModel(result.profile!);
+      } else if (result.user != null) {
         setUserModel(result.user!);
       }
       if (result.rawData != null) {
@@ -159,6 +293,45 @@ class UserProfileController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void setUserProfileModel(UserProfileModel p) {
+    profileModel.value = p;
+    if (p.name.isNotEmpty) {
+      name.value = p.name;
+      basicName.value = p.name;
+    }
+    if (p.email.isNotEmpty) email.value = p.email;
+    if (p.role.isNotEmpty) role.value = p.role;
+    if (p.status.isNotEmpty) status.value = p.status;
+    if (p.mobile.isNotEmpty) mobile.value = p.mobile;
+    if (p.country.isNotEmpty) country.value = p.country;
+    if (p.createdOn.isNotEmpty)
+      createdOn.value = DateFormat(
+        'dd-MM-yyyy hh:mm:ss a',
+      ).format(DateTime.parse(p.createdOn));
+    if (p.gender.isNotEmpty) gender.value = p.gender;
+    if (p.dob.isNotEmpty)
+      dob.value = DateFormat('dd-MM-yyyy').format(DateTime.parse(p.dob));
+    if (p.type.isNotEmpty)
+      type.value = p.type[0].toUpperCase() + p.type.substring(1).toLowerCase();
+    if (p.language.isNotEmpty) language.value = p.language;
+    if (p.vehicleNo.isNotEmpty) vehicleNo.value = p.vehicleNo;
+    if (p.portal.isNotEmpty) portal.value = p.portal;
+    if (p.emergencyContact.isNotEmpty)
+      emergencyContact.value = p.emergencyContact;
+    if (p.emergencyContactName.isNotEmpty)
+      emergencyContactName.value = p.emergencyContactName;
+    if (p.whatsapp.isNotEmpty) whatsapp.value = p.whatsapp;
+    if (p.docType.isNotEmpty)
+      docType.value =
+          p.docType[0].toUpperCase() + p.docType.substring(1).toLowerCase();
+    if (p.docNumber.isNotEmpty) docNumber.value = p.docNumber;
+    if (p.docExpiry.isNotEmpty)
+      docExpiry.value = DateFormat(
+        'dd-MM-yyyy',
+      ).format(DateTime.parse(p.docExpiry));
+    if (p.avatarUrl.isNotEmpty) avatarUrl.value = p.avatarUrl;
   }
 
   void setUserModel(UserModel u) {
@@ -178,95 +351,8 @@ class UserProfileController extends GetxController {
   }
 
   void populateFromRawMap(Map<String, dynamic> raw) {
-    final nameVal =
-        raw['name']?.toString() ??
-        raw['fullname']?.toString() ??
-        raw['full_name']?.toString() ??
-        raw['first_name']?.toString() ??
-        raw['display_name']?.toString() ??
-        raw['userName']?.toString() ??
-        raw['username']?.toString() ??
-        raw['user_name']?.toString() ??
-        '';
-    if (nameVal.isNotEmpty && nameVal != 'null') {
-      name.value = nameVal;
-      basicName.value = nameVal;
-    }
-
-    final emailVal =
-        raw['email']?.toString() ??
-        raw['emailid']?.toString() ??
-        raw['email_id']?.toString() ??
-        raw['emailAddress']?.toString() ??
-        raw['email_address']?.toString() ??
-        '';
-    if (emailVal.isNotEmpty && emailVal != 'null') {
-      email.value = emailVal;
-    }
-
-    final roleVal =
-        raw['rolename']?.toString() ??
-        raw['role_name']?.toString() ??
-        raw['roleName']?.toString() ??
-        raw['role_title']?.toString() ??
-        raw['user_role']?.toString() ??
-        raw['role']?.toString() ??
-        '';
-    if (roleVal.isNotEmpty && roleVal != 'null') {
-      role.value = roleVal;
-    }
-
-    final statusVal =
-        raw['status']?.toString() ??
-        raw['user_status']?.toString() ??
-        raw['is_active']?.toString() ??
-        '';
-    if (statusVal.isNotEmpty && statusVal != 'null') {
-      if (statusVal == '1' ||
-          statusVal.toLowerCase() == 'active' ||
-          statusVal.toLowerCase() == 'true') {
-        status.value = 'Active';
-      } else if (statusVal == '0' ||
-          statusVal.toLowerCase() == 'inactive' ||
-          statusVal.toLowerCase() == 'false') {
-        status.value = 'Inactive';
-      } else {
-        status.value = statusVal;
-      }
-    }
-
-    final mobVal =
-        raw['mobile']?.toString() ??
-        raw['mobNo']?.toString() ??
-        raw['mob_no']?.toString() ??
-        raw['mobile_no']?.toString() ??
-        raw['mobile_number']?.toString() ??
-        raw['contact']?.toString() ??
-        raw['phone']?.toString() ??
-        raw['phone_number']?.toString() ??
-        '';
-    if (mobVal.isNotEmpty && mobVal != 'null') {
-      mobile.value = mobVal;
-      final emergencyVal =
-          raw['emergency_contact']?.toString() ??
-          raw['emergencyContact']?.toString() ??
-          raw['emergency_phone']?.toString() ??
-          raw['emergency_mobile']?.toString() ??
-          raw['alt_contact']?.toString() ??
-          mobVal;
-      emergencyContact.value =
-          (emergencyVal.isNotEmpty && emergencyVal != 'null')
-          ? emergencyVal
-          : mobVal;
-
-      final waVal =
-          raw['whatsapp']?.toString() ??
-          raw['whatsapp_no']?.toString() ??
-          raw['whatsapp_number']?.toString() ??
-          raw['whatsapp_phone']?.toString() ??
-          mobVal;
-      whatsapp.value = (waVal.isNotEmpty && waVal != 'null') ? waVal : mobVal;
-    }
+    final profile = UserProfileModel.fromJson(raw);
+    setUserProfileModel(profile);
   }
 
   @override

@@ -186,7 +186,7 @@ class OrderDetailsController extends GetxController {
   }
 
   Future<void> fetchOrderDetails(String salesorderId) async {
-    print("salesorderId...$salesorderId");
+    //print("salesorderId...$salesorderId");
     final cleanId = salesorderId.trim();
     if (cleanId.isEmpty) return;
 

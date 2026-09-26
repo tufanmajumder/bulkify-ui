@@ -36,19 +36,18 @@ class RoleModel {
   final String roleKey;
   final String roleName;
 
-  RoleModel({
-    required this.roleKey,
-    required this.roleName,
-  });
+  RoleModel({required this.roleKey, required this.roleName});
 
   factory RoleModel.fromJson(Map<String, dynamic> json) {
     return RoleModel(
-      roleKey: json['rolekey']?.toString() ??
+      roleKey:
+          json['rolekey']?.toString() ??
           json['role_key']?.toString() ??
           json['id']?.toString() ??
           json['key']?.toString() ??
           '',
-      roleName: json['rolename']?.toString() ??
+      roleName:
+          json['rolename']?.toString() ??
           json['role_name']?.toString() ??
           json['name']?.toString() ??
           json['role']?.toString() ??
@@ -92,7 +91,9 @@ class UserModel {
         '';
 
     String formattedLastLogin = '-';
-    if (rawLastLogin.isNotEmpty && rawLastLogin != 'null' && rawLastLogin != '-') {
+    if (rawLastLogin.isNotEmpty &&
+        rawLastLogin != 'null' &&
+        rawLastLogin != '-') {
       try {
         DateTime parsedDate = DateTime.parse(rawLastLogin);
         String formattedDate = DateFormat('dd-MM-yyyy').format(parsedDate);

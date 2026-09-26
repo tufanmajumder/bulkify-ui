@@ -7,4 +7,9 @@ class AssetManager {
   static const String userIcon = "assets/userIcon.png";
   static const String userPlus = "assets/userPlus.png";
   static const String userSearch = "assets/userSearch.png";
+  static const String mail = "assets/mail.png";
+  static const String mob = "assets/mob.png";
+  static const String call = "assets/call.png";
+  static const String whatsapp = "assets/whatsapp.png";
+  static const String map = "assets/map.png";
 }
