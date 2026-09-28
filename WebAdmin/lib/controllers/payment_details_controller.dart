@@ -105,9 +105,9 @@ class PaymentDetailsController extends GetxController {
         errorMessage.value = result.message;
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[PaymentDetailsController] Error fetching details: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[PaymentDetailsController] Error fetching details: $e');
+      // }
       errorMessage.value = 'Failed to load payment details';
     } finally {
       isLoading.value = false;

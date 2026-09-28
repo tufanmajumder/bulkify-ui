@@ -200,14 +200,14 @@ class OrderDetailsController extends GetxController {
       if (responseMap != null) {
         _populateFromApiResponse(responseMap);
       } else {
-        if (kDebugMode) {
-          debugPrint('[OrderDetailsController] API returned null response');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[OrderDetailsController] API returned null response');
+        // }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[OrderDetailsController] Error fetching details: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[OrderDetailsController] Error fetching details: $e');
+      // }
       isError.value = true;
     } finally {
       isLoading.value = false;
@@ -218,9 +218,9 @@ class OrderDetailsController extends GetxController {
   Map<String, dynamic> _extractTargetOrderMap(
     Map<String, dynamic> responseMap,
   ) {
-    if (kDebugMode) {
-      debugPrint('[OrderDetailsController] Raw responseMap: $responseMap');
-    }
+    // if (kDebugMode) {
+    //   debugPrint('[OrderDetailsController] Raw responseMap: $responseMap');
+    // }
 
     Map<String, dynamic> current = responseMap;
 
@@ -1043,11 +1043,11 @@ class OrderDetailsController extends GetxController {
         ? invId.trim()
         : invoiceId.value.trim();
 
-    if (kDebugMode) {
-      debugPrint(
-        '[OrderDetailsController] Requesting invoice download for invoice_id: $targetInvoiceId',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[OrderDetailsController] Requesting invoice download for invoice_id: $targetInvoiceId',
+    //   );
+    // }
 
     if (targetInvoiceId.isEmpty || targetInvoiceId == 'null') {
       Get.snackbar(

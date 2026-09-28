@@ -79,9 +79,9 @@ class OrderService extends GetxService {
           responseData = jsonDecode(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[OrderService] Web getOrderList request failed: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[OrderService] Web getOrderList request failed: $e');
+        // }
       }
     }
 
@@ -104,11 +104,11 @@ class OrderService extends GetxService {
           }
         }
       } on DioException catch (e) {
-        if (kDebugMode) {
-          debugPrint(
-            '[OrderService] DioException in getOrderList: ${e.response?.statusCode}',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[OrderService] DioException in getOrderList: ${e.response?.statusCode}',
+        //   );
+        // }
         try {
           final response = await dio.get(
             ApiManager.getOrderList,
@@ -139,20 +139,20 @@ class OrderService extends GetxService {
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[OrderService] Unexpected error in getOrderList: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[OrderService] Unexpected error in getOrderList: $e');
+        // }
       }
     }
 
     if (responseData != null) {
       final parsed = _parseOrders(responseData);
       final hasMore = extractHasMorePage(responseData);
-      if (kDebugMode) {
-        debugPrint(
-          '[OrderService] Parsed ${parsed.length} orders. HasMorePage: $hasMore',
-        );
-      }
+      // if (kDebugMode) {
+      //   debugPrint(
+      //     '[OrderService] Parsed ${parsed.length} orders. HasMorePage: $hasMore',
+      //   );
+      // }
       return parsed;
     }
 
@@ -262,9 +262,9 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[OrderService] Token missing — session expired');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[OrderService] Token missing — session expired');
+      // }
       return OrderListResult(
         orders: [],
         hasMorePage: false,
@@ -318,9 +318,9 @@ class OrderService extends GetxService {
           responseData = jsonDecode(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[OrderService] Web getOrderListResult failed: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[OrderService] Web getOrderListResult failed: $e');
+        // }
       }
     }
 
@@ -345,11 +345,11 @@ class OrderService extends GetxService {
         }
       } on DioException catch (e) {
         responseStatusCode = e.response?.statusCode;
-        if (kDebugMode) {
-          debugPrint(
-            '[OrderService] DioException in getOrderListResult: $responseStatusCode',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[OrderService] DioException in getOrderListResult: $responseStatusCode',
+        //   );
+        // }
         try {
           final response = await dio.get(
             ApiManager.getOrderList,
@@ -384,7 +384,7 @@ class OrderService extends GetxService {
     }
 
     if (isTokenExpiredResponse(responseStatusCode, responseData)) {
-      if (kDebugMode) debugPrint('[OrderService] Token expiration detected');
+      //if (kDebugMode) debugPrint('[OrderService] Token expiration detected');
       return OrderListResult(
         orders: [],
         hasMorePage: false,
@@ -403,11 +403,11 @@ class OrderService extends GetxService {
           )
         : false;
 
-    if (kDebugMode) {
-      debugPrint(
-        '[OrderService] Result: ${orders.length} orders, hasMorePage: $hasMore',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[OrderService] Result: ${orders.length} orders, hasMorePage: $hasMore',
+    //   );
+    // }
 
     return OrderListResult(
       orders: orders,
@@ -458,7 +458,7 @@ class OrderService extends GetxService {
           final Map<String, dynamic> mapItem = Map<String, dynamic>.from(item);
           orders.add(OrderModel.fromJson(mapItem));
         } catch (e) {
-          if (kDebugMode) debugPrint('[OrderService] Error parsing order: $e');
+          //if (kDebugMode) debugPrint('[OrderService] Error parsing order: $e');
         }
       }
     }
@@ -484,11 +484,11 @@ class OrderService extends GetxService {
 
     final Map<String, dynamic> payload = {"orderkey": orderKey};
 
-    if (kDebugMode) {
-      debugPrint(
-        '[OrderService] Fetching details for salesorder_id: $orderKey from $targetUrl',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[OrderService] Fetching details for salesorder_id: $orderKey from $targetUrl',
+    //   );
+    // }
 
     dynamic responseData;
 
@@ -500,11 +500,11 @@ class OrderService extends GetxService {
           body: jsonEncode(payload),
         );
 
-        if (kDebugMode) {
-          debugPrint(
-            '[OrderService] Web getOrderDetails status: ${httpResponse.statusCode}',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[OrderService] Web getOrderDetails status: ${httpResponse.statusCode}',
+        //   );
+        // }
 
         if (httpResponse.statusCode >= 200 &&
             httpResponse.statusCode < 500 &&
@@ -512,9 +512,9 @@ class OrderService extends GetxService {
           responseData = jsonDecode(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[OrderService] Web getOrderDetails exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[OrderService] Web getOrderDetails exception: $e');
+        // }
       }
     }
 
@@ -536,9 +536,9 @@ class OrderService extends GetxService {
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[OrderService] Dio getOrderDetails exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[OrderService] Dio getOrderDetails exception: $e');
+        // }
       }
     }
 
@@ -569,11 +569,11 @@ class OrderService extends GetxService {
 
     final Map<String, dynamic> payload = {"invoice_id": cleanInvoiceId};
 
-    if (kDebugMode) {
-      debugPrint(
-        '[OrderService] Requesting invoice with payload: $payload from $targetUrl',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[OrderService] Requesting invoice with payload: $payload from $targetUrl',
+    //   );
+    // }
 
     try {
       List<int>? rawBytes;
@@ -588,9 +588,9 @@ class OrderService extends GetxService {
           final snippet = httpResponse.body.length > 200
               ? httpResponse.body.substring(0, 200)
               : httpResponse.body;
-          debugPrint(
-            '[OrderService] Web downloadInvoice POST (invoice_id: $cleanInvoiceId) status: ${httpResponse.statusCode}, snippet: $snippet',
-          );
+          // debugPrint(
+          //   '[OrderService] Web downloadInvoice POST (invoice_id: $cleanInvoiceId) status: ${httpResponse.statusCode}, snippet: $snippet',
+          // );
         }
 
         if (httpResponse.statusCode >= 200 &&
@@ -623,17 +623,17 @@ class OrderService extends GetxService {
         final validPdf = await _extractValidPdfBytes(rawBytes);
         if (validPdf != null && validPdf.isNotEmpty) {
           if (kDebugMode) {
-            debugPrint(
-              '[OrderService] Successfully extracted valid PDF (${validPdf.length} bytes)',
-            );
+            // debugPrint(
+            //   '[OrderService] Successfully extracted valid PDF (${validPdf.length} bytes)',
+            // );
           }
           return validPdf;
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[OrderService] downloadInvoice exception: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[OrderService] downloadInvoice exception: $e');
+      // }
     }
 
     return null;
@@ -642,11 +642,11 @@ class OrderService extends GetxService {
   Future<List<int>?> _extractValidPdfBytes(List<int>? rawBytes) async {
     if (rawBytes == null || rawBytes.isEmpty) return null;
 
-    if (kDebugMode) {
-      debugPrint(
-        '[OrderService] Processing rawBytes (${rawBytes.length} bytes)',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[OrderService] Processing rawBytes (${rawBytes.length} bytes)',
+    //   );
+    // }
 
     // 1. Direct PDF magic header check (%PDF-)
     if (_isPdfBytes(rawBytes)) {
@@ -658,11 +658,11 @@ class OrderService extends GetxService {
     try {
       text = utf8.decode(rawBytes).trim();
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint(
-          '[OrderService] rawBytes UTF-8 decode failed: $e. Returning rawBytes as binary fallback.',
-        );
-      }
+      // if (kDebugMode) {
+      //   debugPrint(
+      //     '[OrderService] rawBytes UTF-8 decode failed: $e. Returning rawBytes as binary fallback.',
+      //   );
+      // }
       return rawBytes;
     }
 
@@ -672,11 +672,11 @@ class OrderService extends GetxService {
     final lowerText = text.toLowerCase();
     if (lowerText.startsWith('<!doctype html') ||
         lowerText.startsWith('<html')) {
-      if (kDebugMode) {
-        debugPrint(
-          '[OrderService] HTML error response received instead of PDF',
-        );
-      }
+      // if (kDebugMode) {
+      //   debugPrint(
+      //     '[OrderService] HTML error response received instead of PDF',
+      //   );
+      // }
       return null;
     }
 
@@ -687,15 +687,15 @@ class OrderService extends GetxService {
         final pdfBytes = await _extractPdfFromJson(decodedJson);
         if (pdfBytes != null) return pdfBytes;
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[OrderService] Error parsing JSON PDF response: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[OrderService] Error parsing JSON PDF response: $e');
+        // }
       }
-      if (kDebugMode) {
-        debugPrint(
-          '[OrderService] JSON response did not contain valid PDF content: $text',
-        );
-      }
+      // if (kDebugMode) {
+      //   debugPrint(
+      //     '[OrderService] JSON response did not contain valid PDF content: $text',
+      //   );
+      // }
       return null;
     }
 
@@ -710,11 +710,11 @@ class OrderService extends GetxService {
 
     // 6. Binary fallback for non-text payloads
     if (rawBytes.length > 100) {
-      if (kDebugMode) {
-        debugPrint(
-          '[OrderService] Fallback: returning rawBytes (${rawBytes.length} bytes)',
-        );
-      }
+      // if (kDebugMode) {
+      //   debugPrint(
+      //     '[OrderService] Fallback: returning rawBytes (${rawBytes.length} bytes)',
+      //   );
+      // }
       return rawBytes;
     }
 
@@ -815,9 +815,9 @@ class OrderService extends GetxService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[OrderService] _tryDecodeBase64 error: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[OrderService] _tryDecodeBase64 error: $e');
+      // }
     }
     return null;
   }
@@ -855,9 +855,9 @@ class OrderService extends GetxService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[OrderService] Error fetching PDF from URL ($url): $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[OrderService] Error fetching PDF from URL ($url): $e');
+      // }
     }
     return null;
   }

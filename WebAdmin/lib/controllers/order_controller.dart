@@ -41,7 +41,7 @@ class OrderController extends GetxController {
       //print("token....$token");
       if (token.trim().isEmpty) {
         if (kDebugMode) {
-          debugPrint('[OrderController] No token — redirecting to login');
+          //debugPrint('[OrderController] No token — redirecting to login');
         }
         await _handleTokenExpired();
         return;
@@ -55,16 +55,16 @@ class OrderController extends GetxController {
 
       if (result.isTokenExpired) {
         if (kDebugMode) {
-          debugPrint('[OrderController] Token expired — redirecting to login');
+          //debugPrint('[OrderController] Token expired — redirecting to login');
         }
         await _handleTokenExpired();
         return;
       }
 
       if (kDebugMode) {
-        debugPrint(
-          '[OrderController] Fetched ${result.orders.length} orders. HasMorePage: ${result.hasMorePage}',
-        );
+        // debugPrint(
+        //   '[OrderController] Fetched ${result.orders.length} orders. HasMorePage: ${result.hasMorePage}',
+        // );
       }
 
       orders.assignAll(result.orders);
@@ -72,7 +72,7 @@ class OrderController extends GetxController {
       rowsPerPage.value = targetPerPage;
       hasMorePage.value = result.hasMorePage;
     } catch (e) {
-      if (kDebugMode) debugPrint('[OrderController] Error fetching orders: $e');
+      //if (kDebugMode) debugPrint('[OrderController] Error fetching orders: $e');
     } finally {
       isLoading.value = false;
     }

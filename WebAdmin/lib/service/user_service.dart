@@ -130,9 +130,9 @@ class UserService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[UserService] Auth token is empty');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserService] Auth token is empty');
+      // }
       return UserListResult(
         success: false,
         message: 'Authentication token missing',
@@ -159,11 +159,11 @@ class UserService extends GetxService {
     dynamic responseData;
     int? responseStatusCode;
 
-    if (kDebugMode) {
-      debugPrint(
-        '[UserService] Calling getUserList endpoint (POST): $targetUrl with payload: $requestPayload',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[UserService] Calling getUserList endpoint (POST): $targetUrl with payload: $requestPayload',
+    //   );
+    // }
 
     // Web request direct call (POST with JSON payload)
     if (kIsWeb) {
@@ -176,14 +176,14 @@ class UserService extends GetxService {
 
         responseStatusCode = httpResponse.statusCode;
 
-        if (kDebugMode) {
-          debugPrint(
-            '[UserService] Web getUserList response status: ${httpResponse.statusCode}',
-          );
-          debugPrint(
-            '[UserService] Web getUserList response body: ${httpResponse.body}',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[UserService] Web getUserList response status: ${httpResponse.statusCode}',
+        //   );
+        //   debugPrint(
+        //     '[UserService] Web getUserList response body: ${httpResponse.body}',
+        //   );
+        // }
 
         if (httpResponse.statusCode >= 200 &&
             httpResponse.statusCode < 500 &&
@@ -191,9 +191,9 @@ class UserService extends GetxService {
           responseData = jsonDecode(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[UserService] Web getUserList request exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[UserService] Web getUserList request exception: $e');
+        // }
       }
     }
 
@@ -331,9 +331,9 @@ class UserService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[UserService] Auth token is empty in addUser');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserService] Auth token is empty in addUser');
+      // }
       return UserAddResult(
         success: false,
         message: 'Authentication token missing',
@@ -360,11 +360,11 @@ class UserService extends GetxService {
     dynamic responseData;
     int? responseStatusCode;
 
-    if (kDebugMode) {
-      debugPrint(
-        '[UserService] Calling userAdd endpoint: $targetUrl with payload: $payload',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[UserService] Calling userAdd endpoint: $targetUrl with payload: $payload',
+    //   );
+    // }
 
     if (kIsWeb) {
       try {
@@ -378,9 +378,9 @@ class UserService extends GetxService {
           responseData = jsonDecode(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[UserService] Web userAdd request exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[UserService] Web userAdd request exception: $e');
+        // }
       }
     }
 
@@ -404,11 +404,11 @@ class UserService extends GetxService {
         }
       } on DioException catch (e) {
         responseStatusCode = e.response?.statusCode;
-        if (kDebugMode) {
-          debugPrint(
-            '[UserService] DioException in userAdd: $responseStatusCode',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[UserService] DioException in userAdd: $responseStatusCode',
+        //   );
+        // }
         if (e.response?.data != null) {
           if (e.response!.data is Map<String, dynamic>) {
             responseData = e.response!.data;
@@ -419,9 +419,9 @@ class UserService extends GetxService {
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[UserService] Unexpected error in userAdd: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[UserService] Unexpected error in userAdd: $e');
+        // }
       }
     }
 
@@ -475,9 +475,9 @@ class UserService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[UserService] Auth token is empty in getRoleList');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserService] Auth token is empty in getRoleList');
+      // }
       return RoleListResult(
         success: false,
         message: 'Authentication token missing',
@@ -497,9 +497,9 @@ class UserService extends GetxService {
     dynamic responseData;
     int? responseStatusCode;
 
-    if (kDebugMode) {
-      debugPrint('[UserService] Calling roleList endpoint: $targetUrl');
-    }
+    // if (kDebugMode) {
+    //   debugPrint('[UserService] Calling roleList endpoint: $targetUrl');
+    // }
 
     if (kIsWeb) {
       try {
@@ -512,9 +512,9 @@ class UserService extends GetxService {
           responseData = jsonDecode(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[UserService] Web getRoleList request exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[UserService] Web getRoleList request exception: $e');
+        // }
       }
     }
 
@@ -537,11 +537,11 @@ class UserService extends GetxService {
         }
       } on DioException catch (e) {
         responseStatusCode = e.response?.statusCode;
-        if (kDebugMode) {
-          debugPrint(
-            '[UserService] DioException in getRoleList: $responseStatusCode',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[UserService] DioException in getRoleList: $responseStatusCode',
+        //   );
+        // }
         if (e.response?.data != null) {
           if (e.response!.data is Map<String, dynamic> ||
               e.response!.data is List) {
@@ -553,9 +553,9 @@ class UserService extends GetxService {
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[UserService] Unexpected error in getRoleList: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[UserService] Unexpected error in getRoleList: $e');
+        // }
       }
     }
 
@@ -639,9 +639,9 @@ class UserService extends GetxService {
 
     //print("authToken...$activeToken");
     if (activeToken.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[UserService] Auth token is empty in getUserDetails');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserService] Auth token is empty in getUserDetails');
+      // }
       return UserDetailResult(
         success: false,
         message: 'Authentication token missing',
@@ -665,11 +665,11 @@ class UserService extends GetxService {
     dynamic responseData;
     int? responseStatusCode;
 
-    if (kDebugMode) {
-      debugPrint(
-        '[UserService] Calling userDetails endpoint: $baseUrlStr with userkey: $userkey',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[UserService] Calling userDetails endpoint: $baseUrlStr with userkey: $userkey',
+    //   );
+    // }
 
     // 1. Web (http package)
     if (kIsWeb) {
@@ -682,8 +682,8 @@ class UserService extends GetxService {
         );
         responseStatusCode = httpResponse.statusCode;
 
-        print("Response from post request: $baseUrlStr");
-        print("Response from post request: $payload");
+        // print("Response from post request: $baseUrlStr");
+        // print("Response from post request: $payload");
 
         // If POST returns 405 Method Not Allowed or 404, fallback to GET
         if (httpResponse.statusCode == 405 || httpResponse.statusCode == 404) {
@@ -700,9 +700,9 @@ class UserService extends GetxService {
           } catch (_) {}
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[UserService] Web getUserDetails request exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[UserService] Web getUserDetails request exception: $e');
+        // }
       }
     }
 

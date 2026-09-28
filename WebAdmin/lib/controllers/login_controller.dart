@@ -21,11 +21,11 @@ class LoginController extends GetxController {
   final RxString errorMessage = ''.obs;
   final RxString base64Data = ''.obs;
 
-  int activeChannel = 1;
+  int activeChannel = 2;
   String activeIdentifier = '';
   String deviceAllInfo = "";
 
-  bool get isMobileInput => activeChannel == 1;
+  bool get isMobileInput => activeChannel == 2;
 
   String get getFullOtp => otpControllers.map((c) => c.text.trim()).join();
 
@@ -69,7 +69,7 @@ class LoginController extends GetxController {
         WidgetManager.showAlertSnackBar(errorMessage.value);
         return;
       }
-      channel = 1;
+      channel = 2;
       identifier = cleanDigits.startsWith('+91')
           ? cleanDigits
           : '+91$cleanDigits';
@@ -82,7 +82,7 @@ class LoginController extends GetxController {
         WidgetManager.showAlertSnackBar(errorMessage.value);
         return;
       }
-      channel = 2;
+      channel = 0;
       identifier = input;
     }
 
@@ -182,8 +182,9 @@ class LoginController extends GetxController {
         deviceType = 'Desktop';
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('[LoginController] Device info error: $e');
-      deviceId = 'error';
+      if (kDebugMode)
+        //debugPrint('[LoginController] Device info error: $e');
+        deviceId = 'error';
     }
 
     final infoObj = _authService.convertData(
