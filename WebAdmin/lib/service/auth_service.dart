@@ -123,6 +123,9 @@ class AuthService extends GetxService {
       "identifier": identifier,
     };
 
+    // print("fdgdfgdgfd...$dataMap");
+    // print("fdgdfgdgfd...$targetUrl");
+
     // Web: call the backend directly.
     // NOTE: The backend must have CORS headers configured for this to succeed
     // in a browser context. Public CORS proxies have been removed for security.
@@ -143,8 +146,8 @@ class AuthService extends GetxService {
           return loginModelFromJson(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode)
-          debugPrint('[AuthService] Web login request failed: $e');
+        // if (kDebugMode)
+        //   debugPrint('[AuthService] Web login request failed: $e');
       }
     }
 
@@ -171,11 +174,11 @@ class AuthService extends GetxService {
       }
       return null;
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint(
-          '[AuthService] DioException in login: ${e.response?.statusCode}',
-        );
-      }
+      // if (kDebugMode) {
+      //   debugPrint(
+      //     '[AuthService] DioException in login: ${e.response?.statusCode}',
+      //   );
+      // }
 
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
@@ -199,7 +202,7 @@ class AuthService extends GetxService {
       WidgetManager.showAlertSnackBar(errorText, 3);
       return null;
     } catch (e) {
-      if (kDebugMode) debugPrint('[AuthService] Unexpected error in login: $e');
+      //if (kDebugMode) debugPrint('[AuthService] Unexpected error in login: $e');
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
@@ -285,9 +288,9 @@ class AuthService extends GetxService {
             }
           }
         } catch (e) {
-          if (kDebugMode) {
-            debugPrint('[AuthService] Web verifyOtp attempt failed: $e');
-          }
+          // if (kDebugMode) {
+          //   debugPrint('[AuthService] Web verifyOtp attempt failed: $e');
+          // }
         }
       }
     }
@@ -315,11 +318,11 @@ class AuthService extends GetxService {
       }
       return null;
     } on DioException catch (e) {
-      if (kDebugMode) {
-        debugPrint(
-          '[AuthService] DioException in verifyOtp: ${e.response?.statusCode}',
-        );
-      }
+      // if (kDebugMode) {
+      //   debugPrint(
+      //     '[AuthService] DioException in verifyOtp: ${e.response?.statusCode}',
+      //   );
+      // }
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
           return LoginModel.fromJson(e.response!.data);
@@ -327,9 +330,9 @@ class AuthService extends GetxService {
       }
       return null;
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[AuthService] Unexpected error in verifyOtp: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[AuthService] Unexpected error in verifyOtp: $e');
+      // }
       return null;
     }
   }

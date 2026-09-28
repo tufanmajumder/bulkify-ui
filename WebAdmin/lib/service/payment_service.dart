@@ -121,9 +121,9 @@ class PaymentService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[PaymentService] Auth token is empty');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[PaymentService] Auth token is empty');
+      // }
       return PaymentListResult(
         success: false,
         message: 'Authentication token missing',
@@ -147,11 +147,11 @@ class PaymentService extends GetxService {
     dynamic responseData;
     int? responseStatusCode;
 
-    if (kDebugMode) {
-      debugPrint(
-        '[PaymentService] Calling paymentList endpoint (POST): $targetUrl with payload: $requestPayload',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[PaymentService] Calling paymentList endpoint (POST): $targetUrl with payload: $requestPayload',
+    //   );
+    // }
 
     if (kIsWeb) {
       try {
@@ -163,14 +163,14 @@ class PaymentService extends GetxService {
 
         responseStatusCode = httpResponse.statusCode;
 
-        if (kDebugMode) {
-          debugPrint(
-            '[PaymentService] Web getPaymentList response status: ${httpResponse.statusCode}',
-          );
-          debugPrint(
-            '[PaymentService] Web getPaymentList response body: ${httpResponse.body}',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[PaymentService] Web getPaymentList response status: ${httpResponse.statusCode}',
+        //   );
+        //   debugPrint(
+        //     '[PaymentService] Web getPaymentList response body: ${httpResponse.body}',
+        //   );
+        // }
 
         if (httpResponse.statusCode >= 200 &&
             httpResponse.statusCode < 500 &&
@@ -178,9 +178,9 @@ class PaymentService extends GetxService {
           responseData = jsonDecode(httpResponse.body);
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[PaymentService] Web getPaymentList exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[PaymentService] Web getPaymentList exception: $e');
+        // }
       }
     }
 
@@ -204,11 +204,11 @@ class PaymentService extends GetxService {
         }
       } on DioException catch (e) {
         responseStatusCode = e.response?.statusCode;
-        if (kDebugMode) {
-          debugPrint(
-            '[PaymentService] DioException in getPaymentList POST: $responseStatusCode',
-          );
-        }
+        // if (kDebugMode) {
+        //   debugPrint(
+        //     '[PaymentService] DioException in getPaymentList POST: $responseStatusCode',
+        //   );
+        // }
         if (e.response?.data != null) {
           if (e.response!.data is Map<String, dynamic> ||
               e.response!.data is List) {
@@ -220,9 +220,9 @@ class PaymentService extends GetxService {
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[PaymentService] Unexpected error in getPaymentList: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[PaymentService] Unexpected error in getPaymentList: $e');
+        // }
       }
     }
 
@@ -329,9 +329,9 @@ class PaymentService extends GetxService {
         : await AuthService.getAuthToken();
 
     if (activeToken.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('[PaymentService] Auth token is empty in getPaymentDetails');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[PaymentService] Auth token is empty in getPaymentDetails');
+      // }
       return PaymentDetailResult(
         success: false,
         message: 'Authentication token missing',
@@ -347,18 +347,16 @@ class PaymentService extends GetxService {
       'Accept': 'application/json',
       'Authorization': 'Bearer $activeToken',
     };
-    final Map<String, dynamic> requestPayload = {
-      "paymentkey": paymentKey,
-    };
+    final Map<String, dynamic> requestPayload = {"paymentkey": paymentKey};
 
     dynamic responseData;
     int? responseStatusCode;
 
-    if (kDebugMode) {
-      debugPrint(
-        '[PaymentService] Calling paymentDetails endpoint (POST): $targetUrl with payload: $requestPayload',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[PaymentService] Calling paymentDetails endpoint (POST): $targetUrl with payload: $requestPayload',
+    //   );
+    // }
 
     if (kIsWeb) {
       try {
@@ -374,9 +372,9 @@ class PaymentService extends GetxService {
           } catch (_) {}
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[PaymentService] Web getPaymentDetails exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[PaymentService] Web getPaymentDetails exception: $e');
+        // }
       }
     }
 
@@ -401,9 +399,9 @@ class PaymentService extends GetxService {
           }
         }
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[PaymentService] Dio getPaymentDetails exception: $e');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('[PaymentService] Dio getPaymentDetails exception: $e');
+        // }
       }
     }
 
@@ -417,7 +415,8 @@ class PaymentService extends GetxService {
     }
 
     if (responseData is Map<String, dynamic>) {
-      final bool success = responseData['success'] == true ||
+      final bool success =
+          responseData['success'] == true ||
           responseData['code'] == 200 ||
           responseStatusCode == 200;
       final String message = responseData['message']?.toString() ?? 'success';
@@ -438,9 +437,9 @@ class PaymentService extends GetxService {
         try {
           paymentModel = PaymentModel.fromJson(dataObj);
         } catch (e) {
-          if (kDebugMode) {
-            debugPrint('[PaymentService] Error parsing PaymentModel: $e');
-          }
+          // if (kDebugMode) {
+          //   debugPrint('[PaymentService] Error parsing PaymentModel: $e');
+          // }
         }
       }
 

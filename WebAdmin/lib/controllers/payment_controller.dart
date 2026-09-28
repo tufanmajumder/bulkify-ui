@@ -101,9 +101,9 @@ class PaymentController extends GetxController {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[PaymentController] Error fetching payments: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[PaymentController] Error fetching payments: $e');
+      // }
       errorMessage.value = 'Failed to load payments';
       if (payments.isEmpty) {
         loadMockPayments();

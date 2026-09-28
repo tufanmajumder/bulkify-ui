@@ -57,9 +57,9 @@ class UserController extends GetxController {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[UserController] Error fetching roles: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserController] Error fetching roles: $e');
+      // }
     } finally {
       isLoadingRoles.value = false;
     }
@@ -94,9 +94,9 @@ class UserController extends GetxController {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[UserController] Error fetching users: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserController] Error fetching users: $e');
+      // }
       errorMessage.value = 'Failed to load users';
       if (users.isEmpty) {
         _loadInitialUsers();
@@ -212,11 +212,11 @@ class UserController extends GetxController {
     selectedRole.value = role;
     currentPage.value = 1;
     final matchedRole = roles.firstWhereOrNull((r) => r.roleName == role);
-    if (kDebugMode) {
-      debugPrint(
-        '[UserController] Selected Role: $role | roleKey: ${matchedRole?.roleKey}',
-      );
-    }
+    // if (kDebugMode) {
+    //   debugPrint(
+    //     '[UserController] Selected Role: $role | roleKey: ${matchedRole?.roleKey}',
+    //   );
+    // }
   }
 
   void setSelectedStatus(String status) {
@@ -276,11 +276,11 @@ class UserController extends GetxController {
         }
       }
 
-      if (kDebugMode) {
-        debugPrint(
-          '[UserController] Adding user "$name" with role: "$role", resolved roleKey: "$targetRoleKey"',
-        );
-      }
+      //if (kDebugMode) {
+        // debugPrint(
+        //   '[UserController] Adding user "$name" with role: "$role", resolved roleKey: "$targetRoleKey"',
+        // );
+      //}
 
       final result = await _userService.addUser(
         email: email,
@@ -321,9 +321,9 @@ class UserController extends GetxController {
         return false;
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[UserController] Error adding user: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserController] Error adding user: $e');
+      // }
       Get.snackbar(
         'Error',
         'An error occurred while adding user',

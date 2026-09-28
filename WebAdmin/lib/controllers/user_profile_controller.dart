@@ -246,9 +246,9 @@ class UserProfileController extends GetxController {
       } catch (_) {}
     }
 
-    if (kDebugMode) {
-      debugPrint('[UserProfileController] userkey: ${userkey.value}');
-    }
+    // if (kDebugMode) {
+    //   debugPrint('[UserProfileController] userkey: ${userkey.value}');
+    // }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (userkey.value.isNotEmpty) {
@@ -287,9 +287,9 @@ class UserProfileController extends GetxController {
         populateFromRawMap(result.rawData!);
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[UserProfileController] Error in fetchUserDetails: $e');
-      }
+      // if (kDebugMode) {
+      //   debugPrint('[UserProfileController] Error in fetchUserDetails: $e');
+      // }
     } finally {
       isLoading.value = false;
     }
