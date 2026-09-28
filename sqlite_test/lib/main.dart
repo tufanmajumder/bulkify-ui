@@ -438,13 +438,13 @@ class HomeScreen extends StatelessWidget {
       }
       CommonMethod commonMethod = CommonMethod();
       base64Data = commonMethod.convertData(deviceType, deviceId, model, brand);
-      print('data in block...$base64Data');
+      //print('data in block...$base64Data');
     } catch (e) {
       deviceId = 'Error: $e';
     }
 
-    print("Device ID: $deviceId ($deviceType)");
-    print("Device Info Data: ${info.data}");
+    // print("Device ID: $deviceId ($deviceType)");
+    // print("Device Info Data: ${info.data}");
 
     if (!context.mounted) return;
 

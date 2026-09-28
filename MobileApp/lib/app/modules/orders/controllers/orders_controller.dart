@@ -87,7 +87,7 @@ class OrdersController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? sessionId = prefs.getString('sessionId');
-      print("Fetching active orders (page $page) with sessionId: $sessionId");
+      //print("Fetching active orders (page $page) with sessionId: $sessionId");
 
       final RejectedModel? response = await _authService.getOrderList(
         page: page,
@@ -140,7 +140,7 @@ class OrdersController extends GetxController {
         }
       }
     } catch (e) {
-      print("Error fetching active orders: $e");
+      //print("Error fetching active orders: $e");
     } finally {
       isActiveLoading.value = false;
       isActiveLoadingMore.value = false;
@@ -173,9 +173,9 @@ class OrdersController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? sessionId = prefs.getString('sessionId');
-      print(
-        "Fetching completed orders (page $page) with sessionId: $sessionId",
-      );
+      // print(
+      //   "Fetching completed orders (page $page) with sessionId: $sessionId",
+      // );
 
       final RejectedModel? response = await _authService.getOrderList(
         page: page,
@@ -227,7 +227,7 @@ class OrdersController extends GetxController {
         }
       }
     } catch (e) {
-      print("Error fetching completed orders: $e");
+      //print("Error fetching completed orders: $e");
     } finally {
       isCompletedLoading.value = false;
       isCompletedLoadingMore.value = false;
@@ -258,7 +258,7 @@ class OrdersController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? sessionId = prefs.getString('sessionId');
-      print("Fetching rejected orders (page $page) with sessionId: $sessionId");
+      //print("Fetching rejected orders (page $page) with sessionId: $sessionId");
 
       final RejectedModel? response = await _authService.getOrderList(
         page: page,
@@ -310,7 +310,7 @@ class OrdersController extends GetxController {
         }
       }
     } catch (e) {
-      print("Error fetching rejected orders: $e");
+      //print("Error fetching rejected orders: $e");
     } finally {
       isRejectedLoading.value = false;
       isRejectedLoadingMore.value = false;

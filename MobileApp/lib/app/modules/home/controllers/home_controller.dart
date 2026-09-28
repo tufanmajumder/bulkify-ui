@@ -63,7 +63,7 @@ class HomeController extends GetxController {
         currentLongitude.value = locData.longitude ?? 0.0;
       }
     } catch (e) {
-      print("Location status check: $e");
+      //print("Location status check: $e");
     }
   }
 
@@ -153,7 +153,7 @@ class HomeController extends GetxController {
   Future<void> handleOrderAccept(Map<String, dynamic> order) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var sid = prefs.getString('sessionId');
-    print("Sid...$sid");
+    //print("Sid...$sid");
     final Location location = Location();
     bool serviceEnabled = await location.serviceEnabled();
     PermissionStatus permission = await location.hasPermission();
@@ -184,7 +184,7 @@ class HomeController extends GetxController {
         _updateSummaryFields(model);
       }
     } catch (e) {
-      print("Error fetching summary data: $e");
+      //print("Error fetching summary data: $e");
     } finally {
       isLoadingSummary.value = false;
     }
@@ -231,7 +231,7 @@ class HomeController extends GetxController {
         }
       }
     } catch (e) {
-      print("Error fetching user profile in HomeController: $e");
+      //print("Error fetching user profile in HomeController: $e");
     }
   }
 
@@ -395,13 +395,13 @@ class HomeController extends GetxController {
         model,
         brand,
       );
-      print('data in block...$base64Data');
+      //print('data in block...$base64Data');
     } catch (e) {
       deviceId = 'Error: $e';
     }
 
-    print("Device ID: $deviceId ($deviceType)");
-    print("Device Info Data: ${info.data}");
+    // print("Device ID: $deviceId ($deviceType)");
+    // print("Device Info Data: ${info.data}");
 
     if (!context.mounted) return;
 

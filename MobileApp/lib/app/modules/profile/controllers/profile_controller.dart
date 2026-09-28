@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,9 +81,7 @@ class ProfileController extends GetxController {
 
     final Data? dataObj = rootData is Data
         ? rootData
-        : (rootData is Map<String, dynamic>
-            ? Data.fromJson(rootData)
-            : null);
+        : (rootData is Map<String, dynamic> ? Data.fromJson(rootData) : null);
 
     if (dataObj == null) return;
 

@@ -156,7 +156,7 @@ class OtpValidationController extends GetxController {
       final deviceInfo = DeviceInfoPlugin();
       if (kIsWeb) {
         final webInfo = await deviceInfo.webBrowserInfo;
-        print("deviceInfo...${webInfo.userAgent}");
+        //print("deviceInfo...${webInfo.userAgent}");
         deviceId = webInfo.userAgent ?? 'Web Browser';
         model = webInfo.browserName.name;
         final vendor = webInfo.vendor;

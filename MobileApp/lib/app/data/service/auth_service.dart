@@ -31,8 +31,8 @@ class AuthService extends GetConnect implements GetxService {
   // loginService
   Future<LoginModel?> login1(String name, String pass) async {
     final String url = ApiManager.loginUrl;
-    print("url in login...${ApiManager.baseUrl}$url");
-    print("name & pass...$name...$pass");
+    //print("url in login...${ApiManager.baseUrl}$url");
+    //print("name & pass...$name...$pass");
     final dynamic channelValue =
         int.tryParse(name) ?? (name.toLowerCase() == '1' ? 1 : name);
     final String formattedPhone = pass.startsWith('+91') ? pass : '+91$pass';
@@ -42,8 +42,8 @@ class AuthService extends GetConnect implements GetxService {
     };
     try {
       final response = await dio.post(url, data: data1);
-      print("response status...${response.statusCode}");
-      print("response data...${response.data}");
+      //print("response status...${response.statusCode}");
+      //print("response data...${response.data}");
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
           return LoginModel.fromJson(response.data);
@@ -53,10 +53,10 @@ class AuthService extends GetConnect implements GetxService {
       }
       return null;
     } on DioException catch (e) {
-      print("DioException type: ${e.type}");
-      print("DioException error: ${e.error}");
-      print("DioException response status: ${e.response?.statusCode}");
-      print("DioException response data: ${e.response?.data}");
+      //print("DioException type: ${e.type}");
+      //print("DioException error: ${e.error}");
+      //print("DioException response status: ${e.response?.statusCode}");
+      //print("DioException response data: ${e.response?.data}");
 
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
@@ -73,9 +73,9 @@ class AuthService extends GetConnect implements GetxService {
         WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       }
       return null;
-    } catch (e, stackTrace) {
-      print("General exception in login1: $e");
-      print("StackTrace: $stackTrace");
+    } catch (e) {
+      //print("General exception in login1: $e");
+      //print("StackTrace: $stackTrace");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
@@ -103,9 +103,9 @@ class AuthService extends GetConnect implements GetxService {
 
     try {
       final response = await dio.post(url, data: dataMap);
-      print("verifyOtp status...${response.statusCode}");
-      print("verifyOtp data...${response.data}");
-      print("verifyOtp data...$dataMap");
+      //print("verifyOtp status...${response.statusCode}");
+      //print("verifyOtp data...${response.data}");
+      //print("verifyOtp data...$dataMap");
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
           return VerifyOtpModel.fromJson(response.data);
@@ -115,8 +115,8 @@ class AuthService extends GetConnect implements GetxService {
       }
       return null;
     } on DioException catch (e) {
-      print("DioException verifyOtp status: ${e.response?.statusCode}");
-      print("DioException verifyOtp data: ${e.response?.data}");
+      //print("DioException verifyOtp status: ${e.response?.statusCode}");
+      //print("DioException verifyOtp data: ${e.response?.data}");
 
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
@@ -133,9 +133,9 @@ class AuthService extends GetConnect implements GetxService {
         WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       }
       return null;
-    } catch (e, stackTrace) {
-      print("General exception in verifyOtp: $e");
-      print("StackTrace: $stackTrace");
+    } catch (e) {
+      //print("General exception in verifyOtp: $e");
+      //print("StackTrace: $stackTrace");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
@@ -160,13 +160,13 @@ class AuthService extends GetConnect implements GetxService {
       headers['Authorization'] = 'Bearer $cleanToken';
     }
 
-    print("url in getConnect...${ApiManager.baseUrl}$url");
-    print("Authorization token...${headers['Authorization']}");
+    //print("url in getConnect...${ApiManager.baseUrl}$url");
+    //print("Authorization token...${headers['Authorization']}");
 
     try {
       final response = await dio.get(url, options: Options(headers: headers));
-      print("getConnect status...${response.statusCode}");
-      print("getConnect data...${response.data}");
+      // print("getConnect status...${response.statusCode}");
+      // print("getConnect data...${response.data}");
 
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
@@ -177,8 +177,8 @@ class AuthService extends GetConnect implements GetxService {
       }
       return null;
     } on DioException catch (e) {
-      print("DioException getConnect status: ${e.response?.statusCode}");
-      print("DioException getConnect data: ${e.response?.data}");
+      //print("DioException getConnect status: ${e.response?.statusCode}");
+      //print("DioException getConnect data: ${e.response?.data}");
 
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
@@ -195,9 +195,9 @@ class AuthService extends GetConnect implements GetxService {
         WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       }
       return null;
-    } catch (e, stackTrace) {
-      print("General exception in getConnect: $e");
-      print("StackTrace: $stackTrace");
+    } catch (e) {
+      //print("General exception in getConnect: $e");
+      //print("StackTrace: $stackTrace");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
@@ -233,10 +233,10 @@ class AuthService extends GetConnect implements GetxService {
       "status": status,
     };
 
-    print("url in getOrderList (GET with body)...${ApiManager.baseUrl}$url");
-    print("token in getOrderList...$token");
-    print("headers in getOrderList...$headers");
-    print("body in getOrderList...$bodyData");
+    //print("url in getOrderList (GET with body)...${ApiManager.baseUrl}$url");
+    //print("token in getOrderList...$token");
+    //print("headers in getOrderList...$headers");
+    //print("body in getOrderList...$bodyData");
 
     try {
       final response = await dio.get(
@@ -244,8 +244,8 @@ class AuthService extends GetConnect implements GetxService {
         data: bodyData,
         options: Options(headers: headers),
       );
-      print("getOrderList status...${response.statusCode}");
-      print("getOrderList data...${response.data}");
+      //print("getOrderList status...${response.statusCode}");
+      //print("getOrderList data...${response.data}");
 
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
@@ -256,8 +256,8 @@ class AuthService extends GetConnect implements GetxService {
       }
       return null;
     } on DioException catch (e) {
-      print("DioException getOrderList status: ${e.response?.statusCode}");
-      print("DioException getOrderList data: ${e.response?.data}");
+      //print("DioException getOrderList status: ${e.response?.statusCode}");
+      //print("DioException getOrderList data: ${e.response?.data}");
 
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
@@ -274,9 +274,9 @@ class AuthService extends GetConnect implements GetxService {
         WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       }
       return null;
-    } catch (e, stackTrace) {
-      print("General exception in getOrderList: $e");
-      print("StackTrace: $stackTrace");
+    } catch (e) {
+      //print("General exception in getOrderList: $e");
+      //print("StackTrace: $stackTrace");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
@@ -301,14 +301,14 @@ class AuthService extends GetConnect implements GetxService {
       headers['Authorization'] = 'Bearer $cleanToken';
     }
 
-    print("url in getSummary...${ApiManager.baseUrl}$url");
-    print("token in getSummary...$token");
-    print("headers in getSummary...$headers");
+    // print("url in getSummary...${ApiManager.baseUrl}$url");
+    // print("token in getSummary...$token");
+    // print("headers in getSummary...$headers");
 
     try {
       final response = await dio.get(url, options: Options(headers: headers));
-      print("getSummary status...${response.statusCode}");
-      print("getSummary data...${response.data}");
+      // print("getSummary status...${response.statusCode}");
+      // print("getSummary data...${response.data}");
 
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
@@ -319,8 +319,8 @@ class AuthService extends GetConnect implements GetxService {
       }
       return null;
     } on DioException catch (e) {
-      print("DioException getSummary status: ${e.response?.statusCode}");
-      print("DioException getSummary data: ${e.response?.data}");
+      //print("DioException getSummary status: ${e.response?.statusCode}");
+      //print("DioException getSummary data: ${e.response?.data}");
 
       if (e.response?.data != null) {
         if (e.response!.data is Map<String, dynamic>) {
@@ -337,9 +337,9 @@ class AuthService extends GetConnect implements GetxService {
         WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       }
       return null;
-    } catch (e, stackTrace) {
-      print("General exception in getSummary: $e");
-      print("StackTrace: $stackTrace");
+    } catch (e) {
+      //print("General exception in getSummary: $e");
+      //print("StackTrace: $stackTrace");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
@@ -369,10 +369,10 @@ class AuthService extends GetConnect implements GetxService {
 
     final Map<String, dynamic> body = {"isonline": isOnline};
 
-    print("url in updateOnlineStatus...${ApiManager.baseUrl}$url");
-    print("token in updateOnlineStatus...$token");
-    print("headers in updateOnlineStatus...$headers");
-    print("body in updateOnlineStatus...$body");
+    //print("url in updateOnlineStatus...${ApiManager.baseUrl}$url");
+    //print("token in updateOnlineStatus...$token");
+    //print("headers in updateOnlineStatus...$headers");
+    //print("body in updateOnlineStatus...$body");
 
     try {
       final response = await dio.post(
@@ -380,8 +380,8 @@ class AuthService extends GetConnect implements GetxService {
         data: body,
         options: Options(headers: headers),
       );
-      print("updateOnlineStatus status...${response.statusCode}");
-      print("updateOnlineStatus data...${response.data}");
+      //print("updateOnlineStatus status...${response.statusCode}");
+      //print("updateOnlineStatus data...${response.data}");
 
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
@@ -390,10 +390,10 @@ class AuthService extends GetConnect implements GetxService {
       }
       return null;
     } on DioException catch (e) {
-      print(
-        "DioException updateOnlineStatus status: ${e.response?.statusCode}",
-      );
-      print("DioException updateOnlineStatus data: ${e.response?.data}");
+      //print(
+      //  "DioException updateOnlineStatus status: ${e.response?.statusCode}",
+      //);
+      //print("DioException updateOnlineStatus data: ${e.response?.data}");
 
       if (e.response?.data != null &&
           e.response!.data is Map<String, dynamic>) {
@@ -407,15 +407,20 @@ class AuthService extends GetConnect implements GetxService {
         WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       }
       return null;
-    } catch (e, stackTrace) {
-      print("General exception in updateOnlineStatus: $e");
-      print("StackTrace: $stackTrace");
+    } catch (e) {
+      //print("General exception in updateOnlineStatus: $e");
+      //print("StackTrace: $stackTrace");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }
   }
 
-  convertData(String phone, String deviceId, String model, String brand) {
+  String convertData(
+    String phone,
+    String deviceId,
+    String model,
+    String brand,
+  ) {
     // 1. Define your source Map
     final Map<String, dynamic> deviceData = {
       "devicetype": phone,
@@ -434,7 +439,7 @@ class AuthService extends GetConnect implements GetxService {
     // 4. Encode the bytes to Base64
     final String base64Result = base64.encode(jsonBytes);
 
-    print(base64Result);
+    //print(base64Result);
     return base64Result;
     // Output: ewogICJkZXZpY2V0eXBlIjogIlBob25lIiwKICAiZGV2aWNlaWQiOiAiQlA0QS4yNTEyMDUuMDA2IiwKICAibW9kZWwiOiAiU00tTTA3NUYiLAogICJicmFuZCI6ICJzYW1zdW5nIgp9
   }
