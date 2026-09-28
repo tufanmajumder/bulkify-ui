@@ -123,7 +123,7 @@ class AuthService extends GetxService {
       "identifier": identifier,
     };
 
-    // Web: call the backend directly.
+    // Web: call the backend directly .
     // NOTE: The backend must have CORS headers configured for this to succeed
     // in a browser context. Public CORS proxies have been removed for security.
     if (kIsWeb) {
