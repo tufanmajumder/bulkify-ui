@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:admin_app/models/order_model.dart';
 import 'package:admin_app/service/order_service.dart';
 import 'package:admin_app/utils/blob_downloader.dart';
+import 'package:intl/intl.dart';
 
 class PaymentTransactionModel {
   final String issuedBy;
@@ -170,7 +171,7 @@ class OrderDetailsController extends GetxController {
       }
       if (args.date.isNotEmpty && args.date != '-') {
         date.value = formatDateOnly(args.date);
-        time.value = _formatTimeOnly(args.date);
+        time.value = formatDateOnly(args.date);
       }
     } else if (args is String) {
       salesorderId = args;
@@ -292,22 +293,11 @@ class OrderDetailsController extends GetxController {
       orderNo.value = '';
     }
 
-    final dateVal =
-        data['orderdate'] ??
-        data['order_date'] ??
-        data['date'] ??
-        data['salesorder_date'] ??
-        data['created_time'] ??
-        data['created_at'];
+    final dateVal = data['createdtime'];
     date.value = dateVal != null ? formatDateOnly(dateVal.toString()) : '';
 
-    final timeVal =
-        data['time'] ??
-        data['orderdate'] ??
-        data['order_date'] ??
-        data['created_time'] ??
-        data['created_at'];
-    time.value = timeVal != null ? _formatTimeOnly(timeVal.toString()) : '';
+    final timeVal = data['createdtime'];
+    time.value = timeVal != null ? formatDateOnly(timeVal.toString()) : '';
 
     customer.value =
         (data['customername'] ??
@@ -481,34 +471,51 @@ class OrderDetailsController extends GetxController {
       subtotal.value = '';
     }
 
-    shippingFee.value = _formatPriceVal(
-      data['shipping_charge'] ??
-          data['shipping_fee'] ??
-          data['shipping_charges'],
-    );
+    shippingFee.value = _formatPriceVal(data['shippingcharge']);
     platformFee.value = _formatPriceVal(
       data['platform_fee'] ?? data['platform_charge'],
     );
-    bankFee.value = _formatPriceVal(data['bank_fee'] ?? data['bank_charge']);
+
+    // Calculate bankFee by summing bankcharges from payments array
+    double totalBankCharges = 0.0;
+    bool foundBankChargesInPayments = false;
+    final paymentsList = data['payments'];
+    if (paymentsList is List && paymentsList.isNotEmpty) {
+      for (final p in paymentsList) {
+        if (p is Map) {
+          final val = p['bankcharges'];
+          if (val != null) {
+            final cleanStr = val
+                .toString()
+                .replaceAll('₹', '')
+                .replaceAll(',', '')
+                .replaceAll(RegExp(r'\s+'), '')
+                .trim();
+            final parsed = double.tryParse(cleanStr);
+            if (parsed != null) {
+              totalBankCharges += parsed;
+              foundBankChargesInPayments = true;
+            }
+          }
+        }
+      }
+    }
+
+    if (foundBankChargesInPayments) {
+      bankFee.value = _formatPriceVal(totalBankCharges);
+    } else {
+      bankFee.value = _formatPriceVal(data['bankcharges']);
+    }
+
     discountPercent.value = _formatPriceVal(
       data['discount'] ?? data['discount_total'] ?? data['discount_amount'],
     );
-    couponDiscount.value = _formatPriceVal(
-      data['coupondiscount'] ??
-          data['coupon_discount'] ??
-          data['coupon_amount'],
-    );
+    couponDiscount.value = _formatPriceVal(data['coupondiscount']);
     if (data['coupon_code'] != null || data['coupon_name'] != null) {
       couponCode.value = (data['coupon_code'] ?? data['coupon_name'])
           .toString();
     }
-    tax.value = _formatPriceVal(
-      data['taxamount'] ??
-          data['tax_total'] ??
-          data['tax_total_formatted'] ??
-          data['tax'] ??
-          data['tax_amount'],
-    );
+    tax.value = _formatPriceVal(data['taxamount']);
 
     // Tax breakdown from taxes array, line_item_taxes, or line items
     double calculatedCgst = 0.0;
@@ -630,13 +637,7 @@ class OrderDetailsController extends GetxController {
       igst.value = '';
     }
 
-    grandTotal.value = _formatPriceVal(
-      data['finalamount'] ??
-          data['grandtotal'] ??
-          data['total'] ??
-          data['grand_total'] ??
-          data['amount'],
-    );
+    grandTotal.value = _formatPriceVal(data['finalamount']);
 
     // Extract invoice_id & invoice_number from data['invoices'] list or top-level keys
     invoiceId.value = '';
@@ -921,110 +922,140 @@ class OrderDetailsController extends GetxController {
     return str;
   }
 
-  String formatDateOnly(String raw) {
-    final str = raw.trim();
-    if (str.isEmpty || str == 'null' || str == '-') return '-';
-
-    // 1. Try parsing full DateTime (ISO, yyyy-MM-dd, etc.)
-    DateTime? dt = DateTime.tryParse(str);
-    if (dt == null && str.contains(' ')) {
-      dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
-    }
-    if (dt != null) {
-      final dd = dt.day.toString().padLeft(2, '0');
-      final mm = dt.month.toString().padLeft(2, '0');
-      final yyyy = dt.year.toString().padLeft(4, '0');
-      return '$dd-$mm-$yyyy';
+  String formatDateOnly(dynamic dateRaw) {
+    if (dateRaw == null) return '-';
+    final String inputString = dateRaw.toString().trim();
+    if (inputString.isEmpty || inputString == 'null' || inputString == '-') {
+      return '-';
     }
 
-    // 2. Extract date portion if input contains time
-    String datePart = str;
-    if (str.contains(' ')) {
-      datePart = str.split(RegExp(r'\s+'))[0];
-    }
-
-    // 3. Parse date components
-    final components = datePart.split(RegExp(r'[-/.]'));
-    if (components.length == 3) {
-      String? dd, mm, yyyy;
-
-      if (components[0].length == 4) {
-        // yyyy-MM-dd
-        yyyy = components[0];
-        mm = components[1].padLeft(2, '0');
-        dd = components[2].padLeft(2, '0');
-      } else if (components[2].length == 4) {
-        // dd-MM-yyyy
-        dd = components[0].padLeft(2, '0');
-        mm = components[1].padLeft(2, '0');
-        yyyy = components[2];
-      } else if (components[2].length == 2) {
-        // dd-MM-yy
-        dd = components[0].padLeft(2, '0');
-        mm = components[1].padLeft(2, '0');
-        yyyy = '20${components[2]}';
+    try {
+      DateTime dateTime = DateTime.parse(inputString);
+      String formattedDate = DateFormat(
+        'dd-MM-yyyy',
+      ).format(dateTime.toLocal());
+      String formattedTime = DateFormat(
+        'hh:mm:ss a',
+      ).format(dateTime.toLocal());
+      return '$formattedDate $formattedTime';
+    } catch (_) {
+      DateTime? dt = DateTime.tryParse(inputString);
+      if (dt == null && inputString.contains(' ')) {
+        dt = DateTime.tryParse(inputString.replaceFirst(' ', 'T'));
       }
-
-      if (dd != null && mm != null && yyyy != null) {
-        return '$dd-$mm-$yyyy';
+      if (dt != null) {
+        String formattedDate = DateFormat('dd-MM-yyyy').format(dt.toLocal());
+        String formattedTime = DateFormat('hh:mm:ss a').format(dt.toLocal());
+        return '$formattedDate $formattedTime';
       }
+      return inputString;
     }
-
-    return datePart;
   }
 
-  String _formatTimeOnly(String raw) {
-    final str = raw.trim();
-    if (str.isEmpty || str == 'null' || str == '-') return '-';
+  // String formatDateOnly(String raw) {
+  //   final str = raw.trim();
+  //   if (str.isEmpty || str == 'null' || str == '-') return '-';
 
-    // 1. Try parsing full DateTime
-    DateTime? dt = DateTime.tryParse(str);
-    if (dt == null && str.contains(' ')) {
-      dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
-    }
-    if (dt != null) {
-      int hr = dt.hour % 12;
-      if (hr == 0) hr = 12;
-      final hrStr = hr.toString().padLeft(2, '0');
-      final minStr = dt.minute.toString().padLeft(2, '0');
-      final period = dt.hour >= 12 ? 'PM' : 'AM';
-      return '$hrStr:$minStr $period';
-    }
+  //   // 1. Try parsing full DateTime (ISO, yyyy-MM-dd, etc.)
+  //   DateTime? dt = DateTime.tryParse(str);
+  //   if (dt == null && str.contains(' ')) {
+  //     dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
+  //   }
+  //   if (dt != null) {
+  //     final dd = dt.day.toString().padLeft(2, '0');
+  //     final mm = dt.month.toString().padLeft(2, '0');
+  //     final yyyy = dt.year.toString().padLeft(4, '0');
+  //     return '$dd-$mm-$yyyy';
+  //   }
 
-    // 2. Extract time component if input contains Date & Time
-    String timePart = str;
-    if (str.contains(' ')) {
-      final parts = str.split(RegExp(r'\s+'));
-      if (parts.length > 1 &&
-          (parts[0].contains('-') || parts[0].contains('/'))) {
-        timePart = parts.sublist(1).join(' ');
-      }
-    }
+  //   // 2. Extract date portion if input contains time
+  //   String datePart = str;
+  //   if (str.contains(' ')) {
+  //     datePart = str.split(RegExp(r'\s+'))[0];
+  //   }
 
-    // 3. Match HH:mm:ss or HH:mm with optional AM/PM
-    final timeMatch = RegExp(
-      r'^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$',
-    ).firstMatch(timePart.trim());
-    if (timeMatch != null) {
-      int hr = int.parse(timeMatch.group(1)!);
-      final minStr = timeMatch.group(2)!;
-      final ampm = timeMatch.group(3);
+  //   // 3. Parse date components
+  //   final components = datePart.split(RegExp(r'[-/.]'));
+  //   if (components.length == 3) {
+  //     String? dd, mm, yyyy;
 
-      if (ampm != null && ampm.isNotEmpty) {
-        final period = ampm.toUpperCase();
-        final hrStr = hr.toString().padLeft(2, '0');
-        return '$hrStr:$minStr $period';
-      } else {
-        final period = hr >= 12 ? 'PM' : 'AM';
-        hr = hr % 12;
-        if (hr == 0) hr = 12;
-        final hrStr = hr.toString().padLeft(2, '0');
-        return '$hrStr:$minStr $period';
-      }
-    }
+  //     if (components[0].length == 4) {
+  //       // yyyy-MM-dd
+  //       yyyy = components[0];
+  //       mm = components[1].padLeft(2, '0');
+  //       dd = components[2].padLeft(2, '0');
+  //     } else if (components[2].length == 4) {
+  //       // dd-MM-yyyy
+  //       dd = components[0].padLeft(2, '0');
+  //       mm = components[1].padLeft(2, '0');
+  //       yyyy = components[2];
+  //     } else if (components[2].length == 2) {
+  //       // dd-MM-yy
+  //       dd = components[0].padLeft(2, '0');
+  //       mm = components[1].padLeft(2, '0');
+  //       yyyy = '20${components[2]}';
+  //     }
 
-    return timePart;
-  }
+  //     if (dd != null && mm != null && yyyy != null) {
+  //       return '$dd-$mm-$yyyy';
+  //     }
+  //   }
+
+  //   return datePart;
+  // }
+
+  // String _formatTimeOnly(String raw) {
+  //   final str = raw.trim();
+  //   if (str.isEmpty || str == 'null' || str == '-') return '-';
+
+  //   // 1. Try parsing full DateTime
+  //   DateTime? dt = DateTime.tryParse(str);
+  //   if (dt == null && str.contains(' ')) {
+  //     dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
+  //   }
+  //   if (dt != null) {
+  //     int hr = dt.hour % 12;
+  //     if (hr == 0) hr = 12;
+  //     final hrStr = hr.toString().padLeft(2, '0');
+  //     final minStr = dt.minute.toString().padLeft(2, '0');
+  //     final period = dt.hour >= 12 ? 'PM' : 'AM';
+  //     return '$hrStr:$minStr $period';
+  //   }
+
+  //   // 2. Extract time component if input contains Date & Time
+  //   String timePart = str;
+  //   if (str.contains(' ')) {
+  //     final parts = str.split(RegExp(r'\s+'));
+  //     if (parts.length > 1 &&
+  //         (parts[0].contains('-') || parts[0].contains('/'))) {
+  //       timePart = parts.sublist(1).join(' ');
+  //     }
+  //   }
+
+  //   // 3. Match HH:mm:ss or HH:mm with optional AM/PM
+  //   final timeMatch = RegExp(
+  //     r'^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$',
+  //   ).firstMatch(timePart.trim());
+  //   if (timeMatch != null) {
+  //     int hr = int.parse(timeMatch.group(1)!);
+  //     final minStr = timeMatch.group(2)!;
+  //     final ampm = timeMatch.group(3);
+
+  //     if (ampm != null && ampm.isNotEmpty) {
+  //       final period = ampm.toUpperCase();
+  //       final hrStr = hr.toString().padLeft(2, '0');
+  //       return '$hrStr:$minStr $period';
+  //     } else {
+  //       final period = hr >= 12 ? 'PM' : 'AM';
+  //       hr = hr % 12;
+  //       if (hr == 0) hr = 12;
+  //       final hrStr = hr.toString().padLeft(2, '0');
+  //       return '$hrStr:$minStr $period';
+  //     }
+  //   }
+
+  //   return timePart;
+  // }
 
   String _buildAddressString(Map map) {
     final parts = [

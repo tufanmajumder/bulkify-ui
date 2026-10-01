@@ -200,7 +200,7 @@ class OrderDetailsScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _buildKeyValueRow(
                 'Date',
-                controller.date.value,
+                controller.date.value.split(" ")[0],
                 isBoldValue: true,
               ),
               const SizedBox(height: 10),
@@ -217,7 +217,7 @@ class OrderDetailsScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _buildKeyValueRow(
                 'Time',
-                controller.time.value,
+                '${controller.time.value.split(" ")[1]} ${controller.time.value.split(" ")[2]}',
                 isBoldValue: true,
               ),
               const SizedBox(height: 10),
@@ -1222,19 +1222,40 @@ class OrderDetailsScreen extends StatelessWidget {
                                         ),
                                         Expanded(
                                           flex: 2,
-                                          child: Text(
-                                            (tx.createdOn.trim().isEmpty ||
-                                                    tx.createdOn.trim() ==
-                                                        'null')
-                                                ? '-'
-                                                : controller.formatDateOnly(
-                                                    tx.createdOn,
-                                                  ),
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Color(0xFF64748B),
-                                              height: 1.3,
-                                            ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                (tx.createdOn.trim().isEmpty ||
+                                                        tx.createdOn.trim() ==
+                                                            'null')
+                                                    ? '-'
+                                                    : controller
+                                                          .formatDateOnly(
+                                                            tx.createdOn,
+                                                          )
+                                                          .split(" ")[0],
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  color: Color(0xFF64748B),
+                                                  //height: 1.3,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                (tx.createdOn.trim().isEmpty ||
+                                                        tx.createdOn.trim() ==
+                                                            'null')
+                                                    ? '-'
+                                                    : '${controller.formatDateOnly(tx.createdOn).split(" ")[1]} ${controller.formatDateOnly(tx.createdOn).split(" ")[2]}',
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF94A3B8),
+                                                  //height: 1.3,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                         Expanded(

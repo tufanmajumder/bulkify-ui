@@ -80,19 +80,18 @@ class PaymentController extends GetxController {
         if (result.pageContext != null) {
           currentPage.value = result.pageContext!.page;
           hasMorePage.value = result.pageContext!.hasMorePage;
-          totalPayments.value = result.pageContext!.total > 0
-              ? result.pageContext!.total
-              : result.payments.length;
-          totalPages.value = result.pageContext!.totalPages > 0
-              ? result.pageContext!.totalPages
-              : (hasMorePage.value
-                    ? currentPage.value + 1
-                    : (currentPage.value > 0 ? currentPage.value : 1));
+          if (result.pageContext!.total > 0) {
+            totalPayments.value = result.pageContext!.total;
+            totalPages.value = (result.pageContext!.total / targetPerPage).ceil();
+          } else {
+            totalPayments.value = 0;
+            totalPages.value = hasMorePage.value ? currentPage.value + 1 : currentPage.value;
+          }
         } else {
           currentPage.value = page;
           hasMorePage.value = result.payments.length >= targetPerPage;
-          totalPayments.value = result.payments.length;
-          totalPages.value = hasMorePage.value ? page + 1 : page;
+          totalPayments.value = 0;
+          totalPages.value = hasMorePage.value ? currentPage.value + 1 : currentPage.value;
         }
       } else {
         errorMessage.value = result.message;
@@ -226,14 +225,39 @@ class PaymentController extends GetxController {
   }
 
   int get computedTotalPages {
-    final total = displayTotalCount;
-    if (total > 0 && rowsPerPage.value > 0) {
-      return (total / rowsPerPage.value).ceil();
+    if (totalPayments.value > 0 && rowsPerPage.value > 0) {
+      final t = (totalPayments.value / rowsPerPage.value).ceil();
+      return t > 0 ? t : 1;
     }
+
+    int pages = currentPage.value;
     if (hasMorePage.value) {
-      return currentPage.value + 1;
+      pages = currentPage.value + 1;
     }
-    return currentPage.value > 0 ? currentPage.value : 1;
+
+    return pages > 0 ? pages : 1;
+  }
+
+  List<int> get visiblePageNumbers {
+    final maxPage = computedTotalPages;
+    if (maxPage <= 3) {
+      return List.generate(maxPage > 0 ? maxPage : 1, (i) => i + 1);
+    }
+    final current = currentPage.value;
+    int start = current - 1;
+    int end = current + 1;
+    if (start < 1) {
+      start = 1;
+      end = 3;
+    } else if (end > maxPage) {
+      end = maxPage;
+      start = maxPage - 2;
+    }
+    List<int> pages = [];
+    for (int i = start; i <= end; i++) {
+      pages.add(i);
+    }
+    return pages;
   }
 
   int get startEntryIndex {
@@ -243,17 +267,13 @@ class PaymentController extends GetxController {
 
   int get endEntryIndex {
     if (filteredPayments.isEmpty) return 0;
-    final end = startEntryIndex + paginatedPayments.length - 1;
-    final total = displayTotalCount;
-    if (total > 0 && end > total) {
-      return total;
-    }
-    return end;
+    return (currentPage.value - 1) * rowsPerPage.value + paginatedPayments.length;
   }
 
   int get displayTotalCount {
     if (totalPayments.value > 0) return totalPayments.value;
-    return filteredPayments.length;
+    if (filteredPayments.isEmpty) return 0;
+    return (currentPage.value - 1) * rowsPerPage.value + paginatedPayments.length;
   }
 
   void setSearchQuery(String val) {

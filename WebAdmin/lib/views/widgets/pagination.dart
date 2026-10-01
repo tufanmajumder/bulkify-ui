@@ -71,10 +71,8 @@ class PaginationControls extends StatelessWidget {
                   const SizedBox(width: 6),
 
                   // Numbered Page Buttons
-                  ...List.generate(
-                    controller.totalPages,
-                    (index) {
-                      final pageNum = index + 1;
+                  ...controller.visiblePageNumbers.map(
+                    (pageNum) {
                       final isSelected = pageNum == currentPage;
 
                       return Padding(

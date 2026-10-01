@@ -191,6 +191,28 @@ class UserController extends GetxController {
 
   bool get hasMorePage => currentPage.value < totalPages;
 
+  List<int> get visiblePageNumbers {
+    final maxPage = totalPages;
+    if (maxPage <= 3) {
+      return List.generate(maxPage > 0 ? maxPage : 1, (i) => i + 1);
+    }
+    final current = currentPage.value;
+    int start = current - 1;
+    int end = current + 1;
+    if (start < 1) {
+      start = 1;
+      end = 3;
+    } else if (end > maxPage) {
+      end = maxPage;
+      start = maxPage - 2;
+    }
+    List<int> pages = [];
+    for (int i = start; i <= end; i++) {
+      pages.add(i);
+    }
+    return pages;
+  }
+
   int get startEntryIndex {
     if (filteredUsers.isEmpty) return 0;
     return (currentPage.value - 1) * rowsPerPage.value + 1;
@@ -277,9 +299,9 @@ class UserController extends GetxController {
       }
 
       //if (kDebugMode) {
-        // debugPrint(
-        //   '[UserController] Adding user "$name" with role: "$role", resolved roleKey: "$targetRoleKey"',
-        // );
+      // debugPrint(
+      //   '[UserController] Adding user "$name" with role: "$role", resolved roleKey: "$targetRoleKey"',
+      // );
       //}
 
       final result = await _userService.addUser(

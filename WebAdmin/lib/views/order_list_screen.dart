@@ -875,8 +875,7 @@ class OrderListScreen extends StatelessWidget {
                             : null,
                       ),
                       const SizedBox(width: 6),
-                      ...List.generate(controller.totalPages, (index) {
-                        final pageNum = index + 1;
+                      ...controller.visiblePageNumbers.map((pageNum) {
                         final isSelected = pageNum == currentPage;
                         return Padding(
                           padding: const EdgeInsets.only(right: 6.0),

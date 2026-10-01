@@ -38,7 +38,7 @@ class OrderController extends GetxController {
     final int targetPerPage = perPage ?? rowsPerPage.value;
     try {
       final token = await AuthService.getAuthToken();
-      //print("token....$token");
+      // print("token....$token");
       if (token.trim().isEmpty) {
         if (kDebugMode) {
           //debugPrint('[OrderController] No token — redirecting to login');
@@ -118,16 +118,29 @@ class OrderController extends GetxController {
       if (count == 0) return 1;
       return (count / rowsPerPage.value).ceil();
     }
-    return (!isLoading.value && hasMorePage.value)
-        ? currentPage.value + 1
-        : currentPage.value;
+    if (!isLoading.value && hasMorePage.value) {
+      return currentPage.value + 1;
+    }
+    return currentPage.value > 0 ? currentPage.value : 1;
   }
 
   List<int> get visiblePageNumbers {
     final maxPage = totalPages;
-    int startPage = (maxPage - 4).clamp(1, maxPage);
+    if (maxPage <= 3) {
+      return List.generate(maxPage > 0 ? maxPage : 1, (i) => i + 1);
+    }
+    final current = currentPage.value;
+    int start = current - 1;
+    int end = current + 1;
+    if (start < 1) {
+      start = 1;
+      end = 3;
+    } else if (end > maxPage) {
+      end = maxPage;
+      start = maxPage - 2;
+    }
     List<int> pages = [];
-    for (int i = startPage; i <= maxPage; i++) {
+    for (int i = start; i <= end; i++) {
       pages.add(i);
     }
     return pages;
@@ -183,6 +196,7 @@ class OrderController extends GetxController {
 
   void setRowsPerPage(int rows) {
     if (!isLoading.value) {
+      currentPage.value = 1;
       fetchOrders(page: 1, perPage: rows);
     }
   }

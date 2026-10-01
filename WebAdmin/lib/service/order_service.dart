@@ -273,6 +273,8 @@ class OrderService extends GetxService {
     }
 
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getOrderList}";
+    // print("targetUrl....$targetUrl");
+    // print("token....$activeToken");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -476,6 +478,7 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
     final String targetUrl =
         "${ApiManager.baseUrl}${ApiManager.getOrderDetails}";
+    //print("order details..$targetUrl..$orderKey");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

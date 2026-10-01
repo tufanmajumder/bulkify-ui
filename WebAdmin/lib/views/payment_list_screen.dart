@@ -270,7 +270,8 @@ class PaymentListScreen extends StatelessWidget {
     PaymentController controller,
   ) {
     return ElevatedButton.icon(
-      onPressed: () => controller.initiateNewPayment(context),
+      onPressed: () {},
+      //controller.initiateNewPayment(context),
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFFCF4340),
         foregroundColor: Colors.white,
@@ -734,8 +735,7 @@ class PaymentListScreen extends StatelessWidget {
                       : null,
                 ),
                 const SizedBox(width: 6),
-                ...List.generate(totalPages > 0 ? totalPages : 1, (index) {
-                  final pageNum = index + 1;
+                ...controller.visiblePageNumbers.map((pageNum) {
                   final isSelected = pageNum == currentPage;
                   return Padding(
                     padding: const EdgeInsets.only(right: 6.0),

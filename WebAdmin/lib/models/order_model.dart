@@ -58,7 +58,7 @@ class OrderModel {
     final idDisplay = idRaw.toString().trim();
 
     // Extract Date & Time ("orderdate", "created_time", "created_at", "date")
-    final dateRaw = json['orderdate'];
+    final dateRaw = json['createdtime'];
     final dateStr = _formatCreatedTime(dateRaw);
 
     // Extract Customer Name ("customername", "customer_name", "customerName", "name", "customer")

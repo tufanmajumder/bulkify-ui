@@ -41,19 +41,23 @@ class PaymentPageContext {
       return false;
     }
 
-    final pageVal = parseInt(json['page']);
-    final perPageVal = parseInt(json['perpage']);
-    final totalVal = parseInt(
-      json['total'] ?? json['total_count'] ?? json['totalCount'],
-    );
-    final totalPagesVal = parseInt(
-      json['totalpages'] ?? json['total_pages'] ?? json['totalPages'],
-    );
+    dynamic findVal(List<String> keys) {
+      for (final k in keys) {
+        if (json.containsKey(k) && json[k] != null) return json[k];
+      }
+      return null;
+    }
+
+    final pageVal = parseInt(findVal(['page', 'currentPage', 'current_page']));
+    final perPageVal = parseInt(findVal(['perpage', 'perPage', 'per_page', 'limit', 'pageSize', 'page_size']));
+    final totalVal = parseInt(findVal(['total', 'total_count', 'totalCount', 'count', 'total_records', 'totalRecords']));
+    final totalPagesVal = parseInt(findVal(['totalpages', 'total_pages', 'totalPages', 'pages']));
+    final hasMoreVal = parseBool(findVal(['hasmorepage', 'has_more_page', 'hasMorePage', 'has_more', 'hasMore']));
 
     return PaymentPageContext(
       page: pageVal > 0 ? pageVal : 1,
       perpage: perPageVal > 0 ? perPageVal : 2,
-      hasMorePage: parseBool(json['hasmorepage']),
+      hasMorePage: hasMoreVal,
       total: totalVal,
       totalPages: totalPagesVal > 0 ? totalPagesVal : 1,
     );
@@ -247,11 +251,15 @@ class PaymentService extends GetxService {
       List<PaymentModel> paymentsList = [];
 
       if (dataObj is Map<String, dynamic>) {
-        if (dataObj.containsKey('pagecontext') &&
-            dataObj['pagecontext'] is Map<String, dynamic>) {
-          pageContext = PaymentPageContext.fromJson(
-            dataObj['pagecontext'] as Map<String, dynamic>,
-          );
+        Map<String, dynamic>? pcMap;
+        for (final k in ['pagecontext', 'pageContext', 'page_context', 'pagination']) {
+          if (dataObj.containsKey(k) && dataObj[k] is Map<String, dynamic>) {
+            pcMap = dataObj[k] as Map<String, dynamic>;
+            break;
+          }
+        }
+        if (pcMap != null) {
+          pageContext = PaymentPageContext.fromJson(pcMap);
         }
 
         if (dataObj.containsKey('payments') && dataObj['payments'] is List) {
@@ -282,12 +290,17 @@ class PaymentService extends GetxService {
             .toList();
       }
 
-      if (pageContext == null &&
-          responseData.containsKey('pagecontext') &&
-          responseData['pagecontext'] is Map<String, dynamic>) {
-        pageContext = PaymentPageContext.fromJson(
-          responseData['pagecontext'] as Map<String, dynamic>,
-        );
+      if (pageContext == null) {
+        Map<String, dynamic>? pcMap;
+        for (final k in ['pagecontext', 'pageContext', 'page_context', 'pagination']) {
+          if (responseData.containsKey(k) && responseData[k] is Map<String, dynamic>) {
+            pcMap = responseData[k] as Map<String, dynamic>;
+            break;
+          }
+        }
+        if (pcMap != null) {
+          pageContext = PaymentPageContext.fromJson(pcMap);
+        }
       }
 
       return PaymentListResult(
