@@ -21,7 +21,7 @@ class LoginController extends GetxController {
   final RxString errorMessage = ''.obs;
   final RxString base64Data = ''.obs;
 
-  int activeChannel = 2;
+  int activeChannel = 1;
   String activeIdentifier = '';
   String deviceAllInfo = "";
 
@@ -69,7 +69,7 @@ class LoginController extends GetxController {
         WidgetManager.showAlertSnackBar(errorMessage.value);
         return;
       }
-      channel = 2;
+      channel = 1;
       identifier = cleanDigits.startsWith('+91')
           ? cleanDigits
           : '+91$cleanDigits';
