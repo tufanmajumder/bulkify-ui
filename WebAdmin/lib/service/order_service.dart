@@ -478,7 +478,7 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
     final String targetUrl =
         "${ApiManager.baseUrl}${ApiManager.getOrderDetails}";
-    //print("order details..$targetUrl..$orderKey");
+    //print("order details..$targetUrl..$activeToken");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

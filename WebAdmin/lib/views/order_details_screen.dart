@@ -531,7 +531,7 @@ class OrderDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Price Details',
+            'Invoice Summary',
             style: TextStyle(
               fontFamily: 'Public-Sans',
               fontSize: Responsive.sp(context, 15),
@@ -548,35 +548,35 @@ class OrderDetailsScreen extends StatelessWidget {
                   controller.subtotal.value,
                   isBoldValue: false,
                 ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  'Shipping Fee',
-                  controller.shippingFee.value,
-                  isBoldValue: false,
-                ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
+                //const SizedBox(height: 10),
+                // DottedLine(
+                //   direction: Axis.horizontal,
+                //   alignment: WrapAlignment.center,
+                //   lineLength: double.infinity,
+                //   lineThickness: 1.0,
+                //   dashLength: 4.0,
+                //   dashColor: Colors.grey.shade300,
+                //   dashGapLength: 2.0,
+                //   dashGapColor: Colors.transparent,
+                // ),
+                // const SizedBox(height: 10),
+                // _buildKeyValueRow(
+                //   'Shipping Fee',
+                //   controller.shippingFee.value,
+                //   isBoldValue: false,
+                // ),
+                //const SizedBox(height: 10),
+                // DottedLine(
+                //   direction: Axis.horizontal,
+                //   alignment: WrapAlignment.center,
+                //   lineLength: double.infinity,
+                //   lineThickness: 1.0,
+                //   dashLength: 4.0,
+                //   dashColor: Colors.grey.shade300,
+                //   dashGapLength: 2.0,
+                //   dashGapColor: Colors.transparent,
+                // ),
+                // const SizedBox(height: 10),
                 // _buildKeyValueRow(
                 //   'Platform Fee',
                 //   controller.platformFee.value,
@@ -594,11 +594,49 @@ class OrderDetailsScreen extends StatelessWidget {
                 //   dashGapColor: Colors.transparent,
                 // ),
                 //const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  'Bank Fee',
-                  controller.bankFee.value,
-                  isBoldValue: false,
-                ),
+                // _buildKeyValueRow(
+                //   'Bank Fee',
+                //   controller.bankFee.value,
+                //   isBoldValue: false,
+                // ),
+                // const SizedBox(height: 10),
+                // DottedLine(
+                //   direction: Axis.horizontal,
+                //   alignment: WrapAlignment.center,
+                //   lineLength: double.infinity,
+                //   lineThickness: 1.0,
+                //   dashLength: 4.0,
+                //   dashColor: Colors.grey.shade300,
+                //   dashGapLength: 2.0,
+                //   dashGapColor: Colors.transparent,
+                // ),
+                // const SizedBox(height: 10),
+                // _buildKeyValueRow(
+                //   'Discount 10%',
+                //   controller.discountPercent.value,
+                //   isBoldValue: false,
+                // ),
+                //const SizedBox(height: 10),
+                // DottedLine(
+                //   direction: Axis.horizontal,
+                //   alignment: WrapAlignment.center,
+                //   lineLength: double.infinity,
+                //   lineThickness: 1.0,
+                //   dashLength: 4.0,
+                //   dashColor: Colors.grey.shade300,
+                //   dashGapLength: 2.0,
+                //   dashGapColor: Colors.transparent,
+                // ),
+                // const SizedBox(height: 10),
+                // _buildKeyValueRow(
+                //   controller.couponCode.value.isNotEmpty
+                //       ? (controller.couponCode.value.startsWith('#')
+                //             ? 'Coupon ${controller.couponCode.value}'
+                //             : 'Coupon #${controller.couponCode.value}')
+                //       : 'Coupon #WELCOME10',
+                //   controller.couponDiscount.value,
+                //   isBoldValue: false,
+                // ),
                 const SizedBox(height: 10),
                 DottedLine(
                   direction: Axis.horizontal,
@@ -611,62 +649,6 @@ class OrderDetailsScreen extends StatelessWidget {
                   dashGapColor: Colors.transparent,
                 ),
                 const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  'Discount 10%',
-                  controller.discountPercent.value,
-                  isBoldValue: false,
-                ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  controller.couponCode.value.isNotEmpty
-                      ? (controller.couponCode.value.startsWith('#')
-                            ? 'Coupon ${controller.couponCode.value}'
-                            : 'Coupon #${controller.couponCode.value}')
-                      : 'Coupon #WELCOME10',
-                  controller.couponDiscount.value,
-                  isBoldValue: false,
-                ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
-                _buildKeyValueRow(
-                  'Tax',
-                  controller.tax.value,
-                  isBoldValue: false,
-                ),
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
-
                 if (controller.cgst.value.trim().isNotEmpty &&
                     controller.cgst.value.trim() != 'null' &&
                     controller.cgst.value.trim() != '-') ...[
@@ -717,23 +699,40 @@ class OrderDetailsScreen extends StatelessWidget {
                     controller.igst.value,
                     isBoldValue: false,
                   ),
-                  const SizedBox(height: 10),
-                  DottedLine(
-                    direction: Axis.horizontal,
-                    alignment: WrapAlignment.center,
-                    lineLength: double.infinity,
-                    lineThickness: 1.0,
-                    dashLength: 4.0,
-                    dashColor: Colors.grey.shade300,
-                    dashGapLength: 2.0,
-                    dashGapColor: Colors.transparent,
-                  ),
-                  const SizedBox(height: 10),
                 ],
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
                 _buildKeyValueRow(
-                  'Total:',
+                  'TotalTax',
+                  controller.tax.value,
+                  isBoldValue: false,
+                ),
+                const SizedBox(height: 10),
+                DottedLine(
+                  direction: Axis.horizontal,
+                  alignment: WrapAlignment.center,
+                  lineLength: double.infinity,
+                  lineThickness: 1.0,
+                  dashLength: 4.0,
+                  dashColor: Colors.grey.shade300,
+                  dashGapLength: 2.0,
+                  dashGapColor: Colors.transparent,
+                ),
+                const SizedBox(height: 10),
+                _buildKeyValueRow(
+                  'Total',
                   controller.grandTotal.value,
-                  isBoldLabel: false,
+                  isBoldLabel: true,
                   isBoldValue: true,
                   valueFontSize: 15,
                 ),
@@ -1416,43 +1415,43 @@ class OrderDetailsScreen extends StatelessWidget {
                         child: Row(
                           children: [
                             Expanded(
-                              flex: 5,
+                              flex: 8,
                               child: Text(
                                 'PRODUCT',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: Responsive.sp(context, 11.5),
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: Responsive.sp(context, 10.8),
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0,
                                 ),
                               ),
                             ),
                             Expanded(
-                              flex: 2,
+                              flex: 3,
                               child: Text(
                                 'PRICE',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: Responsive.sp(context, 11.5),
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: Responsive.sp(context, 10.8),
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0,
                                 ),
                               ),
                             ),
                             Expanded(
-                              flex: 2,
+                              flex: 3,
                               child: Text(
                                 'QTY',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: Responsive.sp(context, 11.5),
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: Responsive.sp(context, 10.8),
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0,
                                 ),
                               ),
                             ),
@@ -1463,10 +1462,10 @@ class OrderDetailsScreen extends StatelessWidget {
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
-                                  fontSize: Responsive.sp(context, 11.5),
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: Responsive.sp(context, 10.8),
+                                  fontWeight: FontWeight.w500,
                                   color: Color(0xFF2F2B3D),
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0,
                                 ),
                               ),
                             ),
@@ -1500,7 +1499,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                     child: Row(
                                       children: [
                                         Expanded(
-                                          flex: 5,
+                                          flex: 8,
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -1557,7 +1556,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           ),
                                         ),
                                         Expanded(
-                                          flex: 2,
+                                          flex: 3,
                                           child: _buildRupeeText(
                                             item.price,
                                             textAlign: TextAlign.right,
@@ -1568,7 +1567,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           ),
                                         ),
                                         Expanded(
-                                          flex: 2,
+                                          flex: 3,
                                           child: Text(
                                             '${item.qty}',
                                             textAlign: TextAlign.center,
@@ -1808,6 +1807,8 @@ class OrderDetailsScreen extends StatelessWidget {
         : value;
 
     Widget labelWidget;
+    print("dsdsdsa...$customLabelWidget");
+    print("dsdsdsa...$label");
     if (customLabelWidget != null) {
       labelWidget = customLabelWidget;
     } else if (label.contains('#')) {

@@ -18,7 +18,7 @@ class BulkifyAdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Admin App',
+      title: 'Bulkify Click',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Public Sans',
@@ -41,7 +41,10 @@ class BulkifyAdminApp extends StatelessWidget {
         GetPage(name: '/user-profile', page: () => const UserProfileScreen()),
         GetPage(name: '/orders', page: () => const OrderListScreen()),
         GetPage(name: '/order-details', page: () => const OrderDetailsScreen()),
-        GetPage(name: '/payment-details', page: () => const PaymentDetailsScreen()),
+        GetPage(
+          name: '/payment-details',
+          page: () => const PaymentDetailsScreen(),
+        ),
         GetPage(name: '/payments', page: () => const PaymentListScreen()),
       ],
     );

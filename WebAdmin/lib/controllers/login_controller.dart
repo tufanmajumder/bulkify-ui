@@ -25,7 +25,7 @@ class LoginController extends GetxController {
   String activeIdentifier = '';
   String deviceAllInfo = "";
 
-  bool get isMobileInput => activeChannel == 2;
+  bool get isMobileInput => activeChannel == 1;
 
   String get getFullOtp => otpControllers.map((c) => c.text.trim()).join();
 

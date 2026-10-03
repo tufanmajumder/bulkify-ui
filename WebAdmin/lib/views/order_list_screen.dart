@@ -851,7 +851,7 @@ class OrderListScreen extends StatelessWidget {
                             color: Color(0xFF475569),
                           ),
                         ),
-                        TextSpan(text: ' entries (Page $currentPage)'),
+                        TextSpan(text: ' orders (Page $currentPage)'),
                       ],
                     ),
                   ),
