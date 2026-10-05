@@ -723,7 +723,7 @@ class PaymentListScreen extends StatelessWidget {
                   context,
                   Icons.keyboard_double_arrow_left_rounded,
                   onTap: currentPage > 1 && !isLoading
-                      ? () => controller.setPage(1)
+                      ? () => controller.goToFirstPage()
                       : null,
                 ),
                 const SizedBox(width: 6),
@@ -761,7 +761,7 @@ class PaymentListScreen extends StatelessWidget {
                   context,
                   Icons.keyboard_double_arrow_right_rounded,
                   onTap: totalPages > currentPage && !isLoading
-                      ? () => controller.setPage(totalPages)
+                      ? () => controller.goToLastPage()
                       : null,
                 ),
               ],

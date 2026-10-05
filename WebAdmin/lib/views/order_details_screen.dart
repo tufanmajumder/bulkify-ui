@@ -53,6 +53,8 @@ class OrderDetailsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _buildGoBackButton(context),
+                          const SizedBox(height: 14),
                           // Responsive 2-Column Grid (Left: Sidebar details, Right: Main tables)
                           LayoutBuilder(
                             builder: (context, constraints) {
@@ -119,6 +121,36 @@ class OrderDetailsScreen extends StatelessWidget {
               child: Sidebar(activeRoute: '/orders'),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGoBackButton(BuildContext context) {
+    return InkWell(
+      onTap: () => Get.back(),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.chevron_left_rounded,
+              size: 20,
+              color: Color(0xFFCF4340),
+            ),
+            const SizedBox(width: 2),
+            Text(
+              'Go Back',
+              style: TextStyle(
+                fontFamily: 'Public Sans',
+                fontSize: Responsive.sp(context, 14),
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFCF4340),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

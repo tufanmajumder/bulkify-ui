@@ -22,9 +22,13 @@ class OrderController extends GetxController {
   final RxString failedCount = '32'.obs;
 
   // Search & Pagination states
+  final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
+  final RxBool isSearchingMode = false.obs;
   final RxInt currentPage = 1.obs;
   final RxInt rowsPerPage = 10.obs;
+  final RxInt totalPagesFromApi = 1.obs;
+  final RxInt totalRecordsFromApi = 0.obs;
 
   @override
   void onInit() {
@@ -47,11 +51,22 @@ class OrderController extends GetxController {
         return;
       }
 
-      final result = await _orderService.getOrderListResult(
-        page: targetPage,
-        perPage: targetPerPage,
-        token: token,
-      );
+      final OrderListResult result;
+      final String query = searchController.text.trim();
+      if (isSearchingMode.value && query.isNotEmpty) {
+        result = await _orderService.getSearchListResult(
+          query: query,
+          page: targetPage,
+          perPage: targetPerPage,
+          token: token,
+        );
+      } else {
+        result = await _orderService.getOrderListResult(
+          page: targetPage,
+          perPage: targetPerPage,
+          token: token,
+        );
+      }
 
       if (result.isTokenExpired) {
         if (kDebugMode) {
@@ -71,6 +86,8 @@ class OrderController extends GetxController {
       currentPage.value = targetPage;
       rowsPerPage.value = targetPerPage;
       hasMorePage.value = result.hasMorePage;
+      totalPagesFromApi.value = result.totalPages;
+      totalRecordsFromApi.value = result.totalRecords;
     } catch (e) {
       //if (kDebugMode) debugPrint('[OrderController] Error fetching orders: $e');
     } finally {
@@ -85,20 +102,7 @@ class OrderController extends GetxController {
   }
 
   // Filtered Orders Getter
-  List<OrderModel> get filteredOrders {
-    if (searchQuery.value.isEmpty) {
-      return orders;
-    }
-    final q = searchQuery.value.toLowerCase();
-    return orders.where((order) {
-      return order.id.toLowerCase().contains(q) ||
-          order.customerName.toLowerCase().contains(q) ||
-          order.customerEmail.toLowerCase().contains(q) ||
-          order.orderStatus.toLowerCase().contains(q) ||
-          order.paymentStatus.toLowerCase().contains(q) ||
-          order.amount.toLowerCase().contains(q);
-    }).toList();
-  }
+  List<OrderModel> get filteredOrders => orders;
 
   // Paginated Orders Getter
   List<OrderModel> get paginatedOrders {
@@ -113,10 +117,13 @@ class OrderController extends GetxController {
   }
 
   int get totalPages {
-    if (searchQuery.value.isNotEmpty) {
+    if (isSearchingMode.value || searchQuery.value.isNotEmpty) {
       final count = filteredOrders.length;
       if (count == 0) return 1;
       return (count / rowsPerPage.value).ceil();
+    }
+    if (totalPagesFromApi.value > 0) {
+      return totalPagesFromApi.value;
     }
     if (!isLoading.value && hasMorePage.value) {
       return currentPage.value + 1;
@@ -156,14 +163,38 @@ class OrderController extends GetxController {
 
   // Controller Actions
   void setSearchQuery(String query) {
+    searchQuery.value = query;
+    if (searchController.text != query) {
+      searchController.text = query;
+      searchController.selection = TextSelection.fromPosition(
+        TextPosition(offset: searchController.text.length),
+      );
+    }
+  }
+
+  void searchOrders() {
     if (isLoading.value) return;
+    final query = searchController.text.trim();
+    if (query.isEmpty) {
+      clearSearchQuery();
+      return;
+    }
+    isSearchingMode.value = true;
     searchQuery.value = query;
     currentPage.value = 1;
     fetchOrders(page: 1);
   }
 
+  void clearSearchQuery() {
+    searchController.clear();
+    searchQuery.value = '';
+    isSearchingMode.value = false;
+    currentPage.value = 1;
+    fetchOrders(page: 1);
+  }
+
   void nextPage() {
-    if (!isLoading.value && hasMorePage.value) {
+    if (!isLoading.value && (hasMorePage.value || currentPage.value < totalPages)) {
       fetchOrders(page: currentPage.value + 1);
     }
   }
@@ -183,8 +214,10 @@ class OrderController extends GetxController {
   }
 
   void goToLastPage() {
-    if (!isLoading.value && hasMorePage.value) {
-      fetchOrders(page: totalPages);
+    if (isLoading.value) return;
+    final targetLastPage = totalPages;
+    if (targetLastPage >= 1 && targetLastPage != currentPage.value) {
+      fetchOrders(page: targetLastPage);
     }
   }
 

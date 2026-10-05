@@ -384,16 +384,57 @@ class OrderListScreen extends StatelessWidget {
                       height: 38,
                       width: 220,
                       child: TextField(
+                        controller: controller.searchController,
                         onChanged: (val) => controller.setSearchQuery(val),
+                        onSubmitted: (_) => controller.searchOrders(),
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          color: const Color(0xFF1E293B),
+                        ),
                         decoration: InputDecoration(
+                          isDense: true,
                           hintText: 'Search Order',
                           hintStyle: TextStyle(
                             fontSize: fontSize,
                             color: const Color(0xFF94A3B8),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 0,
-                            horizontal: 14,
+                          contentPadding: const EdgeInsets.only(
+                            left: 12,
+                            top: 10,
+                            bottom: 10,
+                            right: 4,
+                          ),
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                InkWell(
+                                  onTap: () => controller.clearSearchQuery(),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                InkWell(
+                                  onTap: () => controller.searchOrders(),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: const Icon(
+                                    Icons.search,
+                                    size: 18,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          suffixIconConstraints: const BoxConstraints(
+                            minWidth: 50,
+                            minHeight: 38,
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -892,7 +933,7 @@ class OrderListScreen extends StatelessWidget {
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_arrow_right_rounded,
-                        onTap: hasMorePage && !isLoading
+                        onTap: (hasMorePage || currentPage < controller.totalPages) && !isLoading
                             ? () => controller.nextPage()
                             : null,
                       ),
@@ -900,7 +941,7 @@ class OrderListScreen extends StatelessWidget {
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_double_arrow_right_rounded,
-                        onTap: hasMorePage && !isLoading
+                        onTap: (currentPage < controller.totalPages) && !isLoading
                             ? () => controller.goToLastPage()
                             : null,
                       ),

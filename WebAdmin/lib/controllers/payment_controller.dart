@@ -80,12 +80,18 @@ class PaymentController extends GetxController {
         if (result.pageContext != null) {
           currentPage.value = result.pageContext!.page;
           hasMorePage.value = result.pageContext!.hasMorePage;
-          if (result.pageContext!.total > 0) {
-            totalPayments.value = result.pageContext!.total;
+          if (result.pageContext!.totalPages > 0) {
+            totalPages.value = result.pageContext!.totalPages;
+          } else if (result.pageContext!.total > 0) {
             totalPages.value = (result.pageContext!.total / targetPerPage).ceil();
           } else {
-            totalPayments.value = 0;
             totalPages.value = hasMorePage.value ? currentPage.value + 1 : currentPage.value;
+          }
+
+          if (result.pageContext!.total > 0) {
+            totalPayments.value = result.pageContext!.total;
+          } else if (result.pageContext!.totalPages > 0) {
+            totalPayments.value = result.pageContext!.totalPages * targetPerPage;
           }
         } else {
           currentPage.value = page;
@@ -208,11 +214,11 @@ class PaymentController extends GetxController {
     final filtered = filteredPayments;
     if (filtered.isEmpty) return [];
 
-    // If backend returns more items than rowsPerPage, slice locally for strict pagination display
+    // If backend returns more items than rowsPerPage (e.g. client-side pagination), slice locally
     if (filtered.length > rowsPerPage.value) {
       int start = (currentPage.value - 1) * rowsPerPage.value;
       if (start < 0 || start >= filtered.length) {
-        start = 0;
+        return filtered;
       }
       int end = start + rowsPerPage.value;
       if (end > filtered.length) {
@@ -225,6 +231,9 @@ class PaymentController extends GetxController {
   }
 
   int get computedTotalPages {
+    if (totalPages.value > 0) {
+      return totalPages.value;
+    }
     if (totalPayments.value > 0 && rowsPerPage.value > 0) {
       final t = (totalPayments.value / rowsPerPage.value).ceil();
       return t > 0 ? t : 1;
@@ -303,6 +312,20 @@ class PaymentController extends GetxController {
   void previousPage() {
     if (currentPage.value > 1 && !isLoading.value) {
       fetchPayments(page: currentPage.value - 1, perpage: rowsPerPage.value);
+    }
+  }
+
+  void goToFirstPage() {
+    if (currentPage.value > 1 && !isLoading.value) {
+      fetchPayments(page: 1, perpage: rowsPerPage.value);
+    }
+  }
+
+  void goToLastPage() {
+    if (isLoading.value) return;
+    final targetLastPage = computedTotalPages;
+    if (targetLastPage >= 1 && targetLastPage != currentPage.value) {
+      fetchPayments(page: targetLastPage, perpage: rowsPerPage.value);
     }
   }
 

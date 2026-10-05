@@ -50,19 +50,40 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     // Extract salesorder_id specifically
-    final salesIdRaw = json['orderkey'];
+    final salesIdRaw = json['orderkey'] ??
+        json['order_key'] ??
+        json['salesorder_id'] ??
+        json['salesorder_key'] ??
+        json['id'] ??
+        '';
     final salesIdStr = salesIdRaw.toString().trim();
 
     // Extract ID ("ordernumber", "salesorder_number", "salesorderid", "orderkey")
-    final idRaw = json['ordernumber'] ?? '-';
+    final idRaw = json['ordernumber'] ??
+        json['order_number'] ??
+        json['salesorder_number'] ??
+        json['salesorder_no'] ??
+        json['order_no'] ??
+        json['id'] ??
+        '-';
     final idDisplay = idRaw.toString().trim();
 
-    // Extract Date & Time ("orderdate", "created_time", "created_at", "date")
-    final dateRaw = json['createdtime'];
+    // Extract Date & Time ("createdtime", "created_time", "created_at", "date", "order_date", "orderdate")
+    final dateRaw = json['createdtime'] ??
+        json['created_time'] ??
+        json['created_at'] ??
+        json['date'] ??
+        json['order_date'] ??
+        json['orderdate'];
     final dateStr = _formatCreatedTime(dateRaw);
 
-    // Extract Customer Name ("customername", "customer_name", "customerName", "name", "customer")
-    final customerRaw = json['customername'];
+    // Extract Customer Name ("customername", "customer_name", "customerName", "name", "customer", "contact_name")
+    final customerRaw = json['customername'] ??
+        json['customer_name'] ??
+        json['customerName'] ??
+        json['customer'] ??
+        json['contact_name'] ??
+        json['name'];
     String customerStr = '-';
     if (customerRaw != null &&
         customerRaw.toString().trim().isNotEmpty &&
@@ -70,8 +91,14 @@ class OrderModel {
       customerStr = customerRaw.toString().trim();
     }
 
-    // Extract Company / Restaurant Name ("company_name", "restaurantname", "resturentname")
-    final companyRaw = json['companyname'];
+    // Extract Company / Restaurant Name ("companyname", "company_name", "restaurantname", "resturentname", "company")
+    final companyRaw = json['companyname'] ??
+        json['company_name'] ??
+        json['companyName'] ??
+        json['company'] ??
+        json['restaurantname'] ??
+        json['restaurant_name'] ??
+        json['resturentname'];
     String companyStr = '';
     if (companyRaw != null &&
         companyRaw.toString().trim().isNotEmpty &&
@@ -85,20 +112,46 @@ class OrderModel {
       companyStr = '';
     }
 
-    // Extract Customer Email / Delivery Address ("customeremail", "customer_email", "deliveryaddress")
-    final emailRaw = json['customeremail'] ?? '-';
+    // Extract Customer Email / Delivery Address ("customeremail", "customer_email", "email", "deliveryaddress", "delivery_address")
+    final emailRaw = json['customeremail'] ??
+        json['customer_email'] ??
+        json['customerEmail'] ??
+        json['email'] ??
+        json['deliveryaddress'] ??
+        json['delivery_address'] ??
+        '-';
     String emailStr = emailRaw != null ? emailRaw.toString().trim() : '-';
 
-    // Extract Payment Status ("paymentstatus", "payment_status", "paid_status")
-    final paymentRaw = json['paymentstatus'] ?? '-';
+    // Extract Payment Status ("paymentstatus", "payment_status", "paid_status", "status")
+    final paymentRaw = json['paymentstatus'] ??
+        json['payment_status'] ??
+        json['paymentStatus'] ??
+        json['paid_status'] ??
+        json['status'] ??
+        '-';
     String paymentStr = paymentRaw != null ? paymentRaw.toString().trim() : '-';
 
-    // Extract Order Status ("orderstatus", "order_status", "shippingstatus", "shipped_status", "status")
-    final statusRaw = json['shippingstatus'] ?? '-';
+    // Extract Order Status ("shippingstatus", "shipping_status", "shipped_status", "orderstatus", "order_status", "status")
+    final statusRaw = json['shippingstatus'] ??
+        json['shipping_status'] ??
+        json['shippingStatus'] ??
+        json['shipped_status'] ??
+        json['orderstatus'] ??
+        json['order_status'] ??
+        json['orderStatus'] ??
+        json['status'] ??
+        '-';
     String statusStr = statusRaw != null ? statusRaw.toString().trim() : '-';
 
-    // Extract Amount ("finalamount", "grandtotal", "total", "amount")
-    final amountRaw = json['finalamount'] ?? '0.00';
+    // Extract Amount ("finalamount", "final_amount", "grandtotal", "grand_total", "total", "amount")
+    final amountRaw = json['finalamount'] ??
+        json['final_amount'] ??
+        json['finalAmount'] ??
+        json['grandtotal'] ??
+        json['grand_total'] ??
+        json['total'] ??
+        json['amount'] ??
+        '0.00';
     String amountStr = '0.00';
     if (amountRaw != null) {
       final parsed = double.tryParse(amountRaw.toString().trim());

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:admin_app/models/order_model.dart';
+import 'package:admin_app/models/search_order_model.dart';
 import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/utils/api_manager.dart';
 
@@ -220,6 +221,66 @@ class OrderService extends GetxService {
     return fetchedCount > 0 && fetchedCount >= perPage;
   }
 
+  int extractTotalPages(dynamic responseData) {
+    if (responseData is Map) {
+      final pageContext =
+          responseData['pagecontext'] ??
+          responseData['data']?['pagecontext'] ??
+          responseData['page_context'] ??
+          responseData['data']?['page_context'];
+      if (pageContext is Map) {
+        final tp =
+            pageContext['totalpages'] ??
+            pageContext['total_pages'] ??
+            pageContext['totalPages'];
+        if (tp != null) {
+          final parsed = int.tryParse(tp.toString());
+          if (parsed != null && parsed > 0) return parsed;
+        }
+      }
+      final tpDirect =
+          responseData['totalpages'] ??
+          responseData['total_pages'] ??
+          responseData['data']?['totalpages'] ??
+          responseData['data']?['total_pages'];
+      if (tpDirect != null) {
+        final parsed = int.tryParse(tpDirect.toString());
+        if (parsed != null && parsed > 0) return parsed;
+      }
+    }
+    return 1;
+  }
+
+  int extractTotalRecords(dynamic responseData) {
+    if (responseData is Map) {
+      final pageContext =
+          responseData['pagecontext'] ??
+          responseData['data']?['pagecontext'] ??
+          responseData['page_context'] ??
+          responseData['data']?['page_context'];
+      if (pageContext is Map) {
+        final tr =
+            pageContext['totalrecords'] ??
+            pageContext['total_records'] ??
+            pageContext['totalRecords'];
+        if (tr != null) {
+          final parsed = int.tryParse(tr.toString());
+          if (parsed != null && parsed >= 0) return parsed;
+        }
+      }
+      final trDirect =
+          responseData['totalrecords'] ??
+          responseData['total_records'] ??
+          responseData['data']?['totalrecords'] ??
+          responseData['data']?['total_records'];
+      if (trDirect != null) {
+        final parsed = int.tryParse(trDirect.toString());
+        if (parsed != null && parsed >= 0) return parsed;
+      }
+    }
+    return 0;
+  }
+
   bool isTokenExpiredResponse(int? statusCode, dynamic responseData) {
     if (statusCode == 401 || statusCode == 403) return true;
     if (responseData is Map) {
@@ -411,6 +472,191 @@ class OrderService extends GetxService {
     //   );
     // }
 
+    final totalPages = responseData != null
+        ? extractTotalPages(responseData)
+        : 1;
+    final totalRecords = responseData != null
+        ? extractTotalRecords(responseData)
+        : 0;
+
+    return OrderListResult(
+      orders: orders,
+      hasMorePage: hasMore,
+      totalPages: totalPages,
+      totalRecords: totalRecords,
+      isTokenExpired: false,
+    );
+  }
+
+  Future<OrderListResult> getSearchListResult({
+    required String query,
+    int page = 1,
+    int perPage = 10,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+
+    if (activeToken.isEmpty) {
+      return OrderListResult(
+        orders: [],
+        hasMorePage: false,
+        isTokenExpired: true,
+      );
+    }
+    //print("Auth token...$activeToken");
+    final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getSearchList}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {"ordernumber": query};
+
+    final Map<String, dynamic> queryParams = {'ordernumber': query};
+
+    dynamic responseData;
+    int? responseStatusCode;
+
+    if (kIsWeb) {
+      try {
+        http.Response httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        if (httpResponse.statusCode < 200 ||
+            httpResponse.statusCode >= 300 ||
+            httpResponse.body.isEmpty) {
+          final baseUri = Uri.parse(targetUrl);
+          final uri = baseUri.replace(
+            queryParameters: {...baseUri.queryParameters, ...queryParams},
+          );
+          httpResponse = await http.get(uri, headers: requestHeaders);
+        }
+
+        responseStatusCode = httpResponse.statusCode;
+
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (_) {}
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.getSearchList,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        responseStatusCode = response.statusCode;
+
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic> || response.data is List) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        responseStatusCode = e.response?.statusCode;
+        try {
+          final response = await dio.get(
+            ApiManager.getSearchList,
+            queryParameters: queryParams,
+            options: Options(
+              contentType: Headers.jsonContentType,
+              headers: requestHeaders,
+            ),
+          );
+          responseStatusCode = response.statusCode;
+          if (response.data != null) {
+            if (response.data is Map<String, dynamic> ||
+                response.data is List) {
+              responseData = response.data;
+            } else if (response.data is String) {
+              responseData = jsonDecode(response.data);
+            }
+          }
+        } catch (_) {
+          if (e.response?.data != null) {
+            if (e.response!.data is Map<String, dynamic> ||
+                e.response!.data is List) {
+              responseData = e.response!.data;
+            } else if (e.response!.data is String) {
+              try {
+                responseData = jsonDecode(e.response!.data);
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (isTokenExpiredResponse(responseStatusCode, responseData)) {
+      return OrderListResult(
+        orders: [],
+        hasMorePage: false,
+        isTokenExpired: true,
+      );
+    }
+
+    List<OrderModel> orders = [];
+    if (responseData != null) {
+      dynamic dataObj;
+      if (responseData is Map &&
+          responseData.containsKey('data') &&
+          responseData['data'] != null) {
+        dataObj = responseData['data'];
+      } else {
+        dataObj = responseData;
+      }
+
+      if (dataObj is Map<String, dynamic> || dataObj is Map) {
+        try {
+          final searchModel = SearchOrderModel.fromJson(
+            Map<String, dynamic>.from(dataObj),
+          );
+          orders = [searchModel.toOrderModel()];
+        } catch (e) {
+          orders = _parseOrders(responseData);
+        }
+      } else if (dataObj is List) {
+        for (var item in dataObj) {
+          if (item is Map) {
+            try {
+              final searchModel = SearchOrderModel.fromJson(
+                Map<String, dynamic>.from(item),
+              );
+              orders.add(searchModel.toOrderModel());
+            } catch (_) {}
+          }
+        }
+        if (orders.isEmpty) {
+          orders = _parseOrders(responseData);
+        }
+      } else {
+        orders = _parseOrders(responseData);
+      }
+    }
+
+    final hasMore = responseData != null
+        ? extractHasMorePage(
+            responseData,
+            fetchedCount: orders.length,
+            perPage: perPage,
+          )
+        : false;
+
     return OrderListResult(
       orders: orders,
       hasMorePage: hasMore,
@@ -434,10 +680,15 @@ class OrderService extends GetxService {
             dataField['items'] ??
             dataField['orders'] ??
             dataField['orderlist'] ??
-            dataField['list'] ??
-            dataField['data'];
+            dataField['list'];
         if (innerList is List) {
           rawItems = innerList;
+        } else if (dataField['salesorder'] is Map) {
+          rawItems = [dataField['salesorder']];
+        } else if (dataField['order'] is Map) {
+          rawItems = [dataField['order']];
+        } else {
+          rawItems = [dataField];
         }
       } else {
         final rootList =
@@ -449,6 +700,16 @@ class OrderService extends GetxService {
             responseData['list'];
         if (rootList is List) {
           rawItems = rootList;
+        } else if (responseData['salesorder'] is Map) {
+          rawItems = [responseData['salesorder']];
+        } else if (responseData['order'] is Map) {
+          rawItems = [responseData['order']];
+        } else if (responseData.containsKey('salesorder_id') ||
+            responseData.containsKey('salesorder_number') ||
+            responseData.containsKey('order_id') ||
+            responseData.containsKey('id') ||
+            responseData.containsKey('ordernumber')) {
+          rawItems = [responseData];
         }
       }
     }
@@ -870,10 +1131,14 @@ class OrderListResult {
   final List<OrderModel> orders;
   final bool hasMorePage;
   final bool isTokenExpired;
+  final int totalPages;
+  final int totalRecords;
 
   OrderListResult({
     required this.orders,
     required this.hasMorePage,
     this.isTokenExpired = false,
+    this.totalPages = 1,
+    this.totalRecords = 0,
   });
 }

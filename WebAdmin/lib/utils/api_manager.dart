@@ -5,13 +5,15 @@ class ApiManager {
   //   flutter build web --dart-define=API_BASE_URL=https://bulkify.dts.ind.in/
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://bulkify.dts.ind.in/',
+    //defaultValue: 'https://bulkify.dts.ind.in/',
+    defaultValue: 'https://api.bulkify.click/',
   );
 
   static const String loginUrl = "core/v1/auth/initiate";
   static const String verifyOtpUrl = "core/v1/auth/verify";
   //static const String getOrderList1 = "zoho/v1/salesorder/list";
   static const String getOrderList = "orders/v1/list";
+  static const String getSearchList = "orders/v1/search-by-ordernumber";
   static const String getOrderDetails = "orders/v1/get-by-key";
   //static const String getOrderDetails1 = "zoho/v1/salesorder/get";
   static const String getUserList = "users/v1/list";

@@ -240,21 +240,23 @@ class PaymentService extends GetxService {
       );
     }
 
-    if (responseData is Map<String, dynamic>) {
+    if (responseData is Map) {
+      final Map<String, dynamic> respMap = Map<String, dynamic>.from(responseData);
       final bool success =
-          responseData['success'] == true || responseData['code'] == 200;
-      final String message = responseData['message']?.toString() ?? 'success';
-      final int code = responseData['code'] is int ? responseData['code'] : 200;
+          respMap['success'] == true || respMap['code'] == 200;
+      final String message = respMap['message']?.toString() ?? 'success';
+      final int code = respMap['code'] is int ? respMap['code'] : 200;
 
-      final dataObj = responseData['data'];
+      final dataObj = respMap['data'];
       PaymentPageContext? pageContext;
       List<PaymentModel> paymentsList = [];
 
-      if (dataObj is Map<String, dynamic>) {
+      if (dataObj is Map) {
+        final Map<String, dynamic> dataMap = Map<String, dynamic>.from(dataObj);
         Map<String, dynamic>? pcMap;
         for (final k in ['pagecontext', 'pageContext', 'page_context', 'pagination']) {
-          if (dataObj.containsKey(k) && dataObj[k] is Map<String, dynamic>) {
-            pcMap = dataObj[k] as Map<String, dynamic>;
+          if (dataMap.containsKey(k) && dataMap[k] is Map) {
+            pcMap = Map<String, dynamic>.from(dataMap[k] as Map);
             break;
           }
         }
@@ -262,39 +264,39 @@ class PaymentService extends GetxService {
           pageContext = PaymentPageContext.fromJson(pcMap);
         }
 
-        if (dataObj.containsKey('payments') && dataObj['payments'] is List) {
-          final rawPayments = dataObj['payments'] as List;
+        if (dataMap.containsKey('payments') && dataMap['payments'] is List) {
+          final rawPayments = dataMap['payments'] as List;
           paymentsList = rawPayments
-              .whereType<Map<String, dynamic>>()
-              .map((p) => PaymentModel.fromJson(p))
+              .whereType<Map>()
+              .map((p) => PaymentModel.fromJson(Map<String, dynamic>.from(p)))
               .toList();
-        } else if (dataObj.containsKey('list') && dataObj['list'] is List) {
-          final rawPayments = dataObj['list'] as List;
+        } else if (dataMap.containsKey('list') && dataMap['list'] is List) {
+          final rawPayments = dataMap['list'] as List;
           paymentsList = rawPayments
-              .whereType<Map<String, dynamic>>()
-              .map((p) => PaymentModel.fromJson(p))
+              .whereType<Map>()
+              .map((p) => PaymentModel.fromJson(Map<String, dynamic>.from(p)))
               .toList();
-        } else if (dataObj.containsKey('items') && dataObj['items'] is List) {
-          final rawPayments = dataObj['items'] as List;
+        } else if (dataMap.containsKey('items') && dataMap['items'] is List) {
+          final rawPayments = dataMap['items'] as List;
           paymentsList = rawPayments
-              .whereType<Map<String, dynamic>>()
-              .map((p) => PaymentModel.fromJson(p))
+              .whereType<Map>()
+              .map((p) => PaymentModel.fromJson(Map<String, dynamic>.from(p)))
               .toList();
         }
-      } else if (responseData.containsKey('payments') &&
-          responseData['payments'] is List) {
-        final rawPayments = responseData['payments'] as List;
+      } else if (respMap.containsKey('payments') &&
+          respMap['payments'] is List) {
+        final rawPayments = respMap['payments'] as List;
         paymentsList = rawPayments
-            .whereType<Map<String, dynamic>>()
-            .map((p) => PaymentModel.fromJson(p))
+            .whereType<Map>()
+            .map((p) => PaymentModel.fromJson(Map<String, dynamic>.from(p)))
             .toList();
       }
 
       if (pageContext == null) {
         Map<String, dynamic>? pcMap;
         for (final k in ['pagecontext', 'pageContext', 'page_context', 'pagination']) {
-          if (responseData.containsKey(k) && responseData[k] is Map<String, dynamic>) {
-            pcMap = responseData[k] as Map<String, dynamic>;
+          if (respMap.containsKey(k) && respMap[k] is Map) {
+            pcMap = Map<String, dynamic>.from(respMap[k] as Map);
             break;
           }
         }

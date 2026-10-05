@@ -267,6 +267,18 @@ class UserController extends GetxController {
     }
   }
 
+  void goToFirstPage() {
+    if (currentPage.value > 1 && !isLoading.value) {
+      setPage(1);
+    }
+  }
+
+  void goToLastPage() {
+    if (currentPage.value < totalPages && !isLoading.value) {
+      setPage(totalPages);
+    }
+  }
+
   void setRowsPerPage(int rows) {
     rowsPerPage.value = rows;
     currentPage.value = 1;
