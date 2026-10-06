@@ -611,7 +611,13 @@ class OrderService extends GetxService {
     }
 
     List<OrderModel> orders = [];
+    String message = '';
+
     if (responseData != null) {
+      if (responseData is Map && responseData['message'] != null) {
+        message = responseData['message'].toString().trim();
+      }
+
       dynamic dataObj;
       if (responseData is Map &&
           responseData.containsKey('data') &&
@@ -626,9 +632,14 @@ class OrderService extends GetxService {
           final searchModel = SearchOrderModel.fromJson(
             Map<String, dynamic>.from(dataObj),
           );
-          orders = [searchModel.toOrderModel()];
+          if (searchModel.isValid) {
+            orders = [searchModel.toOrderModel()];
+          }
         } catch (e) {
-          orders = _parseOrders(responseData);
+          final parsed = _parseOrders(responseData);
+          if (parsed.isNotEmpty) {
+            orders = parsed;
+          }
         }
       } else if (dataObj is List) {
         for (var item in dataObj) {
@@ -637,15 +648,24 @@ class OrderService extends GetxService {
               final searchModel = SearchOrderModel.fromJson(
                 Map<String, dynamic>.from(item),
               );
-              orders.add(searchModel.toOrderModel());
+              if (searchModel.isValid) {
+                orders.add(searchModel.toOrderModel());
+              }
             } catch (_) {}
           }
         }
         if (orders.isEmpty) {
-          orders = _parseOrders(responseData);
+          final parsed = _parseOrders(responseData);
+          if (parsed.isNotEmpty) {
+            orders = parsed;
+          }
         }
-      } else {
-        orders = _parseOrders(responseData);
+      }
+    }
+
+    if (orders.isEmpty) {
+      if (message.isEmpty || message.toLowerCase() == 'success') {
+        message = 'Order not found';
       }
     }
 
@@ -661,6 +681,7 @@ class OrderService extends GetxService {
       orders: orders,
       hasMorePage: hasMore,
       isTokenExpired: false,
+      message: message,
     );
   }
 
@@ -1133,6 +1154,7 @@ class OrderListResult {
   final bool isTokenExpired;
   final int totalPages;
   final int totalRecords;
+  final String message;
 
   OrderListResult({
     required this.orders,
@@ -1140,5 +1162,6 @@ class OrderListResult {
     this.isTokenExpired = false,
     this.totalPages = 1,
     this.totalRecords = 0,
+    this.message = '',
   });
 }

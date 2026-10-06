@@ -24,7 +24,9 @@ class PaymentController extends GetxController {
   final RxString failedChange = '(+29%)'.obs;
 
   // Filters & Pagination State
+  final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
+  final RxBool isSearchingMode = false.obs;
   final RxString selectedStatus = 'All'.obs;
   final RxInt currentPage = 1.obs;
   final RxInt rowsPerPage = 10.obs;
@@ -59,10 +61,24 @@ class PaymentController extends GetxController {
     rowsPerPage.value = targetPerPage;
 
     try {
-      final result = await _paymentService.getPaymentList(
-        page: page,
-        perpage: targetPerPage,
-      );
+      final PaymentListResult result;
+      final String query = searchController.text.trim();
+      if (isSearchingMode.value && query.isNotEmpty) {
+        result = await _paymentService.searchPayment(transactionref: query);
+        if (result.payments.isEmpty) {
+          payments.clear();
+          errorMessage.value =
+              (result.message.isNotEmpty && result.message != 'success')
+                  ? result.message
+                  : 'Payment record not found';
+          return;
+        }
+      } else {
+        result = await _paymentService.getPaymentList(
+          page: page,
+          perpage: targetPerPage,
+        );
+      }
 
       if (result.isTokenExpired) {
         errorMessage.value = 'Session expired. Please log in again.';
@@ -100,8 +116,9 @@ class PaymentController extends GetxController {
           totalPages.value = hasMorePage.value ? currentPage.value + 1 : currentPage.value;
         }
       } else {
-        errorMessage.value = result.message;
-        if (payments.isEmpty) {
+        errorMessage.value =
+            result.message.isNotEmpty ? result.message : 'Payment record not found';
+        if (payments.isEmpty && !isSearchingMode.value) {
           loadMockPayments();
         }
       }
@@ -110,7 +127,7 @@ class PaymentController extends GetxController {
       //   debugPrint('[PaymentController] Error fetching payments: $e');
       // }
       errorMessage.value = 'Failed to load payments';
-      if (payments.isEmpty) {
+      if (payments.isEmpty && !isSearchingMode.value) {
         loadMockPayments();
       }
     } finally {
@@ -193,6 +210,7 @@ class PaymentController extends GetxController {
     return payments.where((p) {
       final query = searchQuery.value.trim().toLowerCase();
       final matchesSearch =
+          isSearchingMode.value ||
           query.isEmpty ||
           p.orderId.toLowerCase().contains(query) ||
           p.paymentId.toLowerCase().contains(query) ||
@@ -287,6 +305,30 @@ class PaymentController extends GetxController {
 
   void setSearchQuery(String val) {
     searchQuery.value = val;
+    if (searchController.text != val) {
+      searchController.text = val;
+      searchController.selection = TextSelection.fromPosition(
+        TextPosition(offset: searchController.text.length),
+      );
+    }
+  }
+
+  void searchPayments() {
+    if (isLoading.value) return;
+    final query = searchController.text.trim();
+    if (query.isEmpty) {
+      clearSearchQuery();
+      return;
+    }
+    isSearchingMode.value = true;
+    searchQuery.value = query;
+    fetchPayments(page: 1);
+  }
+
+  void clearSearchQuery() {
+    searchController.clear();
+    searchQuery.value = '';
+    isSearchingMode.value = false;
     fetchPayments(page: 1);
   }
 

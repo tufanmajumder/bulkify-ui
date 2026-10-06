@@ -133,7 +133,7 @@ class PaymentListScreen extends StatelessWidget {
               // Right side: Search, Status filter & Initiate Button
               Row(
                 children: [
-                  SizedBox(width: 220, child: _buildSearchInput(controller)),
+                  SizedBox(width: 240, child: _buildSearchInput(controller)),
                   const SizedBox(width: 12),
                   _buildStatusDropdown(controller),
                   const SizedBox(width: 12),
@@ -212,22 +212,71 @@ class PaymentListScreen extends StatelessWidget {
   }
 
   Widget _buildSearchInput(PaymentController controller) {
-    return Container(
+    final borderColor = const Color(0xFFE2E8F0);
+
+    return SizedBox(
       height: 38,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
       child: TextField(
-        onChanged: controller.setSearchQuery,
+        controller: controller.searchController,
         style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-        decoration: const InputDecoration(
-          hintText: 'Search UTR/RRN',
-          hintStyle: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          border: InputBorder.none,
+        decoration: InputDecoration(
           isDense: true,
+          hintText: 'Search UTR/RRN',
+          hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+          contentPadding: const EdgeInsets.only(
+            left: 12,
+            top: 10,
+            bottom: 10,
+            right: 4,
+          ),
+          fillColor: Colors.white,
+          filled: true,
+          suffixIcon: Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                InkWell(
+                  onTap: () => controller.searchPayments(),
+                  borderRadius: BorderRadius.circular(12),
+                  child: const Icon(
+                    Icons.search,
+                    size: 18,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: () => controller.clearSearchQuery(),
+                  borderRadius: BorderRadius.circular(12),
+                  child: const Icon(
+                    Icons.close,
+                    size: 18,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: 50,
+            minHeight: 38,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(
+              color: Color(0xFFCF4340),
+            ),
+          ),
         ),
       ),
     );
@@ -382,31 +431,14 @@ class PaymentListScreen extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.all(40.0),
                       child: Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              controller.errorMessage.value.isNotEmpty
-                                  ? controller.errorMessage.value
-                                  : 'No payment records found',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF94A3B8),
-                              ),
-                            ),
-                            if (controller.errorMessage.value.isNotEmpty) ...[
-                              const SizedBox(height: 12),
-                              ElevatedButton(
-                                onPressed: () => controller.fetchPayments(
-                                  page: controller.currentPage.value,
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFCF4340),
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ],
+                        child: Text(
+                          controller.errorMessage.value.isNotEmpty
+                              ? controller.errorMessage.value
+                              : 'No payment records found',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF94A3B8),
+                          ),
                         ),
                       ),
                     );

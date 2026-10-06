@@ -71,6 +71,11 @@ class SearchOrderModel {
   final double dueamount;
   final String paymentstatus;
 
+  bool get isValid =>
+      orderkey.trim().isNotEmpty ||
+      salesorderid.trim().isNotEmpty ||
+      ordernumber.trim().isNotEmpty;
+
   SearchOrderModel({
     required this.orderkey,
     required this.orgkey,

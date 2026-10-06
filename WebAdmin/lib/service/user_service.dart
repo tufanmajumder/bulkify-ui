@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:admin_app/models/user_model.dart';
+import 'package:admin_app/models/search_user_model.dart';
 import 'package:admin_app/models/user_profile_model.dart';
 import 'package:admin_app/service/auth_service.dart';
 import 'package:admin_app/utils/api_manager.dart';
@@ -314,6 +315,219 @@ class UserService extends GetxService {
       message: 'Failed to parse response data',
       code: responseStatusCode ?? 500,
       users: [],
+    );
+  }
+
+  /// Calls the searchUser API endpoint (users/v1/search-by-registeredmobile).
+  Future<UserListResult> searchUser({
+    required String registeredmobile,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+
+    if (activeToken.isEmpty) {
+      return UserListResult(
+        success: false,
+        message: 'Authentication token missing',
+        code: 401,
+        users: [],
+        isTokenExpired: true,
+      );
+    }
+
+    final String targetUrl = "${ApiManager.baseUrl}${ApiManager.searchUser}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> requestPayload = {
+      'registeredmobile': registeredmobile,
+    };
+
+    final Map<String, String> queryParams = {
+      'registeredmobile': registeredmobile,
+    };
+
+    dynamic responseData;
+    int? responseStatusCode;
+
+    if (kIsWeb) {
+      try {
+        http.Response httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(requestPayload),
+        );
+
+        if (httpResponse.statusCode < 200 ||
+            httpResponse.statusCode >= 300 ||
+            httpResponse.body.isEmpty) {
+          final baseUri = Uri.parse(targetUrl);
+          final uri = baseUri.replace(
+            queryParameters: {...baseUri.queryParameters, ...queryParams},
+          );
+          httpResponse = await http.get(uri, headers: requestHeaders);
+        }
+
+        responseStatusCode = httpResponse.statusCode;
+
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (_) {}
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.searchUser,
+          data: jsonEncode(requestPayload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        responseStatusCode = response.statusCode;
+
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic> || response.data is List) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        responseStatusCode = e.response?.statusCode;
+        try {
+          final response = await dio.get(
+            ApiManager.searchUser,
+            queryParameters: queryParams,
+            options: Options(
+              contentType: Headers.jsonContentType,
+              headers: requestHeaders,
+            ),
+          );
+          responseStatusCode = response.statusCode;
+          if (response.data != null) {
+            if (response.data is Map<String, dynamic> ||
+                response.data is List) {
+              responseData = response.data;
+            } else if (response.data is String) {
+              responseData = jsonDecode(response.data);
+            }
+          }
+        } catch (_) {
+          if (e.response?.data != null) {
+            if (e.response!.data is Map<String, dynamic> ||
+                e.response!.data is List) {
+              responseData = e.response!.data;
+            } else if (e.response!.data is String) {
+              try {
+                responseData = jsonDecode(e.response!.data);
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (_isTokenExpired(responseStatusCode, responseData)) {
+      return UserListResult(
+        success: false,
+        message: 'Session expired',
+        code: 401,
+        users: [],
+        isTokenExpired: true,
+      );
+    }
+
+    List<UserModel> usersList = [];
+    if (responseData != null) {
+      dynamic dataObj;
+      if (responseData is Map &&
+          responseData.containsKey('data') &&
+          responseData['data'] != null) {
+        dataObj = responseData['data'];
+      } else {
+        dataObj = responseData;
+      }
+
+      bool isValidUser(UserModel u) {
+        return u.id.trim().isNotEmpty ||
+            u.mobNo.trim().isNotEmpty ||
+            u.email.trim().isNotEmpty ||
+            u.name.trim().isNotEmpty ||
+            u.userName.trim().isNotEmpty;
+      }
+
+      if (dataObj is Map<String, dynamic> || dataObj is Map) {
+        try {
+          final searchModel = SearchUserModel.fromJson(
+            Map<String, dynamic>.from(dataObj),
+          );
+          final userModel = searchModel.toUserModel();
+          if (isValidUser(userModel)) {
+            usersList = [userModel];
+          }
+        } catch (_) {
+          try {
+            final userModel =
+                UserModel.fromJson(Map<String, dynamic>.from(dataObj));
+            if (isValidUser(userModel)) {
+              usersList = [userModel];
+            }
+          } catch (_) {}
+        }
+      } else if (dataObj is List) {
+        for (var item in dataObj) {
+          if (item is Map) {
+            try {
+              final searchModel = SearchUserModel.fromJson(
+                Map<String, dynamic>.from(item),
+              );
+              final userModel = searchModel.toUserModel();
+              if (isValidUser(userModel)) {
+                usersList.add(userModel);
+              }
+            } catch (_) {
+              try {
+                final userModel =
+                    UserModel.fromJson(Map<String, dynamic>.from(item));
+                if (isValidUser(userModel)) {
+                  usersList.add(userModel);
+                }
+              } catch (_) {}
+            }
+          }
+        }
+      }
+    }
+
+    final bool success = usersList.isNotEmpty &&
+        (responseData is Map
+            ? (responseData['success'] == true || responseData['code'] == 200)
+            : true);
+    final String apiMsg =
+        (responseData is Map && responseData['message'] != null)
+            ? responseData['message'].toString().trim()
+            : '';
+    final String message = usersList.isEmpty
+        ? (apiMsg.isNotEmpty && apiMsg.toLowerCase() != 'success'
+            ? apiMsg
+            : 'User not found')
+        : (apiMsg.isNotEmpty ? apiMsg : 'success');
+
+    return UserListResult(
+      success: success,
+      message: message,
+      code: responseStatusCode ?? (usersList.isEmpty ? 404 : 200),
+      users: usersList,
     );
   }
 

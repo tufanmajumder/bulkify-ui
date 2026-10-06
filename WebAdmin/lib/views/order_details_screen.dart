@@ -731,19 +731,20 @@ class OrderDetailsScreen extends StatelessWidget {
                     controller.igst.value,
                     isBoldValue: false,
                   ),
+                  const SizedBox(height: 10),
+                  DottedLine(
+                    direction: Axis.horizontal,
+                    alignment: WrapAlignment.center,
+                    lineLength: double.infinity,
+                    lineThickness: 1.0,
+                    dashLength: 4.0,
+                    dashColor: Colors.grey.shade300,
+                    dashGapLength: 2.0,
+                    dashGapColor: Colors.transparent,
+                  ),
+                  const SizedBox(height: 10),
                 ],
-                const SizedBox(height: 10),
-                DottedLine(
-                  direction: Axis.horizontal,
-                  alignment: WrapAlignment.center,
-                  lineLength: double.infinity,
-                  lineThickness: 1.0,
-                  dashLength: 4.0,
-                  dashColor: Colors.grey.shade300,
-                  dashGapLength: 2.0,
-                  dashGapColor: Colors.transparent,
-                ),
-                const SizedBox(height: 10),
+
                 _buildKeyValueRow(
                   'TotalTax',
                   controller.tax.value,
@@ -1839,8 +1840,8 @@ class OrderDetailsScreen extends StatelessWidget {
         : value;
 
     Widget labelWidget;
-    print("dsdsdsa...$customLabelWidget");
-    print("dsdsdsa...$label");
+    // print("dsdsdsa...$customLabelWidget");
+    // print("dsdsdsa...$label");
     if (customLabelWidget != null) {
       labelWidget = customLabelWidget;
     } else if (label.contains('#')) {
@@ -1887,21 +1888,34 @@ class OrderDetailsScreen extends StatelessWidget {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        labelWidget,
-        customValueWidget ??
-            _buildRupeeText(
-              displayValue,
-              style: TextStyle(
-                fontSize: valueFontSize,
-                fontWeight: (isBoldValue && label.startsWith("Total"))
-                    ? FontWeight.w800
-                    : (isBoldValue && !label.startsWith("Total"))
-                    ? FontWeight.w600
-                    : FontWeight.w500,
-                color: const Color(0xFF444050),
-              ),
-            ),
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: labelWidget,
+          ),
+        ),
+        Flexible(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child:
+                customValueWidget ??
+                _buildRupeeText(
+                  displayValue,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: valueFontSize,
+                    fontWeight: (isBoldValue && label.startsWith("Total"))
+                        ? FontWeight.w800
+                        : (isBoldValue && !label.startsWith("Total"))
+                        ? FontWeight.w600
+                        : FontWeight.w500,
+                    color: const Color(0xFF444050),
+                  ),
+                ),
+          ),
+        ),
       ],
     );
   }

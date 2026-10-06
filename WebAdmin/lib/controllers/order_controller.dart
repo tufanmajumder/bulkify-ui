@@ -30,6 +30,8 @@ class OrderController extends GetxController {
   final RxInt totalPagesFromApi = 1.obs;
   final RxInt totalRecordsFromApi = 0.obs;
 
+  final RxString errorMessage = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -38,6 +40,7 @@ class OrderController extends GetxController {
 
   Future<void> fetchOrders({int? page, int? perPage}) async {
     isLoading.value = true;
+    errorMessage.value = '';
     final int targetPage = page ?? currentPage.value;
     final int targetPerPage = perPage ?? rowsPerPage.value;
     try {
@@ -83,6 +86,14 @@ class OrderController extends GetxController {
       }
 
       orders.assignAll(result.orders);
+      if (result.orders.isEmpty) {
+        errorMessage.value = result.message.isNotEmpty
+            ? result.message
+            : (isSearchingMode.value ? 'Order not found' : 'No orders found');
+      } else {
+        errorMessage.value = '';
+      }
+
       currentPage.value = targetPage;
       rowsPerPage.value = targetPerPage;
       hasMorePage.value = result.hasMorePage;
@@ -90,6 +101,7 @@ class OrderController extends GetxController {
       totalRecordsFromApi.value = result.totalRecords;
     } catch (e) {
       //if (kDebugMode) debugPrint('[OrderController] Error fetching orders: $e');
+      errorMessage.value = 'Failed to load orders';
     } finally {
       isLoading.value = false;
     }

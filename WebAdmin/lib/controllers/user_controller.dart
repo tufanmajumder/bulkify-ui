@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/user_model.dart';
 import 'package:admin_app/service/user_service.dart';
@@ -21,7 +21,9 @@ class UserController extends GetxController {
   final RxString errorMessage = ''.obs;
 
   // Search and Filter states
+  final TextEditingController searchController = TextEditingController();
   final RxString searchQuery = ''.obs;
+  final RxBool isSearchingMode = false.obs;
   final RxString selectedRole = 'All'.obs;
   final RxString selectedStatus = 'All'.obs;
 
@@ -65,13 +67,27 @@ class UserController extends GetxController {
     }
   }
 
-  /// Calls getUserList API from ApiManager (via UserService) and updates user list & summary.
+  /// Calls getUserList or searchUser API from ApiManager (via UserService) and updates user list & summary.
   Future<void> fetchUsers({int page = 1, int? perpage}) async {
     isLoading.value = true;
     errorMessage.value = '';
 
     try {
-      final result = await _userService.getUserList(page: 1, perpage: 500);
+      final UserListResult result;
+      final String query = searchController.text.trim();
+      if (isSearchingMode.value && query.isNotEmpty) {
+        result = await _userService.searchUser(registeredmobile: query);
+        if (result.users.isEmpty) {
+          users.clear();
+          errorMessage.value =
+              (result.message.isNotEmpty && result.message != 'success')
+                  ? result.message
+                  : 'User not found';
+          return;
+        }
+      } else {
+        result = await _userService.getUserList(page: 1, perpage: 500);
+      }
 
       if (result.isTokenExpired) {
         errorMessage.value = 'Session expired. Please log in again.';
@@ -88,8 +104,9 @@ class UserController extends GetxController {
           currentPage.value = 1;
         }
       } else {
-        errorMessage.value = result.message;
-        if (users.isEmpty) {
+        errorMessage.value =
+            result.message.isNotEmpty ? result.message : 'User not found';
+        if (users.isEmpty && !isSearchingMode.value) {
           _loadInitialUsers();
         }
       }
@@ -139,6 +156,7 @@ class UserController extends GetxController {
       final cleanQueryDigits = query.replaceAll(RegExp(r'\D'), '');
 
       final matchesSearch =
+          isSearchingMode.value ||
           query.isEmpty ||
           user.name.toLowerCase().contains(query) ||
           user.userName.toLowerCase().contains(query) ||
@@ -227,18 +245,39 @@ class UserController extends GetxController {
   // Controller Actions
   void setSearchQuery(String query) {
     searchQuery.value = query;
+    if (searchController.text != query) {
+      searchController.text = query;
+      searchController.selection = TextSelection.fromPosition(
+        TextPosition(offset: searchController.text.length),
+      );
+    }
     currentPage.value = 1;
+  }
+
+  void searchUsers() {
+    if (isLoading.value) return;
+    final query = searchController.text.trim();
+    if (query.isEmpty) {
+      clearSearchQuery();
+      return;
+    }
+    isSearchingMode.value = true;
+    searchQuery.value = query;
+    currentPage.value = 1;
+    fetchUsers();
+  }
+
+  void clearSearchQuery() {
+    searchController.clear();
+    searchQuery.value = '';
+    isSearchingMode.value = false;
+    currentPage.value = 1;
+    fetchUsers();
   }
 
   void setSelectedRole(String role) {
     selectedRole.value = role;
     currentPage.value = 1;
-    final matchedRole = roles.firstWhereOrNull((r) => r.roleName == role);
-    // if (kDebugMode) {
-    //   debugPrint(
-    //     '[UserController] Selected Role: $role | roleKey: ${matchedRole?.roleKey}',
-    //   );
-    // }
   }
 
   void setSelectedStatus(String status) {

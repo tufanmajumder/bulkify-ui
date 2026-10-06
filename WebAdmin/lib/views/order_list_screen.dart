@@ -411,20 +411,20 @@ class OrderListScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 InkWell(
-                                  onTap: () => controller.clearSearchQuery(),
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: const Icon(
-                                    Icons.close,
-                                    size: 18,
-                                    color: Color(0xFF94A3B8),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                InkWell(
                                   onTap: () => controller.searchOrders(),
                                   borderRadius: BorderRadius.circular(12),
                                   child: const Icon(
                                     Icons.search,
+                                    size: 18,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                InkWell(
+                                  onTap: () => controller.clearSearchQuery(),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: const Icon(
+                                    Icons.close,
                                     size: 18,
                                     color: Color(0xFF94A3B8),
                                   ),
@@ -567,12 +567,14 @@ class OrderListScreen extends StatelessWidget {
                         final paginated = controller.paginatedOrders;
 
                         if (paginated.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.all(40.0),
+                          return Padding(
+                            padding: const EdgeInsets.all(40.0),
                             child: Center(
                               child: Text(
-                                'No orders found',
-                                style: TextStyle(
+                                controller.errorMessage.value.isNotEmpty
+                                    ? controller.errorMessage.value
+                                    : 'No orders found',
+                                style: const TextStyle(
                                   fontFamily: 'Public Sans',
                                   fontSize: 14,
                                   color: Color(0xFF94A3B8),
@@ -933,7 +935,10 @@ class OrderListScreen extends StatelessWidget {
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_arrow_right_rounded,
-                        onTap: (hasMorePage || currentPage < controller.totalPages) && !isLoading
+                        onTap:
+                            (hasMorePage ||
+                                    currentPage < controller.totalPages) &&
+                                !isLoading
                             ? () => controller.nextPage()
                             : null,
                       ),
@@ -941,7 +946,8 @@ class OrderListScreen extends StatelessWidget {
                       _buildPageNavBtn(
                         context,
                         Icons.keyboard_double_arrow_right_rounded,
-                        onTap: (currentPage < controller.totalPages) && !isLoading
+                        onTap:
+                            (currentPage < controller.totalPages) && !isLoading
                             ? () => controller.goToLastPage()
                             : null,
                       ),

@@ -49,10 +49,38 @@ class PaymentPageContext {
     }
 
     final pageVal = parseInt(findVal(['page', 'currentPage', 'current_page']));
-    final perPageVal = parseInt(findVal(['perpage', 'perPage', 'per_page', 'limit', 'pageSize', 'page_size']));
-    final totalVal = parseInt(findVal(['total', 'total_count', 'totalCount', 'count', 'total_records', 'totalRecords']));
-    final totalPagesVal = parseInt(findVal(['totalpages', 'total_pages', 'totalPages', 'pages']));
-    final hasMoreVal = parseBool(findVal(['hasmorepage', 'has_more_page', 'hasMorePage', 'has_more', 'hasMore']));
+    final perPageVal = parseInt(
+      findVal([
+        'perpage',
+        'perPage',
+        'per_page',
+        'limit',
+        'pageSize',
+        'page_size',
+      ]),
+    );
+    final totalVal = parseInt(
+      findVal([
+        'total',
+        'total_count',
+        'totalCount',
+        'count',
+        'total_records',
+        'totalRecords',
+      ]),
+    );
+    final totalPagesVal = parseInt(
+      findVal(['totalpages', 'total_pages', 'totalPages', 'pages']),
+    );
+    final hasMoreVal = parseBool(
+      findVal([
+        'hasmorepage',
+        'has_more_page',
+        'hasMorePage',
+        'has_more',
+        'hasMore',
+      ]),
+    );
 
     return PaymentPageContext(
       page: pageVal > 0 ? pageVal : 1,
@@ -241,9 +269,10 @@ class PaymentService extends GetxService {
     }
 
     if (responseData is Map) {
-      final Map<String, dynamic> respMap = Map<String, dynamic>.from(responseData);
-      final bool success =
-          respMap['success'] == true || respMap['code'] == 200;
+      final Map<String, dynamic> respMap = Map<String, dynamic>.from(
+        responseData,
+      );
+      final bool success = respMap['success'] == true || respMap['code'] == 200;
       final String message = respMap['message']?.toString() ?? 'success';
       final int code = respMap['code'] is int ? respMap['code'] : 200;
 
@@ -254,7 +283,12 @@ class PaymentService extends GetxService {
       if (dataObj is Map) {
         final Map<String, dynamic> dataMap = Map<String, dynamic>.from(dataObj);
         Map<String, dynamic>? pcMap;
-        for (final k in ['pagecontext', 'pageContext', 'page_context', 'pagination']) {
+        for (final k in [
+          'pagecontext',
+          'pageContext',
+          'page_context',
+          'pagination',
+        ]) {
           if (dataMap.containsKey(k) && dataMap[k] is Map) {
             pcMap = Map<String, dynamic>.from(dataMap[k] as Map);
             break;
@@ -294,7 +328,12 @@ class PaymentService extends GetxService {
 
       if (pageContext == null) {
         Map<String, dynamic>? pcMap;
-        for (final k in ['pagecontext', 'pageContext', 'page_context', 'pagination']) {
+        for (final k in [
+          'pagecontext',
+          'pageContext',
+          'page_context',
+          'pagination',
+        ]) {
           if (respMap.containsKey(k) && respMap[k] is Map) {
             pcMap = Map<String, dynamic>.from(respMap[k] as Map);
             break;
@@ -331,6 +370,191 @@ class PaymentService extends GetxService {
       message: 'Failed to parse response data',
       code: responseStatusCode ?? 500,
       payments: [],
+    );
+  }
+
+  /// Calls payments/v1/search-by-transactionref API endpoint.
+  Future<PaymentListResult> searchPayment({
+    required String transactionref,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+
+    if (activeToken.isEmpty) {
+      return PaymentListResult(
+        success: false,
+        message: 'Authentication token missing',
+        code: 401,
+        payments: [],
+        isTokenExpired: true,
+      );
+    }
+
+    final String targetUrl = "${ApiManager.baseUrl}${ApiManager.searchPayment}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+    final Map<String, dynamic> requestPayload = {
+      'transactionref': transactionref,
+    };
+    final Map<String, String> queryParams = {'transactionref': transactionref};
+
+    dynamic responseData;
+    int? responseStatusCode;
+
+    if (kIsWeb) {
+      try {
+        http.Response httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(requestPayload),
+        );
+
+        if (httpResponse.statusCode < 200 ||
+            httpResponse.statusCode >= 300 ||
+            httpResponse.body.isEmpty) {
+          final baseUri = Uri.parse(targetUrl);
+          final uri = baseUri.replace(
+            queryParameters: {...baseUri.queryParameters, ...queryParams},
+          );
+          httpResponse = await http.get(uri, headers: requestHeaders);
+        }
+
+        responseStatusCode = httpResponse.statusCode;
+
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (_) {}
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.searchPayment,
+          data: jsonEncode(requestPayload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        responseStatusCode = response.statusCode;
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic> || response.data is List) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        responseStatusCode = e.response?.statusCode;
+        try {
+          final response = await dio.get(
+            ApiManager.searchPayment,
+            queryParameters: queryParams,
+            options: Options(
+              contentType: Headers.jsonContentType,
+              headers: requestHeaders,
+            ),
+          );
+          responseStatusCode = response.statusCode;
+          if (response.data != null) {
+            if (response.data is Map<String, dynamic> ||
+                response.data is List) {
+              responseData = response.data;
+            } else if (response.data is String) {
+              responseData = jsonDecode(response.data);
+            }
+          }
+        } catch (_) {
+          if (e.response?.data != null) {
+            if (e.response!.data is Map<String, dynamic> ||
+                e.response!.data is List) {
+              responseData = e.response!.data;
+            } else if (e.response!.data is String) {
+              try {
+                responseData = jsonDecode(e.response!.data);
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (_isTokenExpired(responseStatusCode, responseData)) {
+      return PaymentListResult(
+        success: false,
+        message: 'Session expired',
+        code: 401,
+        payments: [],
+        isTokenExpired: true,
+      );
+    }
+
+    List<PaymentModel> paymentsList = [];
+    if (responseData != null) {
+      dynamic dataObj;
+      if (responseData is Map &&
+          responseData.containsKey('data') &&
+          responseData['data'] != null) {
+        dataObj = responseData['data'];
+      } else {
+        dataObj = responseData;
+      }
+
+      bool isValidPayment(PaymentModel p) {
+        return p.orderId.trim().isNotEmpty ||
+            p.paymentId.trim().isNotEmpty ||
+            p.utrRrn.trim().isNotEmpty;
+      }
+
+      if (dataObj is Map<String, dynamic> || dataObj is Map) {
+        try {
+          final p = PaymentModel.fromJson(Map<String, dynamic>.from(dataObj));
+          if (isValidPayment(p)) {
+            paymentsList = [p];
+          }
+        } catch (_) {}
+      } else if (dataObj is List) {
+        for (var item in dataObj) {
+          if (item is Map) {
+            try {
+              final p = PaymentModel.fromJson(Map<String, dynamic>.from(item));
+              if (isValidPayment(p)) {
+                paymentsList.add(p);
+              }
+            } catch (_) {}
+          }
+        }
+      }
+    }
+
+    final bool success =
+        paymentsList.isNotEmpty &&
+        (responseData is Map
+            ? (responseData['success'] == true || responseData['code'] == 200)
+            : true);
+    final String apiMsg =
+        (responseData is Map && responseData['message'] != null)
+        ? responseData['message'].toString().trim()
+        : '';
+    final String message = paymentsList.isEmpty
+        ? (apiMsg.isNotEmpty && apiMsg.toLowerCase() != 'success'
+              ? apiMsg
+              : 'Payment record not found')
+        : (apiMsg.isNotEmpty ? apiMsg : 'success');
+
+    return PaymentListResult(
+      success: success,
+      message: message,
+      code: responseStatusCode ?? (paymentsList.isEmpty ? 404 : 200),
+      payments: paymentsList,
     );
   }
 
