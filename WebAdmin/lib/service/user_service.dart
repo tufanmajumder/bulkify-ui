@@ -13,22 +13,40 @@ import 'package:admin_app/utils/api_manager.dart';
 class PageContextModel {
   final int page;
   final int perpage;
+  final int totalRecords;
+  final int totalPages;
   final bool hasMorePage;
 
-  PageContextModel({this.page = 1, this.perpage = 2, this.hasMorePage = false});
+  PageContextModel({
+    this.page = 1,
+    this.perpage = 10,
+    this.totalRecords = 0,
+    this.totalPages = 1,
+    this.hasMorePage = false,
+  });
 
   factory PageContextModel.fromJson(Map<String, dynamic> json) {
-    int parseInt(dynamic val) {
+    int parseInt(dynamic val, {int defaultValue = 0}) {
       if (val is int) return val;
       if (val is double) return val.toInt();
-      if (val != null) return int.tryParse(val.toString()) ?? 1;
-      return 1;
+      if (val != null) return int.tryParse(val.toString()) ?? defaultValue;
+      return defaultValue;
     }
 
     return PageContextModel(
-      page: parseInt(json['page']),
-      perpage: parseInt(json['perpage']),
-      hasMorePage: json['hasmorepage'] == true || json['has_more_page'] == true,
+      page: parseInt(json['page'], defaultValue: 1),
+      perpage: parseInt(json['perpage'], defaultValue: 10),
+      totalRecords: parseInt(
+        json['totalrecords'] ?? json['total_records'] ?? json['total'],
+      ),
+      totalPages: parseInt(
+        json['totalpages'] ?? json['total_pages'],
+        defaultValue: 1,
+      ),
+      hasMorePage:
+          json['hasmorepage'] == true ||
+          json['has_more_page'] == true ||
+          json['hasMorePage'] == true,
     );
   }
 }
@@ -121,9 +139,11 @@ class UserService extends GetxService {
   Future<UserListResult> getUserList({
     int page = 1,
     int perpage = 100,
-    String? search,
-    String? role,
-    String? status,
+    String? rolekey,
+    String? onlineStatus,
+    // String? search,
+    // String? role,
+    // String? status,
     String? token,
   }) async {
     final String activeToken = (token != null && token.trim().isNotEmpty)
@@ -152,11 +172,14 @@ class UserService extends GetxService {
     final Map<String, dynamic> requestPayload = {
       'page': page,
       'perpage': perpage,
-      if (search != null && search.isNotEmpty) 'search': search,
-      if (role != null && role.isNotEmpty) 'role': role,
-      if (status != null && status.isNotEmpty) 'status': status,
+      'rolekey': rolekey == "All" ? "" : rolekey,
+      'onlinestatus': onlineStatus == "All"
+          ? ""
+          : onlineStatus == "Online"
+          ? "online"
+          : "offline",
     };
-
+    //print("request code...$requestPayload");
     dynamic responseData;
     int? responseStatusCode;
 
@@ -477,8 +500,9 @@ class UserService extends GetxService {
           }
         } catch (_) {
           try {
-            final userModel =
-                UserModel.fromJson(Map<String, dynamic>.from(dataObj));
+            final userModel = UserModel.fromJson(
+              Map<String, dynamic>.from(dataObj),
+            );
             if (isValidUser(userModel)) {
               usersList = [userModel];
             }
@@ -497,8 +521,9 @@ class UserService extends GetxService {
               }
             } catch (_) {
               try {
-                final userModel =
-                    UserModel.fromJson(Map<String, dynamic>.from(item));
+                final userModel = UserModel.fromJson(
+                  Map<String, dynamic>.from(item),
+                );
                 if (isValidUser(userModel)) {
                   usersList.add(userModel);
                 }
@@ -509,24 +534,58 @@ class UserService extends GetxService {
       }
     }
 
-    final bool success = usersList.isNotEmpty &&
+    UserSummaryModel? summaryModel;
+    PageContextModel? pageCtx;
+
+    if (responseData is Map) {
+      final Map<String, dynamic> resMap = Map<String, dynamic>.from(
+        responseData,
+      );
+      final rawSummary =
+          resMap['summary'] ??
+          (resMap['data'] is Map ? resMap['data']['summary'] : null);
+      if (rawSummary != null && rawSummary is Map) {
+        try {
+          summaryModel = UserSummaryModel.fromJson(
+            Map<String, dynamic>.from(rawSummary),
+          );
+        } catch (_) {}
+      }
+
+      final rawPageCtx =
+          resMap['pagecontext'] ??
+          resMap['page_context'] ??
+          (resMap['data'] is Map ? resMap['data']['pagecontext'] : null);
+      if (rawPageCtx != null && rawPageCtx is Map) {
+        try {
+          pageCtx = PageContextModel.fromJson(
+            Map<String, dynamic>.from(rawPageCtx),
+          );
+        } catch (_) {}
+      }
+    }
+
+    final bool success =
+        usersList.isNotEmpty &&
         (responseData is Map
             ? (responseData['success'] == true || responseData['code'] == 200)
             : true);
     final String apiMsg =
         (responseData is Map && responseData['message'] != null)
-            ? responseData['message'].toString().trim()
-            : '';
+        ? responseData['message'].toString().trim()
+        : '';
     final String message = usersList.isEmpty
         ? (apiMsg.isNotEmpty && apiMsg.toLowerCase() != 'success'
-            ? apiMsg
-            : 'User not found')
+              ? apiMsg
+              : 'User not found')
         : (apiMsg.isNotEmpty ? apiMsg : 'success');
 
     return UserListResult(
       success: success,
       message: message,
       code: responseStatusCode ?? (usersList.isEmpty ? 404 : 200),
+      summary: summaryModel,
+      pageContext: pageCtx,
       users: usersList,
     );
   }

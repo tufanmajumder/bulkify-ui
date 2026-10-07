@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/models/payment_model.dart';
 import 'package:admin_app/service/payment_service.dart';
@@ -9,6 +9,7 @@ class PaymentDetailsController extends GetxController {
   final RxString errorMessage = ''.obs;
 
   late final PaymentService _paymentService;
+  bool _isRedirecting = false;
 
   @override
   void onInit() {
@@ -17,26 +18,69 @@ class PaymentDetailsController extends GetxController {
         ? Get.find<PaymentService>()
         : Get.put(PaymentService());
 
-    // Check if initial payment model was passed in arguments
+    String pKey = '';
     final arg = Get.arguments;
     if (arg is PaymentModel) {
       paymentDetail.value = arg;
-      if (arg.paymentKey.isNotEmpty) {
-        fetchPaymentDetails(arg.paymentKey);
-      }
+      pKey = arg.paymentKey;
+    } else if (arg is String) {
+      pKey = arg;
+    } else if (Get.parameters.containsKey('paymentKey')) {
+      pKey = Get.parameters['paymentKey'] ?? '';
+    } else if (Get.parameters.containsKey('key')) {
+      pKey = Get.parameters['key'] ?? '';
     }
+
+    if (pKey.startsWith('#')) {
+      pKey = pKey.substring(1);
+    }
+    pKey = pKey.trim();
+
+    if (pKey.isNotEmpty) {
+      fetchPaymentDetails(pKey);
+    } else {
+      _redirectToPaymentList('Payment key not found');
+    }
+  }
+
+  void _redirectToPaymentList([String? message]) {
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.currentRoute != '/payments') {
+        Get.offAllNamed('/payments');
+      }
+      if (message != null && message.isNotEmpty) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          Get.snackbar(
+            'Payment Not Found',
+            message,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: const Color(0xFFEF4444),
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          );
+        });
+      }
+    });
   }
 
   /// Calls payments/v1/get-by-key API endpoint using paymentkey payload
   Future<void> fetchPaymentDetails(String paymentKey) async {
-    if (paymentKey.trim().isEmpty) return;
+    final cleanKey = paymentKey.trim();
+    if (cleanKey.isEmpty) {
+      _redirectToPaymentList('Payment key not found');
+      return;
+    }
 
     isLoading.value = true;
     errorMessage.value = '';
 
     try {
       final result = await _paymentService.getPaymentDetails(
-        paymentKey: paymentKey.trim(),
+        paymentKey: cleanKey,
       );
 
       if (result.isTokenExpired) {
@@ -52,7 +96,7 @@ class PaymentDetailsController extends GetxController {
         paymentDetail.value = PaymentModel(
           paymentKey: fetched.paymentKey.isNotEmpty
               ? fetched.paymentKey
-              : (current?.paymentKey ?? paymentKey),
+              : (current?.paymentKey ?? cleanKey),
           orderId: (fetched.orderId.isNotEmpty && fetched.orderId != '-')
               ? fetched.orderId
               : (current?.orderId ?? '-'),
@@ -103,12 +147,15 @@ class PaymentDetailsController extends GetxController {
         );
       } else {
         errorMessage.value = result.message;
+        _redirectToPaymentList(
+          result.message.isNotEmpty
+              ? result.message
+              : 'Payment not found for key: $cleanKey',
+        );
       }
     } catch (e) {
-      // if (kDebugMode) {
-      //   debugPrint('[PaymentDetailsController] Error fetching details: $e');
-      // }
       errorMessage.value = 'Failed to load payment details';
+      _redirectToPaymentList('Failed to load payment details');
     } finally {
       isLoading.value = false;
     }

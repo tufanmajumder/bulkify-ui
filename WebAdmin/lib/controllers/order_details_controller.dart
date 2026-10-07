@@ -175,21 +175,58 @@ class OrderDetailsController extends GetxController {
       }
     } else if (args is String) {
       salesorderId = args;
+    } else if (Get.parameters.containsKey('orderkey')) {
+      salesorderId = Get.parameters['orderkey'] ?? '';
+    } else if (Get.parameters.containsKey('id')) {
+      salesorderId = Get.parameters['id'] ?? '';
     }
 
     if (salesorderId.startsWith('#')) {
       salesorderId = salesorderId.substring(1);
     }
 
+    salesorderId = salesorderId.trim();
+
     if (salesorderId.isNotEmpty) {
       fetchOrderDetails(salesorderId);
+    } else {
+      _redirectToOrderList('Order key not found');
     }
+  }
+
+  bool _isRedirecting = false;
+
+  void _redirectToOrderList([String? message]) {
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.currentRoute != '/orders') {
+        Get.offAllNamed('/orders');
+      }
+      if (message != null && message.isNotEmpty) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          Get.snackbar(
+            'Order Not Found',
+            message,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: const Color(0xFFEF4444),
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          );
+        });
+      }
+    });
   }
 
   Future<void> fetchOrderDetails(String salesorderId) async {
     //print("salesorderId...$salesorderId");
     final cleanId = salesorderId.trim();
-    if (cleanId.isEmpty) return;
+    if (cleanId.isEmpty) {
+      _redirectToOrderList('Order key not found');
+      return;
+    }
 
     isLoading.value = true;
     isError.value = false;
@@ -199,17 +236,45 @@ class OrderDetailsController extends GetxController {
         orderKey: cleanId,
       );
       if (responseMap != null) {
+        final isSuccess = responseMap['success'] ?? responseMap['status'];
+        final message =
+            (responseMap['message'] ??
+                    responseMap['error'] ??
+                    responseMap['msg'] ??
+                    '')
+                .toString();
+
+        if (isSuccess == false ||
+            isSuccess == 0 ||
+            message.toLowerCase().contains('not found') ||
+            message.toLowerCase().contains('invalid') ||
+            message.toLowerCase().contains('no order')) {
+          isError.value = true;
+          _redirectToOrderList(
+            message.isNotEmpty
+                ? message
+                : 'Order not found for key: $cleanId',
+          );
+          return;
+        }
+
         _populateFromApiResponse(responseMap);
+
+        if (orderNo.value.isEmpty && orderItems.isEmpty) {
+          isError.value = true;
+          _redirectToOrderList('Order not found for key: $cleanId');
+          return;
+        }
       } else {
-        // if (kDebugMode) {
-        //   debugPrint('[OrderDetailsController] API returned null response');
-        // }
+        isError.value = true;
+        _redirectToOrderList('Order not found for key: $cleanId');
       }
     } catch (e) {
       // if (kDebugMode) {
       //   debugPrint('[OrderDetailsController] Error fetching details: $e');
       // }
       isError.value = true;
+      _redirectToOrderList('Failed to load order details');
     } finally {
       isLoading.value = false;
     }
@@ -950,6 +1015,25 @@ class OrderDetailsController extends GetxController {
       }
       return inputString;
     }
+  }
+
+  String extractDateOnly(String fullDateStr) {
+    final trimmed = fullDateStr.trim();
+    if (trimmed.isEmpty || trimmed == 'null' || trimmed == '-') return '-';
+    final parts = trimmed.split(' ');
+    return parts.isNotEmpty ? parts[0] : trimmed;
+  }
+
+  String extractTimeOnly(String fullTimeStr) {
+    final trimmed = fullTimeStr.trim();
+    if (trimmed.isEmpty || trimmed == 'null' || trimmed == '-') return '-';
+    final parts = trimmed.split(' ');
+    if (parts.length >= 3) {
+      return '${parts[1]} ${parts[2]}';
+    } else if (parts.length == 2) {
+      return parts[1];
+    }
+    return '-';
   }
 
   // String formatDateOnly(String raw) {

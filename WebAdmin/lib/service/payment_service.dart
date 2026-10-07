@@ -146,6 +146,7 @@ class PaymentService extends GetxService {
   Future<PaymentListResult> getPaymentList({
     int page = 1,
     int perpage = 2,
+    String selectedStatus = "",
     String? token,
   }) async {
     final String activeToken = (token != null && token.trim().isNotEmpty)
@@ -174,7 +175,10 @@ class PaymentService extends GetxService {
     final Map<String, dynamic> requestPayload = {
       'page': page,
       'perpage': perpage,
+      "paymentstatus": selectedStatus == "All" ? "" : selectedStatus,
     };
+
+    //print("requestPayload....$requestPayload");
 
     dynamic responseData;
     int? responseStatusCode;
@@ -283,12 +287,7 @@ class PaymentService extends GetxService {
       if (dataObj is Map) {
         final Map<String, dynamic> dataMap = Map<String, dynamic>.from(dataObj);
         Map<String, dynamic>? pcMap;
-        for (final k in [
-          'pagecontext',
-          'pageContext',
-          'page_context',
-          'pagination',
-        ]) {
+        for (final k in ['pagecontext']) {
           if (dataMap.containsKey(k) && dataMap[k] is Map) {
             pcMap = Map<String, dynamic>.from(dataMap[k] as Map);
             break;
@@ -328,12 +327,7 @@ class PaymentService extends GetxService {
 
       if (pageContext == null) {
         Map<String, dynamic>? pcMap;
-        for (final k in [
-          'pagecontext',
-          'pageContext',
-          'page_context',
-          'pagination',
-        ]) {
+        for (final k in ['pagecontext']) {
           if (respMap.containsKey(k) && respMap[k] is Map) {
             pcMap = Map<String, dynamic>.from(respMap[k] as Map);
             break;
@@ -498,31 +492,84 @@ class PaymentService extends GetxService {
     }
 
     List<PaymentModel> paymentsList = [];
+    String message = 'Payment record not found';
+    int statusCode = responseStatusCode ?? 404;
+
     if (responseData != null) {
-      dynamic dataObj;
-      if (responseData is Map &&
-          responseData.containsKey('data') &&
-          responseData['data'] != null) {
-        dataObj = responseData['data'];
-      } else {
-        dataObj = responseData;
-      }
+      if (responseData is Map) {
+        final Map<String, dynamic> respMap =
+            Map<String, dynamic>.from(responseData);
+        final bool isSuccess =
+            respMap['success'] == true || respMap['code'] == 200;
+        final String apiMsg = respMap['message']?.toString().trim() ?? '';
+        statusCode = respMap['code'] is int
+            ? respMap['code']
+            : (responseStatusCode ?? 400);
 
-      bool isValidPayment(PaymentModel p) {
-        return p.orderId.trim().isNotEmpty ||
-            p.paymentId.trim().isNotEmpty ||
-            p.utrRrn.trim().isNotEmpty;
-      }
+        final dataObj = respMap['data'];
 
-      if (dataObj is Map<String, dynamic> || dataObj is Map) {
-        try {
-          final p = PaymentModel.fromJson(Map<String, dynamic>.from(dataObj));
-          if (isValidPayment(p)) {
-            paymentsList = [p];
+        bool isValidPayment(PaymentModel p) {
+          final oId = p.orderId.trim();
+          final pId = p.paymentId.trim();
+          final uRef = p.utrRrn.trim();
+          return (oId.isNotEmpty && oId != '-') ||
+              (pId.isNotEmpty && pId != '-') ||
+              (uRef.isNotEmpty && uRef != '-');
+        }
+
+        if (isSuccess && dataObj != null) {
+          if (dataObj is Map<String, dynamic> || dataObj is Map) {
+            try {
+              final p = PaymentModel.fromJson(
+                Map<String, dynamic>.from(dataObj),
+              );
+              if (isValidPayment(p)) {
+                paymentsList = [p];
+              }
+            } catch (_) {}
+          } else if (dataObj is List) {
+            for (var item in dataObj) {
+              if (item is Map) {
+                try {
+                  final p = PaymentModel.fromJson(
+                    Map<String, dynamic>.from(item),
+                  );
+                  if (isValidPayment(p)) {
+                    paymentsList.add(p);
+                  }
+                } catch (_) {}
+              }
+            }
           }
-        } catch (_) {}
-      } else if (dataObj is List) {
-        for (var item in dataObj) {
+        }
+
+        if (paymentsList.isNotEmpty) {
+          message = apiMsg.isNotEmpty ? apiMsg : 'success';
+          statusCode = 200;
+        } else {
+          message = apiMsg.isNotEmpty && apiMsg.toLowerCase() != 'success'
+              ? apiMsg
+              : 'Payment not found';
+          if (statusCode == 200) statusCode = 404;
+        }
+
+        return PaymentListResult(
+          success: paymentsList.isNotEmpty,
+          message: message,
+          code: statusCode,
+          payments: paymentsList,
+        );
+      } else if (responseData is List) {
+        bool isValidPayment(PaymentModel p) {
+          final oId = p.orderId.trim();
+          final pId = p.paymentId.trim();
+          final uRef = p.utrRrn.trim();
+          return (oId.isNotEmpty && oId != '-') ||
+              (pId.isNotEmpty && pId != '-') ||
+              (uRef.isNotEmpty && uRef != '-');
+        }
+
+        for (var item in responseData) {
           if (item is Map) {
             try {
               final p = PaymentModel.fromJson(Map<String, dynamic>.from(item));
@@ -532,29 +579,21 @@ class PaymentService extends GetxService {
             } catch (_) {}
           }
         }
+
+        return PaymentListResult(
+          success: paymentsList.isNotEmpty,
+          message: paymentsList.isNotEmpty ? 'success' : 'Payment not found',
+          code: paymentsList.isNotEmpty ? 200 : 404,
+          payments: paymentsList,
+        );
       }
     }
 
-    final bool success =
-        paymentsList.isNotEmpty &&
-        (responseData is Map
-            ? (responseData['success'] == true || responseData['code'] == 200)
-            : true);
-    final String apiMsg =
-        (responseData is Map && responseData['message'] != null)
-        ? responseData['message'].toString().trim()
-        : '';
-    final String message = paymentsList.isEmpty
-        ? (apiMsg.isNotEmpty && apiMsg.toLowerCase() != 'success'
-              ? apiMsg
-              : 'Payment record not found')
-        : (apiMsg.isNotEmpty ? apiMsg : 'success');
-
     return PaymentListResult(
-      success: success,
+      success: false,
       message: message,
-      code: responseStatusCode ?? (paymentsList.isEmpty ? 404 : 200),
-      payments: paymentsList,
+      code: statusCode,
+      payments: [],
     );
   }
 
@@ -708,13 +747,7 @@ class PaymentService extends GetxService {
       if (code == 401 || code == 403 || code == '401' || code == '403') {
         return true;
       }
-      final msg =
-          (responseData['message'] ??
-                  responseData['error'] ??
-                  responseData['msg'] ??
-                  '')
-              .toString()
-              .toLowerCase();
+      final msg = (responseData['message']).toString().toLowerCase();
       if (msg.contains('token expired') ||
           msg.contains('expired token') ||
           msg.contains('unauthorized') ||

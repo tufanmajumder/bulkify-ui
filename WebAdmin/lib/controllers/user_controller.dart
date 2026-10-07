@@ -30,6 +30,9 @@ class UserController extends GetxController {
   // Pagination states
   final RxInt currentPage = 1.obs;
   final RxInt rowsPerPage = 10.obs;
+  final RxBool hasMorePage = false.obs;
+  final RxInt totalUsers = 0.obs;
+  final RxInt totalPages = 1.obs;
 
   late final UserService _userService;
 
@@ -71,6 +74,8 @@ class UserController extends GetxController {
   Future<void> fetchUsers({int page = 1, int? perpage}) async {
     isLoading.value = true;
     errorMessage.value = '';
+    final int targetPerPage = perpage ?? rowsPerPage.value;
+    rowsPerPage.value = targetPerPage;
 
     try {
       final UserListResult result;
@@ -81,12 +86,29 @@ class UserController extends GetxController {
           users.clear();
           errorMessage.value =
               (result.message.isNotEmpty && result.message != 'success')
-                  ? result.message
-                  : 'User not found';
+              ? result.message
+              : 'User not found';
           return;
         }
       } else {
-        result = await _userService.getUserList(page: 1, perpage: 500);
+        String targetRoleKey = selectedRole.value;
+        if (targetRoleKey != 'All' && targetRoleKey != 'Select Role') {
+          final matchedRole = roles.firstWhereOrNull(
+            (r) =>
+                r.roleName.toLowerCase() == targetRoleKey.toLowerCase() ||
+                r.roleKey == targetRoleKey,
+          );
+          if (matchedRole != null && matchedRole.roleKey.isNotEmpty) {
+            targetRoleKey = matchedRole.roleKey;
+          }
+        }
+
+        result = await _userService.getUserList(
+          page: page,
+          perpage: targetPerPage,
+          onlineStatus: selectedStatus.value,
+          rolekey: targetRoleKey,
+        );
       }
 
       if (result.isTokenExpired) {
@@ -100,12 +122,39 @@ class UserController extends GetxController {
           summary.value = result.summary;
         }
         users.assignAll(result.users);
-        if (currentPage.value > totalPages) {
-          currentPage.value = 1;
+
+        if (result.pageContext != null) {
+          currentPage.value = result.pageContext!.page;
+          hasMorePage.value = result.pageContext!.hasMorePage;
+          if (result.pageContext!.totalPages > 0) {
+            totalPages.value = result.pageContext!.totalPages;
+          } else if (result.pageContext!.totalRecords > 0) {
+            totalPages.value =
+                (result.pageContext!.totalRecords / targetPerPage).ceil();
+          } else {
+            totalPages.value = hasMorePage.value
+                ? currentPage.value + 1
+                : currentPage.value;
+          }
+
+          if (result.pageContext!.totalRecords > 0) {
+            totalUsers.value = result.pageContext!.totalRecords;
+          } else if (result.pageContext!.totalPages > 0) {
+            totalUsers.value =
+                result.pageContext!.totalPages * targetPerPage;
+          }
+        } else {
+          currentPage.value = page;
+          hasMorePage.value = result.users.length >= targetPerPage;
+          totalUsers.value = 0;
+          totalPages.value = hasMorePage.value
+              ? currentPage.value + 1
+              : currentPage.value;
         }
       } else {
-        errorMessage.value =
-            result.message.isNotEmpty ? result.message : 'User not found';
+        errorMessage.value = result.message.isNotEmpty
+            ? result.message
+            : 'User not found';
         if (users.isEmpty && !isSearchingMode.value) {
           _loadInitialUsers();
         }
@@ -176,7 +225,14 @@ class UserController extends GetxController {
       final matchesRole =
           selectedRole.value == 'All' ||
           selectedRole.value == 'Select Role' ||
-          user.role.toLowerCase() == selectedRole.value.toLowerCase();
+          user.role.toLowerCase() == selectedRole.value.toLowerCase() ||
+          roles.any(
+            (r) =>
+                (r.roleName.toLowerCase() == selectedRole.value.toLowerCase() ||
+                    r.roleKey == selectedRole.value) &&
+                (r.roleKey == user.role ||
+                    r.roleName.toLowerCase() == user.role.toLowerCase()),
+          );
 
       final matchesStatus =
           selectedStatus.value == 'All' ||
@@ -193,24 +249,44 @@ class UserController extends GetxController {
 
   // Paginated Users Getter for the current page
   List<UserModel> get paginatedUsers {
-    final list = filteredUsers;
-    if (list.isEmpty) return [];
-    final start = (currentPage.value - 1) * rowsPerPage.value;
-    if (start >= list.length) return [];
-    final end = (start + rowsPerPage.value).clamp(0, list.length);
-    return list.sublist(start, end);
+    final filtered = filteredUsers;
+    if (filtered.isEmpty) return [];
+
+    // If backend returns more items than rowsPerPage (e.g. client-side filtering), slice locally
+    if (filtered.length > rowsPerPage.value) {
+      int start = (currentPage.value - 1) * rowsPerPage.value;
+      if (start < 0 || start >= filtered.length) {
+        return filtered;
+      }
+      int end = start + rowsPerPage.value;
+      if (end > filtered.length) {
+        end = filtered.length;
+      }
+      return filtered.sublist(start, end);
+    }
+
+    return filtered;
   }
 
-  int get totalPages {
-    final count = filteredUsers.length;
-    if (count == 0) return 1;
-    return (count / rowsPerPage.value).ceil();
-  }
+  int get computedTotalPages {
+    if (totalPages.value > 0) {
+      return totalPages.value;
+    }
+    if (totalUsers.value > 0 && rowsPerPage.value > 0) {
+      final t = (totalUsers.value / rowsPerPage.value).ceil();
+      return t > 0 ? t : 1;
+    }
 
-  bool get hasMorePage => currentPage.value < totalPages;
+    int pages = currentPage.value;
+    if (hasMorePage.value) {
+      pages = currentPage.value + 1;
+    }
+
+    return pages > 0 ? pages : 1;
+  }
 
   List<int> get visiblePageNumbers {
-    final maxPage = totalPages;
+    final maxPage = computedTotalPages;
     if (maxPage <= 3) {
       return List.generate(maxPage > 0 ? maxPage : 1, (i) => i + 1);
     }
@@ -238,8 +314,15 @@ class UserController extends GetxController {
 
   int get endEntryIndex {
     if (filteredUsers.isEmpty) return 0;
-    final end = currentPage.value * rowsPerPage.value;
-    return end > filteredUsers.length ? filteredUsers.length : end;
+    return (currentPage.value - 1) * rowsPerPage.value +
+        paginatedUsers.length;
+  }
+
+  int get displayTotalCount {
+    if (totalUsers.value > 0) return totalUsers.value;
+    if (filteredUsers.isEmpty) return 0;
+    return (currentPage.value - 1) * rowsPerPage.value +
+        paginatedUsers.length;
   }
 
   // Controller Actions
@@ -278,49 +361,51 @@ class UserController extends GetxController {
   void setSelectedRole(String role) {
     selectedRole.value = role;
     currentPage.value = 1;
+    fetchUsers();
   }
 
   void setSelectedStatus(String status) {
     selectedStatus.value = status;
     currentPage.value = 1;
+    fetchUsers();
   }
 
   void setPage(int page) {
-    if (page >= 1 &&
-        page <= totalPages &&
-        page != currentPage.value &&
-        !isLoading.value) {
-      currentPage.value = page;
+    if (page >= 1 && page != currentPage.value && !isLoading.value) {
+      fetchUsers(page: page, perpage: rowsPerPage.value);
     }
   }
 
   void nextPage() {
-    if (currentPage.value < totalPages && !isLoading.value) {
-      currentPage.value = currentPage.value + 1;
+    if ((hasMorePage.value || currentPage.value < computedTotalPages) &&
+        !isLoading.value) {
+      fetchUsers(page: currentPage.value + 1, perpage: rowsPerPage.value);
     }
   }
 
   void prevPage() {
     if (currentPage.value > 1 && !isLoading.value) {
-      currentPage.value = currentPage.value - 1;
+      fetchUsers(page: currentPage.value - 1, perpage: rowsPerPage.value);
     }
   }
 
   void goToFirstPage() {
     if (currentPage.value > 1 && !isLoading.value) {
-      setPage(1);
+      fetchUsers(page: 1, perpage: rowsPerPage.value);
     }
   }
 
   void goToLastPage() {
-    if (currentPage.value < totalPages && !isLoading.value) {
-      setPage(totalPages);
+    if (isLoading.value) return;
+    final targetLastPage = computedTotalPages;
+    if (targetLastPage >= 1 && targetLastPage != currentPage.value) {
+      fetchUsers(page: targetLastPage, perpage: rowsPerPage.value);
     }
   }
 
   void setRowsPerPage(int rows) {
     rowsPerPage.value = rows;
-    currentPage.value = 1;
+    fetchUsers(page: 1, perpage: rows);
   }
 
   /// Calls userAdd API endpoint (users/v1/add) via UserService with email, fullname, mobile, dynamic rolekey and status

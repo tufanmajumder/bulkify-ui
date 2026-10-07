@@ -312,7 +312,7 @@ class OrderListScreen extends StatelessWidget {
                         itemBuilder: (context) => [2, 5, 10, 20, 50].map((r) {
                           return PopupMenuItem<int>(
                             value: r,
-                            child: Text('$r rows per page'),
+                            child: Text('$r'),
                           );
                         }).toList(),
                         child: Container(

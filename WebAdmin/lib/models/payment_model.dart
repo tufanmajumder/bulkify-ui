@@ -36,7 +36,15 @@ class PaymentModel {
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
-    final rawAmount = json['paymentamount'] ?? json['totalamount'] ?? json['amount'];
+    String parseString(dynamic val, {String fallback = '-'}) {
+      if (val == null) return fallback;
+      final str = val.toString().trim();
+      if (str.isEmpty || str == 'null') return fallback;
+      return str;
+    }
+
+    final rawAmount =
+        json['paymentamount'] ?? json['totalamount'] ?? json['amount'];
     String formattedAmount = '0.00';
     if (rawAmount != null) {
       if (rawAmount is num) {
@@ -50,57 +58,45 @@ class PaymentModel {
         if (n != null) {
           formattedAmount = n.toStringAsFixed(2);
         } else {
-          formattedAmount = str;
+          formattedAmount = str.isEmpty ? '-' : str;
         }
       }
     }
 
-    final rawCreated = (json['createdon']).toString();
+    final rawCreated = (json['createdon'] ?? '').toString().trim();
     String dateStr = '-';
     String timeStr = '-';
 
-    if (rawCreated.isNotEmpty && rawCreated != '-') {
-      DateTime time = DateTime.parse(rawCreated);
-      // 2. Format directly using UTC time (forces it to stay 12:24)
-      String formattedTime = DateFormat('hh:mm:ss a').format(time.toUtc());
-      //print(formattedTime);
-      timeStr = formattedTime;
-      dateStr = DateFormat(
-        'dd-MM-yyyy',
-      ).format(DateTime.parse(rawCreated.split("T")[0]));
+    if (rawCreated.isNotEmpty && rawCreated != '-' && rawCreated != 'null') {
+      try {
+        DateTime time = DateTime.parse(rawCreated);
+        String formattedTime = DateFormat('hh:mm:ss a').format(time.toUtc());
+        timeStr = formattedTime;
+        dateStr = DateFormat(
+          'dd-MM-yyyy',
+        ).format(DateTime.parse(rawCreated.split("T")[0]));
+      } catch (_) {
+        dateStr = '-';
+        timeStr = '-';
+      }
     } else {
       dateStr = '-';
       timeStr = '-';
     }
 
-    // final terminalVal = json['terminal'];
-    // final channelVal = json['channel'];
-
     return PaymentModel(
-      paymentKey: (json['paymentkey'] ?? "-").toString(),
-      orderId: (json['salesorderid'] ?? '-').toString(),
-      paymentId: (json['paymentid'] ?? '-').toString(),
-      utrRrn: (json['transactionref'] ?? '-').toString(),
-      paymentMethod: (json['paymentmode'] ?? '-').toString(),
-      customerName: (json['customername'] ?? 'Customer').toString(),
+      paymentKey: parseString(json['paymentkey']),
+      orderId: parseString(json['salesorderid']),
+      paymentId: parseString(json['paymentid']),
+      utrRrn: parseString(json['transactionref']),
+      paymentMethod: parseString(json['paymentmode']),
+      customerName: parseString(json['customername']),
       createdOn: rawCreated,
       date: dateStr,
       time: timeStr,
-      status: (json['paymentstatus'] ?? 'Pending').toString(),
+      status: parseString(json['paymentstatus'], fallback: 'Pending'),
       amount: formattedAmount,
-      isoCurrency: (json['isocurrency'] ?? 'INR').toString(),
-      // terminal:
-      //     (terminalVal != null &&
-      //         terminalVal.toString().trim().isNotEmpty &&
-      //         terminalVal.toString() != 'null')
-      //     ? terminalVal.toString()
-      //     : '-',
-      // channel:
-      //     (channelVal != null &&
-      //         channelVal.toString().trim().isNotEmpty &&
-      //         channelVal.toString() != 'null')
-      //     ? channelVal.toString()
-      //     : '-',
+      isoCurrency: parseString(json['isocurrency'], fallback: 'INR'),
     );
   }
 

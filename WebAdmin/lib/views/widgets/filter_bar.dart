@@ -43,50 +43,48 @@ class FilterBar extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Obx(
-                    () => Container(
-                      height: controlHeight,
-                      width: 72,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: borderColor),
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.white,
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          isExpanded: true,
-                          value: controller.rowsPerPage.value,
-                          icon: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: mutedTextColor,
-                            size: 20,
+                    () => PopupMenuButton<int>(
+                      onSelected: (rows) => controller.setRowsPerPage(rows),
+                      itemBuilder: (context) => [2, 10, 25, 50].map((r) {
+                        return PopupMenuItem<int>(
+                          value: r,
+                          child: Text(
+                            '$r',
+                            style: const TextStyle(
+                              fontFamily: 'Public Sans',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                          style: TextStyle(
-                            color: const Color(0xFF475569),
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          onChanged: (int? newValue) {
-                            if (newValue != null) {
-                              controller.setRowsPerPage(newValue);
-                            }
-                          },
-                          items:
-                              (<int>{
-                                2,
-                                5,
-                                10,
-                                20,
-                                50,
-                                controller.rowsPerPage.value,
-                              }.toList()..sort()).map<DropdownMenuItem<int>>((
-                                int value,
-                              ) {
-                                return DropdownMenuItem<int>(
-                                  value: value,
-                                  child: Text('$value'),
-                                );
-                              }).toList(),
+                        );
+                      }).toList(),
+                      child: Container(
+                        height: controlHeight,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: borderColor),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${controller.rowsPerPage.value}',
+                              style: TextStyle(
+                                fontSize: fontSize,
+                                color: const Color(0xFF475569),
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Public Sans',
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: mutedTextColor,
+                            ),
+                          ],
                         ),
                       ),
                     ),

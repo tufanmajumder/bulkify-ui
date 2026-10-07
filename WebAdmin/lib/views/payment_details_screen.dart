@@ -209,7 +209,7 @@ class PaymentDetailsScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Icon(
               Icons.chevron_left_rounded,
               color: ColorManager.cherryApple,
@@ -219,9 +219,10 @@ class PaymentDetailsScreen extends StatelessWidget {
             Text(
               'Go Back',
               style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: ColorManager.cherryApple,
+                fontFamily: 'Public Sans',
+                fontSize: Responsive.sp(context, 12),
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFCF4340),
               ),
             ),
           ],

@@ -217,6 +217,32 @@ class UserProfileController extends GetxController {
     },
   ].obs;
 
+  bool _isRedirecting = false;
+
+  void _redirectToUsersList([String? message]) {
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.currentRoute != '/users') {
+        Get.offAllNamed('/users');
+      }
+      if (message != null && message.isNotEmpty) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          Get.snackbar(
+            'User Not Found',
+            message,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: const Color(0xFFEF4444),
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          );
+        });
+      }
+    });
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -231,7 +257,13 @@ class UserProfileController extends GetxController {
       userkey.value = args.trim();
     } else if (args is Map && args.containsKey('userkey')) {
       userkey.value = args['userkey'].toString();
+    } else if (Get.parameters.containsKey('userkey')) {
+      userkey.value = Get.parameters['userkey'] ?? '';
+    } else if (Get.parameters.containsKey('id')) {
+      userkey.value = Get.parameters['id'] ?? '';
     }
+
+    userkey.value = userkey.value.trim();
 
     // Lookup in UserController if registered & fields are empty
     if (userkey.value.isNotEmpty && Get.isRegistered<UserController>()) {
@@ -246,15 +278,13 @@ class UserProfileController extends GetxController {
       } catch (_) {}
     }
 
-    // if (kDebugMode) {
-    //   debugPrint('[UserProfileController] userkey: ${userkey.value}');
-    // }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (userkey.value.isNotEmpty) {
+    if (userkey.value.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         fetchUserDetails(userkey.value);
-      }
-    });
+      });
+    } else {
+      _redirectToUsersList('User key not found');
+    }
     _loadInitialInvoices();
   }
 
@@ -264,7 +294,10 @@ class UserProfileController extends GetxController {
         (targetUserKey != null && targetUserKey.trim().isNotEmpty)
         ? targetUserKey.trim()
         : userkey.value;
-    if (keyToFetch.isEmpty) return;
+    if (keyToFetch.isEmpty) {
+      _redirectToUsersList('User key not found');
+      return;
+    }
 
     isLoading.value = true;
     try {
@@ -286,10 +319,18 @@ class UserProfileController extends GetxController {
       if (result.rawData != null) {
         populateFromRawMap(result.rawData!);
       }
+
+      if (result.profile == null &&
+          result.user == null &&
+          result.rawData == null) {
+        _redirectToUsersList(
+          result.message.isNotEmpty
+              ? result.message
+              : 'User not found for key: $keyToFetch',
+        );
+      }
     } catch (e) {
-      // if (kDebugMode) {
-      //   debugPrint('[UserProfileController] Error in fetchUserDetails: $e');
-      // }
+      _redirectToUsersList('Failed to load user details');
     } finally {
       isLoading.value = false;
     }

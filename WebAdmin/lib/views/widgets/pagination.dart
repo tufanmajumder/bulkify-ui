@@ -117,7 +117,9 @@ class PaginationControls extends StatelessWidget {
                     btnSize: btnSize,
                     icon: Icons.keyboard_arrow_right_rounded,
                     isDisabled:
-                        currentPage >= controller.totalPages || controller.isLoading.value,
+                        (!controller.hasMorePage.value &&
+                            currentPage >= controller.computedTotalPages) ||
+                        controller.isLoading.value,
                     onTap: controller.nextPage,
                   ),
                   const SizedBox(width: 6),
@@ -128,7 +130,9 @@ class PaginationControls extends StatelessWidget {
                     btnSize: btnSize,
                     icon: Icons.keyboard_double_arrow_right_rounded,
                     isDisabled:
-                        currentPage >= controller.totalPages || controller.isLoading.value,
+                        (!controller.hasMorePage.value &&
+                            currentPage >= controller.computedTotalPages) ||
+                        controller.isLoading.value,
                     onTap: controller.goToLastPage,
                   ),
                 ],

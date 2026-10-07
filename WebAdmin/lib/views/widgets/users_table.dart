@@ -1,4 +1,4 @@
-﻿import 'package:admin_app/utils/color_manager.dart';
+import 'package:admin_app/utils/color_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
@@ -148,7 +148,7 @@ class UsersTable extends StatelessWidget {
     final bool isActive = user.status.toLowerCase() == 'active';
     final status = user.status.toLowerCase();
     final horizontalPadding = 20.0;
-    final verticalPadding = 16.0;
+    final verticalPadding = 14.0;
     final borderColor = const Color(0xFFF1F5F9);
 
     return Container(
@@ -161,12 +161,13 @@ class UsersTable extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // NAME Column (20%)
           Expanded(
             flex: 20,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
                   Icons.circle,
@@ -277,6 +278,8 @@ class UsersTable extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerRight,
               child: PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 icon: const Icon(
                   Icons.more_vert_rounded,
                   color: Color(0xFF64748B),

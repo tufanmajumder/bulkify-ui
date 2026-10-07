@@ -37,6 +37,7 @@ class OrderService extends GetxService {
         ? token.trim()
         : await AuthService.getAuthToken();
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getOrderList}";
+    //print("orderList....$targetUrl");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -44,6 +45,7 @@ class OrderService extends GetxService {
     };
 
     final Map<String, dynamic> payload = {"page": page, "perpage": perPage};
+    //print("order payload...$payload");
 
     final Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -343,6 +345,7 @@ class OrderService extends GetxService {
     };
 
     final Map<String, dynamic> payload = {"page": page, "perpage": perPage};
+    //print("order payload...$payload");
 
     final Map<String, dynamic> queryParams = {
       'page': page.toString(),

@@ -69,14 +69,15 @@ class PaymentController extends GetxController {
           payments.clear();
           errorMessage.value =
               (result.message.isNotEmpty && result.message != 'success')
-                  ? result.message
-                  : 'Payment record not found';
+              ? result.message
+              : 'Payment record not found';
           return;
         }
       } else {
         result = await _paymentService.getPaymentList(
           page: page,
           perpage: targetPerPage,
+          selectedStatus: selectedStatus.value,
         );
       }
 
@@ -99,25 +100,32 @@ class PaymentController extends GetxController {
           if (result.pageContext!.totalPages > 0) {
             totalPages.value = result.pageContext!.totalPages;
           } else if (result.pageContext!.total > 0) {
-            totalPages.value = (result.pageContext!.total / targetPerPage).ceil();
+            totalPages.value = (result.pageContext!.total / targetPerPage)
+                .ceil();
           } else {
-            totalPages.value = hasMorePage.value ? currentPage.value + 1 : currentPage.value;
+            totalPages.value = hasMorePage.value
+                ? currentPage.value + 1
+                : currentPage.value;
           }
 
           if (result.pageContext!.total > 0) {
             totalPayments.value = result.pageContext!.total;
           } else if (result.pageContext!.totalPages > 0) {
-            totalPayments.value = result.pageContext!.totalPages * targetPerPage;
+            totalPayments.value =
+                result.pageContext!.totalPages * targetPerPage;
           }
         } else {
           currentPage.value = page;
           hasMorePage.value = result.payments.length >= targetPerPage;
           totalPayments.value = 0;
-          totalPages.value = hasMorePage.value ? currentPage.value + 1 : currentPage.value;
+          totalPages.value = hasMorePage.value
+              ? currentPage.value + 1
+              : currentPage.value;
         }
       } else {
-        errorMessage.value =
-            result.message.isNotEmpty ? result.message : 'Payment record not found';
+        errorMessage.value = result.message.isNotEmpty
+            ? result.message
+            : 'Payment record not found';
         if (payments.isEmpty && !isSearchingMode.value) {
           loadMockPayments();
         }
@@ -294,13 +302,15 @@ class PaymentController extends GetxController {
 
   int get endEntryIndex {
     if (filteredPayments.isEmpty) return 0;
-    return (currentPage.value - 1) * rowsPerPage.value + paginatedPayments.length;
+    return (currentPage.value - 1) * rowsPerPage.value +
+        paginatedPayments.length;
   }
 
   int get displayTotalCount {
     if (totalPayments.value > 0) return totalPayments.value;
     if (filteredPayments.isEmpty) return 0;
-    return (currentPage.value - 1) * rowsPerPage.value + paginatedPayments.length;
+    return (currentPage.value - 1) * rowsPerPage.value +
+        paginatedPayments.length;
   }
 
   void setSearchQuery(String val) {

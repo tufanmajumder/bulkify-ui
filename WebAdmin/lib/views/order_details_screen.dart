@@ -1,3 +1,4 @@
+import 'package:admin_app/utils/color_manager.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -134,17 +135,17 @@ class OrderDetailsScreen extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.chevron_left_rounded,
-              size: 20,
-              color: Color(0xFFCF4340),
+              color: ColorManager.cherryApple,
+              size: 22,
             ),
             const SizedBox(width: 2),
             Text(
               'Go Back',
               style: TextStyle(
                 fontFamily: 'Public Sans',
-                fontSize: Responsive.sp(context, 14),
+                fontSize: Responsive.sp(context, 12),
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFFCF4340),
               ),
@@ -232,7 +233,7 @@ class OrderDetailsScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _buildKeyValueRow(
                 'Date',
-                controller.date.value.split(" ")[0],
+                controller.extractDateOnly(controller.date.value),
                 isBoldValue: true,
               ),
               const SizedBox(height: 10),
@@ -249,7 +250,7 @@ class OrderDetailsScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _buildKeyValueRow(
                 'Time',
-                '${controller.time.value.split(" ")[1]} ${controller.time.value.split(" ")[2]}',
+                controller.extractTimeOnly(controller.time.value),
                 isBoldValue: true,
               ),
               const SizedBox(height: 10),
@@ -1096,7 +1097,16 @@ class OrderDetailsScreen extends StatelessWidget {
               ),
             ),
           ),
-          Divider(height: 1, color: Colors.grey.shade300),
+          DottedLine(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.center,
+            lineLength: double.infinity,
+            lineThickness: 1.0,
+            dashLength: 4.0,
+            dashColor: Colors.grey.shade300,
+            dashGapLength: 2.0,
+            dashGapColor: Colors.transparent,
+          ),
           LayoutBuilder(
             builder: (context, constraints) {
               final double tableWidth = constraints.maxWidth < 450
@@ -1212,7 +1222,16 @@ class OrderDetailsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Divider(height: 1, color: Colors.grey.shade300),
+                      DottedLine(
+                        direction: Axis.horizontal,
+                        alignment: WrapAlignment.center,
+                        lineLength: double.infinity,
+                        lineThickness: 1.0,
+                        dashLength: 4.0,
+                        dashColor: Colors.grey.shade300,
+                        dashGapLength: 2.0,
+                        dashGapColor: Colors.transparent,
+                      ),
                       // Table Rows
                       Obx(
                         () => controller.transactions.isEmpty
@@ -1223,159 +1242,192 @@ class OrderDetailsScreen extends StatelessWidget {
                                 ),
                               )
                             : Column(
-                                children: controller.transactions.map((tx) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 14,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade300,
+                                children: controller.transactions
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                  final index = entry.key;
+                                  final tx = entry.value;
+                                  final isLast = index ==
+                                      controller.transactions.length - 1;
+
+                                  return Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 14,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                tx.issuedBy,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    (tx.createdOn
+                                                                .trim()
+                                                                .isEmpty ||
+                                                            tx.createdOn
+                                                                    .trim() ==
+                                                                'null')
+                                                        ? '-'
+                                                        : controller
+                                                            .extractDateOnly(
+                                                              controller
+                                                                  .formatDateOnly(
+                                                                tx.createdOn,
+                                                              ),
+                                                            ),
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      color: Color(0xFF64748B),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    (tx.createdOn
+                                                                .trim()
+                                                                .isEmpty ||
+                                                            tx.createdOn
+                                                                    .trim() ==
+                                                                'null')
+                                                        ? '-'
+                                                        : controller
+                                                            .extractTimeOnly(
+                                                              controller
+                                                                  .formatDateOnly(
+                                                                tx.createdOn,
+                                                              ),
+                                                            ),
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      color: Color(0xFF94A3B8),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    tx.paymentId,
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      color: Color(0xFF64748B),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    tx.paymentMethod,
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      color: Color(0xFF94A3B8),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                tx.rrnUtr,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(
+                                                      0xFFECFDF5,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    tx.status,
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Color(0xFF10B981),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: _buildRupeeText(
+                                                tx.amount,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 1,
+                                              child: Center(
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                    Icons.download_outlined,
+                                                    size: 18,
+                                                    color: Color(0xFF64748B),
+                                                  ),
+                                                  onPressed: () => controller
+                                                      .downloadReceipt(tx),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            tx.issuedBy,
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
+                                      if (!isLast)
+                                        DottedLine(
+                                          direction: Axis.horizontal,
+                                          alignment: WrapAlignment.center,
+                                          lineLength: double.infinity,
+                                          lineThickness: 1.0,
+                                          dashLength: 4.0,
+                                          dashColor: Colors.grey.shade300,
+                                          dashGapLength: 2.0,
+                                          dashGapColor: Colors.transparent,
                                         ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                (tx.createdOn.trim().isEmpty ||
-                                                        tx.createdOn.trim() ==
-                                                            'null')
-                                                    ? '-'
-                                                    : controller
-                                                          .formatDateOnly(
-                                                            tx.createdOn,
-                                                          )
-                                                          .split(" ")[0],
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  color: Color(0xFF64748B),
-                                                  //height: 1.3,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                (tx.createdOn.trim().isEmpty ||
-                                                        tx.createdOn.trim() ==
-                                                            'null')
-                                                    ? '-'
-                                                    : '${controller.formatDateOnly(tx.createdOn).split(" ")[1]} ${controller.formatDateOnly(tx.createdOn).split(" ")[2]}',
-                                                style: const TextStyle(
-                                                  fontSize: 11,
-                                                  color: Color(0xFF94A3B8),
-                                                  //height: 1.3,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                tx.paymentId,
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  color: Color(0xFF64748B),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                tx.paymentMethod,
-                                                style: const TextStyle(
-                                                  fontSize: 11,
-                                                  color: Color(0xFF94A3B8),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            tx.rrnUtr,
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFECFDF5),
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                tx.status,
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF10B981),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: _buildRupeeText(
-                                            tx.amount,
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Center(
-                                            child: IconButton(
-                                              icon: const Icon(
-                                                Icons.download_outlined,
-                                                size: 18,
-                                                color: Color(0xFF64748B),
-                                              ),
-                                              onPressed: () => controller
-                                                  .downloadReceipt(tx),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    ],
                                   );
                                 }).toList(),
                               ),
@@ -1425,7 +1477,16 @@ class OrderDetailsScreen extends StatelessWidget {
               ),
             ),
           ),
-          Divider(height: 1, color: Colors.grey.shade300),
+          DottedLine(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.center,
+            lineLength: double.infinity,
+            lineThickness: 1.0,
+            dashLength: 4.0,
+            dashColor: Colors.grey.shade300,
+            dashGapLength: 2.0,
+            dashGapColor: Colors.transparent,
+          ),
 
           LayoutBuilder(
             builder: (context, constraints) {
@@ -1505,7 +1566,16 @@ class OrderDetailsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Divider(height: 1, color: Colors.grey.shade300),
+                      DottedLine(
+                        direction: Axis.horizontal,
+                        alignment: WrapAlignment.center,
+                        lineLength: double.infinity,
+                        lineThickness: 1.0,
+                        dashLength: 4.0,
+                        dashColor: Colors.grey.shade300,
+                        dashGapLength: 2.0,
+                        dashGapColor: Colors.transparent,
+                      ),
                       // Product Rows
                       Obx(
                         () => controller.orderItems.isEmpty
@@ -1516,120 +1586,144 @@ class OrderDetailsScreen extends StatelessWidget {
                                 ),
                               )
                             : Column(
-                                children: controller.orderItems.map((item) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade300,
+                                children: controller.orderItems
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                  final index = entry.key;
+                                  final item = entry.value;
+                                  final isLast = index ==
+                                      controller.orderItems.length - 1;
+
+                                  return Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 12,
                                         ),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 8,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                (item.name.trim().isEmpty ||
-                                                        item.name.trim() ==
-                                                            'null')
-                                                    ? '-'
-                                                    : item.name,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 8,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    (item.name.trim().isEmpty ||
+                                                            item.name.trim() ==
+                                                                'null')
+                                                        ? '-'
+                                                        : item.name,
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontFamily: 'Public Sans',
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Color(0xFF2F2B3D),
+                                                    ),
+                                                  ),
+                                                  if (item.description
+                                                          .trim()
+                                                          .isNotEmpty &&
+                                                      item.description.trim() !=
+                                                          'null' &&
+                                                      item.description.trim() !=
+                                                          '-') ...[
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      item.description,
+                                                      style: const TextStyle(
+                                                        fontFamily:
+                                                            'Public Sans',
+                                                        fontSize: 11,
+                                                        color: Color(
+                                                          0xFF94A3B8,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (item
+                                                      .lineItemTaxes
+                                                      .isNotEmpty) ...[
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      item.lineItemTaxes
+                                                          .map(
+                                                            (t) =>
+                                                                '${t.taxName}${t.taxPercent > 0 ? " (${t.taxPercent.toStringAsFixed(t.taxPercent.truncateToDouble() == t.taxPercent ? 0 : 1)}%)" : ""}: ${t.taxAmount}',
+                                                          )
+                                                          .join(' · '),
+                                                      style: const TextStyle(
+                                                        fontFamily:
+                                                            'Public Sans',
+                                                        fontSize: 11,
+                                                        color: Color(
+                                                          0xFF64748B,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: _buildRupeeText(
+                                                item.price,
+                                                textAlign: TextAlign.right,
                                                 style: const TextStyle(
                                                   fontSize: 13,
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                '${item.qty}',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
                                                   fontFamily: 'Public Sans',
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF2F2B3D),
+                                                  fontSize: 13,
+                                                  color: Color(0xFF64748B),
                                                 ),
                                               ),
-                                              if (item.description
-                                                      .trim()
-                                                      .isNotEmpty &&
-                                                  item.description.trim() !=
-                                                      'null' &&
-                                                  item.description.trim() !=
-                                                      '-') ...[
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  item.description,
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Align(
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: _buildRupeeText(
+                                                  item.total.contains('₹')
+                                                      ? item.total
+                                                      : '₹ ${item.total}',
+                                                  textAlign: TextAlign.right,
                                                   style: const TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    fontSize: 11,
-                                                    color: Color(0xFF94A3B8),
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Color(0xFF475569),
                                                   ),
                                                 ),
-                                              ],
-                                              if (item
-                                                  .lineItemTaxes
-                                                  .isNotEmpty) ...[
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  item.lineItemTaxes
-                                                      .map(
-                                                        (t) =>
-                                                            '${t.taxName}${t.taxPercent > 0 ? " (${t.taxPercent.toStringAsFixed(t.taxPercent.truncateToDouble() == t.taxPercent ? 0 : 1)}%)" : ""}: ${t.taxAmount}',
-                                                      )
-                                                      .join(' · '),
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    fontSize: 11,
-                                                    color: Color(0xFF64748B),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: _buildRupeeText(
-                                            item.price,
-                                            textAlign: TextAlign.right,
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            '${item.qty}',
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontFamily: 'Public Sans',
-                                              fontSize: 13,
-                                              color: Color(0xFF64748B),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Align(
-                                            alignment: Alignment.centerRight,
-                                            child: _buildRupeeText(
-                                              item.total.contains('₹')
-                                                  ? item.total
-                                                  : '₹ ${item.total}',
-                                              textAlign: TextAlign.right,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                                color: Color(0xFF475569),
                                               ),
                                             ),
-                                          ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      if (!isLast)
+                                        DottedLine(
+                                          direction: Axis.horizontal,
+                                          alignment: WrapAlignment.center,
+                                          lineLength: double.infinity,
+                                          lineThickness: 1.0,
+                                          dashLength: 4.0,
+                                          dashColor: Colors.grey.shade300,
+                                          dashGapLength: 2.0,
+                                          dashGapColor: Colors.transparent,
+                                        ),
+                                    ],
                                   );
                                 }).toList(),
                               ),
