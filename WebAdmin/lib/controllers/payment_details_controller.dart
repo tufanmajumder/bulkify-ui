@@ -53,15 +53,15 @@ class PaymentDetailsController extends GetxController {
       }
       if (message != null && message.isNotEmpty) {
         Future.delayed(const Duration(milliseconds: 300), () {
-          Get.snackbar(
-            'Payment Not Found',
-            message,
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: const Color(0xFFEF4444),
-            colorText: Colors.white,
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          );
+          // Get.snackbar(
+          //   'Payment Not Found',
+          //   message,
+          //   snackPosition: SnackPosition.BOTTOM,
+          //   backgroundColor: const Color(0xFFEF4444),
+          //   colorText: Colors.white,
+          //   margin: const EdgeInsets.all(16),
+          //   duration: const Duration(seconds: 3),
+          // );
         });
       }
     });

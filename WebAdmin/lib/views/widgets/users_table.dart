@@ -1,4 +1,4 @@
-import 'package:admin_app/utils/color_manager.dart';
+﻿import 'package:admin_app/utils/color_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/user_controller.dart';
@@ -179,7 +179,7 @@ class UsersTable extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    user.name,
+                    _capitalizeName(user.name),
                     style: TextStyle(
                       color: const Color(0xFF475569),
                       fontSize: Responsive.sp(context, 13),
@@ -195,7 +195,7 @@ class UsersTable extends StatelessWidget {
           Expanded(
             flex: 20,
             child: Text(
-              user.email,
+              user.email.toLowerCase(),
               style: TextStyle(
                 color: const Color(0xFF475569),
                 fontSize: Responsive.sp(context, 13),
@@ -323,5 +323,17 @@ class UsersTable extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _capitalizeName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return name;
+    return trimmed
+        .split(RegExp(r'\s+'))
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 }

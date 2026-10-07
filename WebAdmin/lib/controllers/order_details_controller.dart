@@ -206,15 +206,15 @@ class OrderDetailsController extends GetxController {
       }
       if (message != null && message.isNotEmpty) {
         Future.delayed(const Duration(milliseconds: 300), () {
-          Get.snackbar(
-            'Order Not Found',
-            message,
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: const Color(0xFFEF4444),
-            colorText: Colors.white,
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          );
+          // Get.snackbar(
+          //   'Order Not Found',
+          //   message,
+          //   snackPosition: SnackPosition.BOTTOM,
+          //   backgroundColor: const Color(0xFFEF4444),
+          //   colorText: Colors.white,
+          //   margin: const EdgeInsets.all(16),
+          //   duration: const Duration(seconds: 3),
+          // );
         });
       }
     });
@@ -251,9 +251,7 @@ class OrderDetailsController extends GetxController {
             message.toLowerCase().contains('no order')) {
           isError.value = true;
           _redirectToOrderList(
-            message.isNotEmpty
-                ? message
-                : 'Order not found for key: $cleanId',
+            message.isNotEmpty ? message : 'Order not found for key: $cleanId',
           );
           return;
         }
