@@ -25,7 +25,7 @@ class LoginController extends GetxController {
   String activeIdentifier = '';
   String deviceAllInfo = "";
 
-  bool get isMobileInput => activeChannel == 1;
+  bool get isMobileInput => activeChannel == 2;
 
   String get getFullOtp => otpControllers.map((c) => c.text.trim()).join();
 
@@ -69,7 +69,7 @@ class LoginController extends GetxController {
         WidgetManager.showAlertSnackBar(errorMessage.value);
         return;
       }
-      channel = 1;
+      channel = 2;
       identifier = cleanDigits.startsWith('+91')
           ? cleanDigits
           : '+91$cleanDigits';

@@ -5,8 +5,8 @@ class ApiManager {
   //   flutter build web --dart-define=API_BASE_URL=https://bulkify.dts.ind.in/
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    //defaultValue: 'https://bulkify.dts.ind.in/',
-    defaultValue: 'https://api.bulkify.click/',
+    defaultValue: 'https://bulkify.dts.ind.in/',
+    //defaultValue: 'https://api.bulkify.click/',
   );
 
   static const String loginUrl = "core/v1/auth/initiate";
@@ -26,4 +26,5 @@ class ApiManager {
   static const String paymentList = "payments/v1/list";
   static const String paymentDetails = "payments/v1/get-by-key";
   static const String searchPayment = "payments/v1/search-by-transactionref";
+  static const String paymentAdd = "payments/v1/add";
 }

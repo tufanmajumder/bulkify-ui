@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -40,20 +41,27 @@ class LineItemTaxModel {
 
 class OrderItemModel {
   final String name;
+  final String itemType;
   final String description;
   final String price;
   final int qty;
   final String total;
   final List<LineItemTaxModel> lineItemTaxes;
+  final RxBool isAccepted;
+  final RxBool isRejected;
 
   OrderItemModel({
     required this.name,
+    required this.itemType,
     required this.description,
     required this.price,
     required this.qty,
     required this.total,
     this.lineItemTaxes = const [],
-  });
+    bool initialAccepted = false,
+    bool initialRejected = false,
+  }) : isAccepted = initialAccepted.obs,
+       isRejected = initialRejected.obs;
 
   String get merchant => description;
 }
@@ -89,6 +97,10 @@ class OrderDetailsController extends GetxController {
   final RxBool isError = false.obs;
 
   // Summary Fields
+  final RxString orderKey = ''.obs;
+  final RxString orderId = ''.obs;
+  final RxString customerId = ''.obs;
+  final RxBool isSubmittingPayment = false.obs;
   final RxString orderNo = ''.obs;
   final RxString date = ''.obs;
   final RxString time = ''.obs;
@@ -127,6 +139,7 @@ class OrderDetailsController extends GetxController {
   final RxString invoiceId = ''.obs;
   final RxString invoiceNumber = ''.obs;
   final RxBool isDownloadingInvoice = false.obs;
+  final RxBool isInvoiceDownloaded = false.obs;
 
   // Documents List
   final RxList<DocumentModel> documents = <DocumentModel>[].obs;
@@ -141,6 +154,16 @@ class OrderDetailsController extends GetxController {
   // Shipping Activity Timeline
   final RxList<ShippingActivityModel> shippingActivities =
       <ShippingActivityModel>[].obs;
+
+  final ScrollController leftScrollController = ScrollController();
+  final ScrollController rightScrollController = ScrollController();
+
+  @override
+  void onClose() {
+    leftScrollController.dispose();
+    rightScrollController.dispose();
+    super.onClose();
+  }
 
   @override
   void onInit() {
@@ -228,8 +251,10 @@ class OrderDetailsController extends GetxController {
       return;
     }
 
+    orderKey.value = cleanId;
     isLoading.value = true;
     isError.value = false;
+    isInvoiceDownloaded.value = false;
 
     try {
       final responseMap = await _orderService.getOrderDetails(
@@ -337,6 +362,21 @@ class OrderDetailsController extends GetxController {
 
   void _populateFromApiResponse(Map<String, dynamic> responseMap) {
     final data = _extractTargetOrderMap(responseMap);
+
+    final rawOrderId =
+        data['orderid'] ??
+        data['salesorderid'] ??
+        data['salesorder_id'] ??
+        data['order_id'] ??
+        data['id'];
+    if (rawOrderId != null && rawOrderId.toString().trim().isNotEmpty) {
+      orderId.value = rawOrderId.toString().trim();
+    }
+
+    final rawCustomerId = data['customerid'] ?? data['customer_id'];
+    if (rawCustomerId != null && rawCustomerId.toString().trim().isNotEmpty) {
+      customerId.value = rawCustomerId.toString().trim();
+    }
 
     // 1. Summary details (if key is missing, make blank "")
     final num =
@@ -899,23 +939,18 @@ class OrderDetailsController extends GetxController {
               }
             }
 
+            final statusStr = (item['status'] ?? item['item_status'] ?? '')
+                .toString()
+                .toLowerCase();
+            final isItemAccepted =
+                statusStr == 'accepted' || statusStr == 'approved';
+            final isItemRejected =
+                statusStr == 'rejected' || statusStr == 'cancelled';
+
             return OrderItemModel(
-              name:
-                  (item['name'] ??
-                          item['item_name'] ??
-                          item['product_name'] ??
-                          '')
-                      .toString(),
-              description:
-                  (item['description'] ??
-                          item['item_description'] ??
-                          item['details'] ??
-                          item['merchant_name'] ??
-                          item['vendor'] ??
-                          item['brand'] ??
-                          item['seller_name'] ??
-                          '')
-                      .toString(),
+              name: (item['name'] ?? '').toString(),
+              itemType: (item['group_name'] ?? '').toString(),
+              description: (item['description'] ?? '').toString(),
               price: _formatPriceVal(
                 item['rate'] ?? item['price'] ?? item['unit_price'],
               ),
@@ -924,10 +959,13 @@ class OrderDetailsController extends GetxController {
                 item['item_total'] ?? item['total'] ?? item['line_total'],
               ),
               lineItemTaxes: itemTaxList,
+              initialAccepted: isItemAccepted,
+              initialRejected: isItemRejected,
             );
           }
           return OrderItemModel(
             name: '',
+            itemType: '',
             description: '',
             price: '',
             qty: 0,
@@ -1034,111 +1072,6 @@ class OrderDetailsController extends GetxController {
     return '-';
   }
 
-  // String formatDateOnly(String raw) {
-  //   final str = raw.trim();
-  //   if (str.isEmpty || str == 'null' || str == '-') return '-';
-
-  //   // 1. Try parsing full DateTime (ISO, yyyy-MM-dd, etc.)
-  //   DateTime? dt = DateTime.tryParse(str);
-  //   if (dt == null && str.contains(' ')) {
-  //     dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
-  //   }
-  //   if (dt != null) {
-  //     final dd = dt.day.toString().padLeft(2, '0');
-  //     final mm = dt.month.toString().padLeft(2, '0');
-  //     final yyyy = dt.year.toString().padLeft(4, '0');
-  //     return '$dd-$mm-$yyyy';
-  //   }
-
-  //   // 2. Extract date portion if input contains time
-  //   String datePart = str;
-  //   if (str.contains(' ')) {
-  //     datePart = str.split(RegExp(r'\s+'))[0];
-  //   }
-
-  //   // 3. Parse date components
-  //   final components = datePart.split(RegExp(r'[-/.]'));
-  //   if (components.length == 3) {
-  //     String? dd, mm, yyyy;
-
-  //     if (components[0].length == 4) {
-  //       // yyyy-MM-dd
-  //       yyyy = components[0];
-  //       mm = components[1].padLeft(2, '0');
-  //       dd = components[2].padLeft(2, '0');
-  //     } else if (components[2].length == 4) {
-  //       // dd-MM-yyyy
-  //       dd = components[0].padLeft(2, '0');
-  //       mm = components[1].padLeft(2, '0');
-  //       yyyy = components[2];
-  //     } else if (components[2].length == 2) {
-  //       // dd-MM-yy
-  //       dd = components[0].padLeft(2, '0');
-  //       mm = components[1].padLeft(2, '0');
-  //       yyyy = '20${components[2]}';
-  //     }
-
-  //     if (dd != null && mm != null && yyyy != null) {
-  //       return '$dd-$mm-$yyyy';
-  //     }
-  //   }
-
-  //   return datePart;
-  // }
-
-  // String _formatTimeOnly(String raw) {
-  //   final str = raw.trim();
-  //   if (str.isEmpty || str == 'null' || str == '-') return '-';
-
-  //   // 1. Try parsing full DateTime
-  //   DateTime? dt = DateTime.tryParse(str);
-  //   if (dt == null && str.contains(' ')) {
-  //     dt = DateTime.tryParse(str.replaceFirst(' ', 'T'));
-  //   }
-  //   if (dt != null) {
-  //     int hr = dt.hour % 12;
-  //     if (hr == 0) hr = 12;
-  //     final hrStr = hr.toString().padLeft(2, '0');
-  //     final minStr = dt.minute.toString().padLeft(2, '0');
-  //     final period = dt.hour >= 12 ? 'PM' : 'AM';
-  //     return '$hrStr:$minStr $period';
-  //   }
-
-  //   // 2. Extract time component if input contains Date & Time
-  //   String timePart = str;
-  //   if (str.contains(' ')) {
-  //     final parts = str.split(RegExp(r'\s+'));
-  //     if (parts.length > 1 &&
-  //         (parts[0].contains('-') || parts[0].contains('/'))) {
-  //       timePart = parts.sublist(1).join(' ');
-  //     }
-  //   }
-
-  //   // 3. Match HH:mm:ss or HH:mm with optional AM/PM
-  //   final timeMatch = RegExp(
-  //     r'^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$',
-  //   ).firstMatch(timePart.trim());
-  //   if (timeMatch != null) {
-  //     int hr = int.parse(timeMatch.group(1)!);
-  //     final minStr = timeMatch.group(2)!;
-  //     final ampm = timeMatch.group(3);
-
-  //     if (ampm != null && ampm.isNotEmpty) {
-  //       final period = ampm.toUpperCase();
-  //       final hrStr = hr.toString().padLeft(2, '0');
-  //       return '$hrStr:$minStr $period';
-  //     } else {
-  //       final period = hr >= 12 ? 'PM' : 'AM';
-  //       hr = hr % 12;
-  //       if (hr == 0) hr = 12;
-  //       final hrStr = hr.toString().padLeft(2, '0');
-  //       return '$hrStr:$minStr $period';
-  //     }
-  //   }
-
-  //   return timePart;
-  // }
-
   String _buildAddressString(Map map) {
     final parts = [
       map['address'],
@@ -1156,20 +1089,15 @@ class OrderDetailsController extends GetxController {
         ? invId.trim()
         : invoiceId.value.trim();
 
-    // if (kDebugMode) {
-    //   debugPrint(
-    //     '[OrderDetailsController] Requesting invoice download for invoice_id: $targetInvoiceId',
-    //   );
-    // }
-
     if (targetInvoiceId.isEmpty || targetInvoiceId == 'null') {
       Get.snackbar(
-        'Invoice Unavailable',
-        'No valid invoice ID found for this order. An invoice may not have been generated yet on Zoho.',
+        'Invoice',
+        'There is no invoice',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: const Color(0xFFEF4444),
         colorText: Colors.white,
         margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
       );
       return;
     }
@@ -1195,6 +1123,7 @@ class OrderDetailsController extends GetxController {
             ? "Invoice_${invoiceNumber.value}.pdf"
             : "Invoice_$targetInvoiceId.pdf";
         downloadBlob(bytes, filename, mimeType: 'application/pdf');
+        isInvoiceDownloaded.value = true;
         Get.snackbar(
           'Success',
           'Invoice downloaded successfully.',
@@ -1227,6 +1156,34 @@ class OrderDetailsController extends GetxController {
     }
   }
 
+  Future<void> generateInvoice() async {
+    final targetInvoiceId = invoiceId.value.trim();
+    final hasInvoice =
+        targetInvoiceId.isNotEmpty && targetInvoiceId != 'null';
+
+    if (invoiceNumber.value.trim().isEmpty ||
+        invoiceNumber.value.trim() == 'null') {
+      if (hasInvoice) {
+        invoiceNumber.value = targetInvoiceId;
+      } else {
+        invoiceNumber.value = '-';
+      }
+    }
+    isInvoiceDownloaded.value = true;
+
+    if (!hasInvoice) {
+      Get.snackbar(
+        'Invoice',
+        'There is no invoice',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+    }
+  }
+
   void downloadDocument(DocumentModel doc) {
     if (doc.title.toLowerCase().replaceAll(' ', '') == 'invoice') {
       downloadInvoiceById(invoiceId.value);
@@ -1244,6 +1201,209 @@ class OrderDetailsController extends GetxController {
     );
   }
 
+  Future<bool> submitPayment({
+    required String orderNumber,
+    required String dueAmount,
+    required String issuedBy,
+    required DateTime selectedDate,
+    required TimeOfDay selectedTime,
+    required String createdDateText,
+    required String createdTimeText,
+    required String rrnUtr,
+    required String amount,
+    required String status,
+    String? receiptFileName,
+  }) async {
+    final cleanAmount = amount
+        .replaceAll('₹', '')
+        .replaceAll('\$', '')
+        .replaceAll(',', '')
+        .trim();
+    final cleanDueAmount = dueAmount
+        .replaceAll('₹', '')
+        .replaceAll('\$', '')
+        .replaceAll(',', '')
+        .trim();
+    final cleanOrderNo = orderNumber.trim().isNotEmpty
+        ? orderNumber.trim().replaceAll('#', '')
+        : orderNo.value.replaceAll('#', '').trim();
+
+    final dt = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
+    final isoDate =
+        '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}T${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:00+05:30';
+
+    final paymentType = issuedBy == 'Bank Transfer'
+        ? 'Bank Transfer'
+        : (issuedBy == 'Cash' ? 'Cash' : 'UPI');
+    final dateStamp =
+        '${dt.year}${dt.month.toString().padLeft(2, '0')}${dt.day.toString().padLeft(2, '0')}';
+    final nowMs = DateTime.now().millisecondsSinceEpoch.toString();
+    final shortSuffix = nowMs.length > 4
+        ? nowMs.substring(nowMs.length - 4)
+        : nowMs;
+    final txnId = 'TXN-$dateStamp-$shortSuffix';
+    final cleanRrn = rrnUtr.trim().isNotEmpty
+        ? rrnUtr.trim()
+        : nowMs.padLeft(12, '0').substring(0, 12);
+    final txnRef = rrnUtr.trim().isNotEmpty
+        ? rrnUtr.trim()
+        : 'TXN-REF-$shortSuffix';
+
+    final parsedOrderId = int.tryParse(orderId.value.trim()) ?? 0;
+    final parsedCustomerId = int.tryParse(customerId.value.trim()) ?? 0;
+
+    final cgstVal = _parseItemAmount(cgst.value);
+    final sgstVal = _parseItemAmount(sgst.value);
+    final taxVal = _parseItemAmount(tax.value);
+
+    final hasValidInv =
+        invoiceNumber.value.trim().isNotEmpty &&
+        invoiceNumber.value.trim() != '-' &&
+        invoiceNumber.value.trim() != 'null';
+    final invoicesJson = hasValidInv
+        ? jsonEncode([
+            {
+              "invoicenumber": invoiceNumber.value.trim(),
+              "amount": _parseItemAmount(grandTotal.value),
+            },
+          ])
+        : "[]";
+
+    final Map<String, dynamic> payload = {
+      "orderid": parsedOrderId,
+      "ordernumber": cleanOrderNo,
+      "customerid": parsedCustomerId,
+      "customername": customer.value,
+      "transactionref": txnRef,
+      "paymentdate": isoDate,
+      "paymenttype": paymentType,
+      "paymentamount": cleanAmount,
+      "isocurrency": "INR",
+      "transactionid": txnId,
+      "gatewaytransactionid": "WL-$shortSuffix",
+      "paymentmode": paymentType,
+      "paymentgateway": issuedBy.toLowerCase(),
+      "terminal": "TID-0042",
+      "channel": "POS",
+      "dueamount": cleanDueAmount.isNotEmpty ? cleanDueAmount : "0",
+      "conveniencefee": "0",
+      "taxamount": taxVal > 0 ? taxVal.toStringAsFixed(2) : "0",
+      "taxdetails": jsonEncode({"cgst": cgstVal, "sgst": sgstVal}),
+      "statuscode": status.toLowerCase() == 'success' ? "00" : "01",
+      "statusmessage": status.toLowerCase() == 'success'
+          ? "Transaction successful"
+          : "Transaction $status",
+      "cardtype": "",
+      "cardlast4": "",
+      "cardexpiry": "",
+      "bankname": "",
+      "accountlast4": "",
+      "upiid": "",
+      "invoices": invoicesJson,
+      "receipturl": receiptFileName ?? "",
+      "receiptid": receiptFileName != null && receiptFileName.isNotEmpty
+          ? "RCPT-$shortSuffix"
+          : "",
+      "isrefund": false,
+      "refundstatus": "",
+      "refundamount": "0",
+      "refundreason": "",
+      "ischargeback": false,
+      "disputeid": "",
+      "installmentnumber": 1,
+      "totalinstallments": 1,
+      "isrecurring": false,
+      "subscriptionid": "",
+      "authcode": "",
+      "rrn": cleanRrn,
+      "metadata": jsonEncode({
+        "gateway_status": status == 'Success' ? "Completed" : status,
+        "fraud_check": "Passed",
+      }),
+      "notes": "Paid at counter",
+      "details": jsonEncode({"source": "pos"}),
+      "paymentstatus": status,
+      "issuedby": issuedBy,
+    };
+
+    isSubmittingPayment.value = true;
+    try {
+      final res = await _orderService.addPayment(payload: payload);
+      final isSuccess =
+          res != null &&
+          (res['success'] == true ||
+              res['status'] == true ||
+              res['status'] == 1 ||
+              res['status'] == 'success' ||
+              res['code'] == 200 ||
+              res['code'] == 201 ||
+              !res.containsKey('error'));
+
+      final formattedAmount = _formatPriceVal(cleanAmount);
+
+      if (isSuccess) {
+        transactions.insert(
+          0,
+          PaymentTransactionModel(
+            issuedBy: issuedBy,
+            createdOn: '$createdDateText $createdTimeText',
+            paymentId: txnId,
+            paymentMethod: paymentType,
+            rrnUtr: cleanRrn,
+            status: status,
+            amount: formattedAmount,
+          ),
+        );
+
+        if (orderKey.value.isNotEmpty) {
+          fetchOrderDetails(orderKey.value);
+        }
+
+        Get.snackbar(
+          'Payment Added',
+          (res['message'] ?? 'Payment of $formattedAmount added successfully')
+              .toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF10B981),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+        return true;
+      } else {
+        final errMsg =
+            (res?['message'] ?? res?['error'] ?? 'Failed to add payment')
+                .toString();
+        Get.snackbar(
+          'Error',
+          errMsg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFEF4444),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+        );
+        return false;
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to add payment: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return false;
+    } finally {
+      isSubmittingPayment.value = false;
+    }
+  }
+
   void downloadReceipt(PaymentTransactionModel transaction) {
     Get.snackbar(
       'Receipt Download',
@@ -1252,6 +1412,82 @@ class OrderDetailsController extends GetxController {
       backgroundColor: const Color(0xFF10B981),
       colorText: Colors.white,
       margin: const EdgeInsets.all(16),
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  double _parseItemAmount(String raw) {
+    final cleanStr = raw
+        .replaceAll('₹', '')
+        .replaceAll(',', '')
+        .replaceAll(RegExp(r'\s+'), '')
+        .trim();
+    return double.tryParse(cleanStr) ?? 0.0;
+  }
+
+  int get totalRejectedItems =>
+      orderItems.where((item) => item.isRejected.value).length;
+
+  String get totalDeclinedAmount {
+    double sum = 0.0;
+    for (final item in orderItems) {
+      if (item.isRejected.value) {
+        sum += _parseItemAmount(item.total);
+      }
+    }
+    return '₹${sum.toStringAsFixed(2)}.';
+  }
+
+  int get totalAcceptedItems =>
+      orderItems.where((item) => item.isAccepted.value).length;
+
+  String get acceptedOrderAmount {
+    double sum = 0.0;
+    for (final item in orderItems) {
+      if (item.isAccepted.value) {
+        sum += _parseItemAmount(item.total);
+      }
+    }
+    return '₹${sum.toStringAsFixed(2)}';
+  }
+
+  void toggleAcceptItem(int index) {
+    if (index >= 0 && index < orderItems.length) {
+      final item = orderItems[index];
+      if (item.isAccepted.value) {
+        item.isAccepted.value = false;
+      } else {
+        item.isAccepted.value = true;
+        item.isRejected.value = false;
+      }
+    }
+  }
+
+  void toggleRejectItem(int index) {
+    if (index >= 0 && index < orderItems.length) {
+      final item = orderItems[index];
+      if (item.isRejected.value) {
+        item.isRejected.value = false;
+      } else {
+        item.isRejected.value = true;
+        item.isAccepted.value = false;
+      }
+    }
+  }
+
+  void acceptAllItems() {
+    for (final item in orderItems) {
+      item.isAccepted.value = true;
+      item.isRejected.value = false;
+    }
+    Get.snackbar(
+      'Accepted',
+      'All order items have been accepted.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: const Color(0xFF10B981),
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 8,
       duration: const Duration(seconds: 2),
     );
   }

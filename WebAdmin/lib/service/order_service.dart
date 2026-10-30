@@ -336,8 +336,8 @@ class OrderService extends GetxService {
     }
 
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getOrderList}";
-    // print("targetUrl....$targetUrl");
-    // print("token....$activeToken");
+    print("targetUrl....$targetUrl");
+    print("token....$activeToken");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -345,7 +345,7 @@ class OrderService extends GetxService {
     };
 
     final Map<String, dynamic> payload = {"page": page, "perpage": perPage};
-    //print("order payload...$payload");
+    print("order payload...$payload");
 
     final Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -763,7 +763,7 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
     final String targetUrl =
         "${ApiManager.baseUrl}${ApiManager.getOrderDetails}";
-    //print("order details..$targetUrl..$activeToken");
+    print("order details..$targetUrl..$activeToken");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -771,6 +771,7 @@ class OrderService extends GetxService {
     };
 
     final Map<String, dynamic> payload = {"orderkey": orderKey};
+    print("order details..$payload");
 
     // if (kDebugMode) {
     //   debugPrint(
@@ -1130,6 +1131,77 @@ class OrderService extends GetxService {
       }
     }
     return false;
+  }
+
+  /// Calls payments/v1/add API endpoint to add a payment transaction.
+  Future<Map<String, dynamic>?> addPayment({
+    required Map<String, dynamic> payload,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String targetUrl = "${ApiManager.baseUrl}${ApiManager.paymentAdd}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        if (httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        // Fallback to dio below
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.paymentAdd,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        if (e.response?.data != null) {
+          if (e.response!.data is Map<String, dynamic>) {
+            responseData = e.response!.data;
+          } else if (e.response!.data is String) {
+            try {
+              responseData = jsonDecode(e.response!.data);
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    } else if (responseData is Map) {
+      return Map<String, dynamic>.from(responseData);
+    }
+    return null;
   }
 
   Future<List<int>?> _fetchPdfFromUrl(String url) async {
