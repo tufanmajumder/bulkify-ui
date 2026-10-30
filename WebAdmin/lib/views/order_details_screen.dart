@@ -2718,7 +2718,10 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
   @override
   void initState() {
     super.initState();
-    _orderNoController.text = widget.controller.orderNo.value;
+    final initialOrderNo = widget.controller.orderNo.value.trim();
+    if (initialOrderNo.isNotEmpty && initialOrderNo != '-') {
+      _orderNoController.text = initialOrderNo;
+    }
     _initDateTime();
   }
 
@@ -2794,11 +2797,32 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
   Future<void> _submit() async {
     if (widget.controller.isSubmittingPayment.value) return;
 
+    final orderNoText = _orderNoController.text.trim();
+    final dueAmountText = _dueAmountController.text.trim();
+    final issuedByText = _selectedIssuedBy.trim();
+    final dateText = _dateController.text.trim();
+    final timeText = _timeController.text.trim();
+    final rrnUtrText = _rrnUtrController.text.trim();
     final amountText = _amountController.text.trim();
-    if (amountText.isEmpty) {
+    final statusText = _selectedStatus.trim();
+    final hasReceipt =
+        _receiptBytes != null &&
+        _receiptFileName != null &&
+        _receiptFileName!.trim().isNotEmpty;
+
+    if (orderNoText.isEmpty ||
+        orderNoText == '-' ||
+        dueAmountText.isEmpty ||
+        issuedByText.isEmpty ||
+        dateText.isEmpty ||
+        timeText.isEmpty ||
+        rrnUtrText.isEmpty ||
+        amountText.isEmpty ||
+        !hasReceipt ||
+        statusText.isEmpty) {
       Get.snackbar(
         'Error',
-        'Please enter the amount',
+        'Please fill all fields',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: const Color(0xFFEF4444),
         colorText: Colors.white,
@@ -2808,16 +2832,16 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
     }
 
     final success = await widget.controller.submitPayment(
-      orderNumber: _orderNoController.text.trim(),
-      dueAmount: _dueAmountController.text.trim(),
-      issuedBy: _selectedIssuedBy,
+      orderNumber: orderNoText,
+      dueAmount: dueAmountText,
+      issuedBy: issuedByText,
       selectedDate: _selectedDate,
       selectedTime: _selectedTime,
-      createdDateText: _dateController.text.trim(),
-      createdTimeText: _timeController.text.trim(),
-      rrnUtr: _rrnUtrController.text.trim(),
+      createdDateText: dateText,
+      createdTimeText: timeText,
+      rrnUtr: rrnUtrText,
       amount: amountText,
-      status: _selectedStatus,
+      status: statusText,
       receiptFileName: _receiptFileName,
     );
 

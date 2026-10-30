@@ -1214,6 +1214,19 @@ class OrderDetailsController extends GetxController {
     required String status,
     String? receiptFileName,
   }) async {
+    if (orderNumber.trim().isEmpty ||
+        dueAmount.trim().isEmpty ||
+        issuedBy.trim().isEmpty ||
+        createdDateText.trim().isEmpty ||
+        createdTimeText.trim().isEmpty ||
+        rrnUtr.trim().isEmpty ||
+        amount.trim().isEmpty ||
+        status.trim().isEmpty ||
+        receiptFileName == null ||
+        receiptFileName.trim().isEmpty) {
+      return false;
+    }
+
     final cleanAmount = amount
         .replaceAll('₹', '')
         .replaceAll('\$', '')
