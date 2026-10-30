@@ -1158,8 +1158,7 @@ class OrderDetailsController extends GetxController {
 
   Future<void> generateInvoice() async {
     final targetInvoiceId = invoiceId.value.trim();
-    final hasInvoice =
-        targetInvoiceId.isNotEmpty && targetInvoiceId != 'null';
+    final hasInvoice = targetInvoiceId.isNotEmpty && targetInvoiceId != 'null';
 
     if (invoiceNumber.value.trim().isEmpty ||
         invoiceNumber.value.trim() == 'null') {
@@ -1221,9 +1220,7 @@ class OrderDetailsController extends GetxController {
         createdTimeText.trim().isEmpty ||
         rrnUtr.trim().isEmpty ||
         amount.trim().isEmpty ||
-        status.trim().isEmpty ||
-        receiptFileName == null ||
-        receiptFileName.trim().isEmpty) {
+        status.trim().isEmpty) {
       return false;
     }
 
@@ -1237,6 +1234,14 @@ class OrderDetailsController extends GetxController {
         .replaceAll('\$', '')
         .replaceAll(',', '')
         .trim();
+
+    final parsedAmountVal = double.tryParse(cleanAmount);
+    final parsedDueAmountVal = double.tryParse(cleanDueAmount) ?? 0.0;
+    if (parsedAmountVal == null ||
+        parsedAmountVal < 0.01 ||
+        parsedAmountVal > parsedDueAmountVal) {
+      return false;
+    }
     final cleanOrderNo = orderNumber.trim().isNotEmpty
         ? orderNumber.trim().replaceAll('#', '')
         : orderNo.value.replaceAll('#', '').trim();
@@ -1359,6 +1364,7 @@ class OrderDetailsController extends GetxController {
               !res.containsKey('error'));
 
       final formattedAmount = _formatPriceVal(cleanAmount);
+      print("IsSuccess in order details....$isSuccess");
 
       if (isSuccess) {
         transactions.insert(
@@ -1436,6 +1442,28 @@ class OrderDetailsController extends GetxController {
         .replaceAll(RegExp(r'\s+'), '')
         .trim();
     return double.tryParse(cleanStr) ?? 0.0;
+  }
+
+  double get totalSuccessTransactionAmount {
+    double sum = 0.0;
+    for (final tx in transactions) {
+      if (tx.status.trim().toLowerCase() == 'success') {
+        sum += _parseItemAmount(tx.amount);
+      }
+    }
+    return sum;
+  }
+
+  double get dueAmountValue {
+    final total = _parseItemAmount(grandTotal.value);
+    return total - totalSuccessTransactionAmount;
+  }
+
+  String get paymentDueDisplay {
+    if (transactions.isEmpty || dueAmountValue <= 0) {
+      return 'Paid';
+    }
+    return 'Due ₹ ${dueAmountValue.toStringAsFixed(2)}';
   }
 
   int get totalRejectedItems =>

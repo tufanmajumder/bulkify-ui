@@ -435,11 +435,7 @@ class OrderDetailsScreen extends StatelessWidget {
                 dashGapColor: Colors.transparent,
               ),
               const SizedBox(height: 10),
-              _buildKeyValueRow(
-                'Date',
-                controller.extractDateOnly(controller.date.value),
-                isBoldValue: true,
-              ),
+              _buildKeyValueRow('Channel', 'ZOHO BOOKS', isBoldValue: true),
               const SizedBox(height: 10),
               DottedLine(
                 direction: Axis.horizontal,
@@ -453,8 +449,8 @@ class OrderDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               _buildKeyValueRow(
-                'Time',
-                controller.extractTimeOnly(controller.time.value),
+                'Date & Time',
+                controller.date.value,
                 isBoldValue: true,
               ),
               const SizedBox(height: 10),
@@ -505,18 +501,17 @@ class OrderDetailsScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _buildKeyValueRow(
                 'Payment',
-                controller.paymentMethod.value,
-                customValueWidget: Text(
-                  (controller.paymentMethod.value.trim().isEmpty ||
-                          controller.paymentMethod.value.trim() == 'null' ||
-                          controller.paymentMethod.value.trim() == '-')
-                      ? '-'
-                      : controller.paymentMethod.value[0].toUpperCase() +
-                            controller.paymentMethod.value.substring(1),
-                  style: const TextStyle(
+                controller.paymentDueDisplay,
+                customValueWidget: _buildRupeeText(
+                  controller.paymentDueDisplay,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontFamily: 'Public Sans',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF10B981),
+                    color: controller.paymentDueDisplay.contains('₹')
+                        ? const Color(0xFFF97316)
+                        : const Color(0xFF10B981),
                   ),
                 ),
               ),
@@ -1120,7 +1115,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           const Text(
-                            'Generate Invoice',
+                            'Refresh Invoice',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -1448,7 +1443,7 @@ class OrderDetailsScreen extends StatelessWidget {
                             Expanded(
                               flex: 2,
                               child: Text(
-                                'ISSUED BY',
+                                'PLATFORM',
                                 style: TextStyle(
                                   fontFamily: 'Public Sans',
                                   fontSize: Responsive.sp(context, 10.8),
@@ -2251,30 +2246,31 @@ class OrderDetailsScreen extends StatelessWidget {
                                                 ],
                                               ),
                                             ),
-                                            const SizedBox(width: 20),
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Text(
-                                                  'Total Declined Amount: ',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Color(0xFF475569),
-                                                  ),
+                                            const SizedBox(width: 18),
+                                            RichText(
+                                              text: TextSpan(
+                                                style: const TextStyle(
+                                                  fontFamily: 'Public Sans',
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xFF475569),
                                                 ),
-                                                _buildRupeeText(
-                                                  controller
-                                                      .totalDeclinedAmount,
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF1E293B),
+                                                children: [
+                                                  const TextSpan(
+                                                    text:
+                                                        'Total Declined Amount: ',
                                                   ),
-                                                ),
-                                              ],
+                                                  TextSpan(
+                                                    text: controller
+                                                        .totalDeclinedAmount,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Color(0xFF1E293B),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -2306,30 +2302,31 @@ class OrderDetailsScreen extends StatelessWidget {
                                                 ],
                                               ),
                                             ),
-                                            const SizedBox(width: 20),
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Text(
-                                                  'Accepted Order Amount: ',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Color(0xFF475569),
-                                                  ),
+                                            const SizedBox(width: 18),
+                                            RichText(
+                                              text: TextSpan(
+                                                style: const TextStyle(
+                                                  fontFamily: 'Public Sans',
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xFF475569),
                                                 ),
-                                                _buildRupeeText(
-                                                  controller
-                                                      .acceptedOrderAmount,
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF1E293B),
+                                                children: [
+                                                  const TextSpan(
+                                                    text:
+                                                        'Accepted Order Amount: ',
                                                   ),
-                                                ),
-                                              ],
+                                                  TextSpan(
+                                                    text: controller
+                                                        .acceptedOrderAmount,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Color(0xFF1E293B),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -2595,13 +2592,8 @@ class OrderDetailsScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Flexible(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: labelWidget,
-          ),
-        ),
-        Flexible(
+        Padding(padding: const EdgeInsets.only(right: 8.0), child: labelWidget),
+        Expanded(
           child: Align(
             alignment: Alignment.centerRight,
             child:
@@ -2687,14 +2679,7 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
   final _timeController = TextEditingController();
 
   String _selectedIssuedBy = 'GPay';
-  final List<String> _issuedByOptions = [
-    'GPay',
-    'PhonePe',
-    'Paytm',
-    'DTSPay',
-    'Bank Transfer',
-    'Cash',
-  ];
+  final List<String> _issuedByOptions = ['GPay', 'PhonePe', 'DTSPay'];
 
   String _selectedStatus = 'Success';
   final List<String> _statusOptions = ['Success', 'Pending', 'Failed'];
@@ -2722,6 +2707,12 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
     if (initialOrderNo.isNotEmpty && initialOrderNo != '-') {
       _orderNoController.text = initialOrderNo;
     }
+    final dueVal =
+        (widget.controller.transactions.isEmpty ||
+            widget.controller.dueAmountValue <= 0)
+        ? 0.0
+        : widget.controller.dueAmountValue;
+    _dueAmountController.text = dueVal.toStringAsFixed(2);
     _initDateTime();
   }
 
@@ -2729,69 +2720,234 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
     final now = DateTime.now();
     _selectedDate = now;
     _selectedTime = TimeOfDay.fromDateTime(now);
-    _dateController.text =
-        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
-
-    final hour = _selectedTime.hour.toString().padLeft(2, '0');
-    final minute = _selectedTime.minute.toString().padLeft(2, '0');
-    final period = _selectedTime.period == DayPeriod.pm ? 'PM' : 'AM';
-    _timeController.text = '$hour:$minute $period';
+    _updateDateTimeText();
   }
 
-  Future<void> _pickDate(BuildContext context) async {
-    final picked = await showDatePicker(
+  void _updateDateTimeText() {
+    final dateStr =
+        '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}';
+    final hour12 = _selectedTime.hourOfPeriod == 0
+        ? 12
+        : _selectedTime.hourOfPeriod;
+    final hour = hour12.toString().padLeft(2, '0');
+    final minute = _selectedTime.minute.toString().padLeft(2, '0');
+    final period = _selectedTime.period == DayPeriod.pm ? 'PM' : 'AM';
+    final timeStr = '$hour:$minute $period';
+
+    _dateController.text = '$dateStr  $timeStr';
+    _timeController.text = timeStr;
+  }
+
+  Widget _buildPickerTheme(BuildContext context, Widget? child) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFFCF4340),
+          onPrimary: Colors.white,
+          surface: Colors.white,
+          onSurface: Color(0xFF1E293B),
+          secondary: Color(0xFFCF4340),
+          onSecondary: Colors.white,
+        ),
+        dialogBackgroundColor: Colors.white,
+        datePickerTheme: DatePickerThemeData(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          headerBackgroundColor: const Color(0xFFCF4340),
+          headerForegroundColor: Colors.white,
+          headerHeadlineStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+          headerHelpStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+          weekdayStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF64748B),
+          ),
+          dayStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+          todayBorder: const BorderSide(color: Color(0xFFCF4340), width: 1.2),
+          dividerColor: const Color(0xFFE2E8F0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          cancelButtonStyle: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF64748B),
+            textStyle: const TextStyle(
+              fontFamily: 'Public Sans',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          confirmButtonStyle: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFCF4340),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            textStyle: const TextStyle(
+              fontFamily: 'Public Sans',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        timePickerTheme: TimePickerThemeData(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          helpTextStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF64748B),
+          ),
+          hourMinuteShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          hourMinuteColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? const Color(0xFFCF4340)
+                : const Color(0xFFF8FAFC),
+          ),
+          hourMinuteTextColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? Colors.white
+                : const Color(0xFF1E293B),
+          ),
+          hourMinuteTextStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+          ),
+          dayPeriodShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          dayPeriodBorderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          dayPeriodColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? const Color(0xFFCF4340)
+                : const Color(0xFFF8FAFC),
+          ),
+          dayPeriodTextColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? Colors.white
+                : const Color(0xFF64748B),
+          ),
+          dayPeriodTextStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          dialBackgroundColor: const Color(0xFFF8FAFC),
+          dialHandColor: const Color(0xFFCF4340),
+          dialTextColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? Colors.white
+                : const Color(0xFF1E293B),
+          ),
+          dialTextStyle: const TextStyle(
+            fontFamily: 'Public Sans',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+          entryModeIconColor: const Color(0xFF64748B),
+          cancelButtonStyle: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF64748B),
+            textStyle: const TextStyle(
+              fontFamily: 'Public Sans',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          confirmButtonStyle: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFCF4340),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+            textStyle: const TextStyle(
+              fontFamily: 'Public Sans',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+      child: child!,
+    );
+  }
+
+  Future<void> _pickDateOnly(BuildContext context) async {
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2035),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFCF4340),
-              onPrimary: Colors.white,
-              onSurface: Color(0xFF1E293B),
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: _buildPickerTheme,
     );
-    if (picked != null) {
+    if (pickedDate != null && mounted) {
       setState(() {
-        _selectedDate = picked;
-        _dateController.text =
-            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+        _selectedDate = pickedDate;
+        _updateDateTimeText();
       });
     }
   }
 
-  Future<void> _pickTime(BuildContext context) async {
-    final picked = await showTimePicker(
+  Future<void> _pickTimeOnly(BuildContext context) async {
+    final pickedTime = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFCF4340),
-              onPrimary: Colors.white,
-              onSurface: Color(0xFF1E293B),
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: _buildPickerTheme,
     );
-    if (picked != null) {
+    if (pickedTime != null && mounted) {
       setState(() {
-        _selectedTime = picked;
-        final hour = picked.hour.toString().padLeft(2, '0');
-        final minute = picked.minute.toString().padLeft(2, '0');
-        final period = picked.period == DayPeriod.pm ? 'PM' : 'AM';
-        _timeController.text = '$hour:$minute $period';
+        _selectedTime = pickedTime;
+        _updateDateTimeText();
       });
     }
+  }
+
+  Future<void> _pickDateTime(BuildContext context) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+      builder: _buildPickerTheme,
+    );
+    if (pickedDate == null || !mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+      builder: _buildPickerTheme,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _selectedDate = pickedDate;
+      if (pickedTime != null) {
+        _selectedTime = pickedTime;
+      }
+      _updateDateTimeText();
+    });
   }
 
   Future<void> _submit() async {
@@ -2818,7 +2974,6 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
         timeText.isEmpty ||
         rrnUtrText.isEmpty ||
         amountText.isEmpty ||
-        !hasReceipt ||
         statusText.isEmpty) {
       Get.snackbar(
         'Error',
@@ -2831,13 +2986,57 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
       return;
     }
 
+    final parsedAmount = double.tryParse(
+      amountText
+          .replaceAll('₹', '')
+          .replaceAll('\$', '')
+          .replaceAll(',', '')
+          .trim(),
+    );
+    final parsedDueAmount =
+        double.tryParse(
+          dueAmountText
+              .replaceAll('₹', '')
+              .replaceAll('\$', '')
+              .replaceAll(',', '')
+              .trim(),
+        ) ??
+        0.0;
+
+    if (parsedAmount == null || parsedAmount < 0.01) {
+      Get.snackbar(
+        'Error',
+        'Amount should not be less than 0.01',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    if (parsedAmount > parsedDueAmount) {
+      Get.snackbar(
+        'Error',
+        'Amount should not exceed Due Amount',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    final formattedDateOnly =
+        '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}';
+
     final success = await widget.controller.submitPayment(
       orderNumber: orderNoText,
       dueAmount: dueAmountText,
       issuedBy: issuedByText,
       selectedDate: _selectedDate,
       selectedTime: _selectedTime,
-      createdDateText: dateText,
+      createdDateText: formattedDateOnly,
       createdTimeText: timeText,
       rrnUtr: rrnUtrText,
       amount: amountText,
@@ -2861,14 +3060,29 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
     super.dispose();
   }
 
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontFamily: 'Public Sans',
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: Color(0xFF64748B),
+  Widget _buildLabel(String text, {bool isRequired = false}) {
+    return RichText(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          fontFamily: 'Public Sans',
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF64748B),
+        ),
+        children: isRequired
+            ? const [
+                TextSpan(
+                  text: '*',
+                  style: TextStyle(
+                    fontFamily: 'Public Sans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFEF4444),
+                  ),
+                ),
+              ]
+            : null,
       ),
     );
   }
@@ -2988,14 +3202,13 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
                         height: 40,
                         child: TextField(
                           controller: _orderNoController,
+                          readOnly: true,
                           style: const TextStyle(
                             fontFamily: 'Public Sans',
                             fontSize: 13,
                             color: Color(0xFF1E293B),
                           ),
-                          decoration: _inputDecoration(
-                            hintText: 'Enter the amount',
-                          ),
+                          decoration: _inputDecoration(hintText: 'Order No.'),
                         ),
                       ),
 
@@ -3008,6 +3221,7 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
                         height: 40,
                         child: TextField(
                           controller: _dueAmountController,
+                          readOnly: true,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
@@ -3016,16 +3230,14 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
                             fontSize: 13,
                             color: Color(0xFF1E293B),
                           ),
-                          decoration: _inputDecoration(
-                            hintText: 'Enter the amount',
-                          ),
+                          decoration: _inputDecoration(hintText: 'Due Amount'),
                         ),
                       ),
 
                       const SizedBox(height: 14),
 
                       // 3. Issued By
-                      _buildLabel('Issued By'),
+                      _buildLabel('Platform'),
                       const SizedBox(height: 6),
                       Container(
                         height: 40,
@@ -3067,29 +3279,55 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
 
                       const SizedBox(height: 14),
 
-                      // 4. Created Date
-                      _buildLabel('Created Date'),
+                      // 4. Payment date & time
+                      _buildLabel('Payment Date & Time', isRequired: true),
                       const SizedBox(height: 6),
                       SizedBox(
                         height: 40,
                         child: TextField(
                           controller: _dateController,
                           readOnly: true,
-                          onTap: () => _pickDate(context),
+                          onTap: () => _pickDateTime(context),
                           style: const TextStyle(
                             fontFamily: 'Public Sans',
                             fontSize: 13,
                             color: Color(0xFF1E293B),
                           ),
                           decoration: _inputDecoration(
-                            suffixIcon: IconButton(
-                              icon: const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 16,
-                                color: Color(0xFF64748B),
-                              ),
-                              onPressed: () => _pickDate(context),
-                              splashRadius: 16,
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: () => _pickDateOnly(context),
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(6.0),
+                                    child: Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 15,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 16,
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                                InkWell(
+                                  onTap: () => _pickTimeOnly(context),
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(6.0),
+                                    child: Icon(
+                                      Icons.access_time_rounded,
+                                      size: 16,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                              ],
                             ),
                           ),
                         ),
@@ -3097,38 +3335,8 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
 
                       const SizedBox(height: 14),
 
-                      // 5. Created Time
-                      _buildLabel('Created Time'),
-                      const SizedBox(height: 6),
-                      SizedBox(
-                        height: 40,
-                        child: TextField(
-                          controller: _timeController,
-                          readOnly: true,
-                          onTap: () => _pickTime(context),
-                          style: const TextStyle(
-                            fontFamily: 'Public Sans',
-                            fontSize: 13,
-                            color: Color(0xFF1E293B),
-                          ),
-                          decoration: _inputDecoration(
-                            suffixIcon: IconButton(
-                              icon: const Icon(
-                                Icons.access_time_rounded,
-                                size: 17,
-                                color: Color(0xFF64748B),
-                              ),
-                              onPressed: () => _pickTime(context),
-                              splashRadius: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      // 6. RRN/UTR
-                      _buildLabel('RRN/UTR'),
+                      // 5. RRN/UTR
+                      _buildLabel('RRN/UTR', isRequired: true),
                       const SizedBox(height: 6),
                       SizedBox(
                         height: 40,
@@ -3148,7 +3356,7 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
                       const SizedBox(height: 14),
 
                       // 7. Amount
-                      _buildLabel('Amount'),
+                      _buildLabel('Amount', isRequired: true),
                       const SizedBox(height: 6),
                       SizedBox(
                         height: 40,
@@ -3168,133 +3376,132 @@ class _AddPaymentDrawerState extends State<AddPaymentDrawer> {
                         ),
                       ),
 
-                      const SizedBox(height: 14),
+                      //const SizedBox(height: 14),
 
-                      // 8. Receipt
-                      _buildLabel('Receipt'),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: _pickReceipt,
-                        borderRadius: BorderRadius.circular(6),
-                        child: CustomPaint(
-                          painter: _DashedRectPainter(
-                            color: const Color(0xFFCBD5E1),
-                            strokeWidth: 1.0,
-                            dashWidth: 4.0,
-                            dashSpace: 3.0,
-                            radius: 6.0,
-                          ),
-                          child: Container(
-                            width: double.infinity,
-                            constraints: const BoxConstraints(minHeight: 46),
-                            padding: _receiptBytes != null
-                                ? const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  )
-                                : EdgeInsets.zero,
-                            alignment: Alignment.center,
-                            child: _receiptBytes != null
-                                ? Row(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Image.memory(
-                                          _receiptBytes!,
-                                          width: 36,
-                                          height: 36,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          _receiptFileName ?? 'Receipt image',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontFamily: 'Public Sans',
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                            color: Color(0xFF1E293B),
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            _receiptBytes = null;
-                                            _receiptFileName = null;
-                                          });
-                                        },
-                                        icon: const Icon(
-                                          Icons.close_rounded,
-                                          size: 16,
-                                          color: Color(0xFF64748B),
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                        splashRadius: 14,
-                                      ),
-                                    ],
-                                  )
-                                : const Text(
-                                    '+ Add receipt here',
-                                    style: TextStyle(
-                                      fontFamily: 'Public Sans',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
+                      // // 8. Receipt
+                      // _buildLabel('Receipt'),
+                      // const SizedBox(height: 6),
+                      // InkWell(
+                      //   onTap: _pickReceipt,
+                      //   borderRadius: BorderRadius.circular(6),
+                      //   child: CustomPaint(
+                      //     painter: _DashedRectPainter(
+                      //       color: const Color(0xFFCBD5E1),
+                      //       strokeWidth: 1.0,
+                      //       dashWidth: 4.0,
+                      //       dashSpace: 3.0,
+                      //       radius: 6.0,
+                      //     ),
+                      //     child: Container(
+                      //       width: double.infinity,
+                      //       constraints: const BoxConstraints(minHeight: 46),
+                      //       padding: _receiptBytes != null
+                      //           ? const EdgeInsets.symmetric(
+                      //               horizontal: 12,
+                      //               vertical: 8,
+                      //             )
+                      //           : EdgeInsets.zero,
+                      //       alignment: Alignment.center,
+                      //       child: _receiptBytes != null
+                      //           ? Row(
+                      //               children: [
+                      //                 ClipRRect(
+                      //                   borderRadius: BorderRadius.circular(4),
+                      //                   child: Image.memory(
+                      //                     _receiptBytes!,
+                      //                     width: 36,
+                      //                     height: 36,
+                      //                     fit: BoxFit.cover,
+                      //                   ),
+                      //                 ),
+                      //                 const SizedBox(width: 10),
+                      //                 Expanded(
+                      //                   child: Text(
+                      //                     _receiptFileName ?? 'Receipt image',
+                      //                     maxLines: 1,
+                      //                     overflow: TextOverflow.ellipsis,
+                      //                     style: const TextStyle(
+                      //                       fontFamily: 'Public Sans',
+                      //                       fontSize: 12,
+                      //                       fontWeight: FontWeight.w500,
+                      //                       color: Color(0xFF1E293B),
+                      //                     ),
+                      //                   ),
+                      //                 ),
+                      //                 IconButton(
+                      //                   onPressed: () {
+                      //                     setState(() {
+                      //                       _receiptBytes = null;
+                      //                       _receiptFileName = null;
+                      //                     });
+                      //                   },
+                      //                   icon: const Icon(
+                      //                     Icons.close_rounded,
+                      //                     size: 16,
+                      //                     color: Color(0xFF64748B),
+                      //                   ),
+                      //                   padding: EdgeInsets.zero,
+                      //                   constraints: const BoxConstraints(),
+                      //                   splashRadius: 14,
+                      //                 ),
+                      //               ],
+                      //             )
+                      //           : const Text(
+                      //               '+ Add receipt here',
+                      //               style: TextStyle(
+                      //                 fontFamily: 'Public Sans',
+                      //                 fontSize: 12,
+                      //                 fontWeight: FontWeight.w400,
+                      //                 color: Color(0xFF94A3B8),
+                      //               ),
+                      //             ),
+                      //     ),
+                      //   ),
+                      // ),
 
-                      const SizedBox(height: 14),
+                      // const SizedBox(height: 14),
 
-                      // 9. Status
-                      _buildLabel('Status'),
-                      const SizedBox(height: 6),
-                      Container(
-                        height: 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: _selectedStatus,
-                            icon: const Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              color: Color(0xFF64748B),
-                              size: 20,
-                            ),
-                            items: _statusOptions.map((status) {
-                              return DropdownMenuItem(
-                                value: status,
-                                child: Text(
-                                  status,
-                                  style: TextStyle(
-                                    fontFamily: 'Public Sans',
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: _getStatusColor(status),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() => _selectedStatus = val);
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-
+                      // // 9. Status
+                      // _buildLabel('Status'),
+                      // const SizedBox(height: 6),
+                      // Container(
+                      //   height: 40,
+                      //   padding: const EdgeInsets.symmetric(horizontal: 12),
+                      //   decoration: BoxDecoration(
+                      //     borderRadius: BorderRadius.circular(6),
+                      //     border: Border.all(color: const Color(0xFFE2E8F0)),
+                      //   ),
+                      //   child: DropdownButtonHideUnderline(
+                      //     child: DropdownButton<String>(
+                      //       isExpanded: true,
+                      //       value: _selectedStatus,
+                      //       icon: const Icon(
+                      //         Icons.keyboard_arrow_down_rounded,
+                      //         color: Color(0xFF64748B),
+                      //         size: 20,
+                      //       ),
+                      //       items: _statusOptions.map((status) {
+                      //         return DropdownMenuItem(
+                      //           value: status,
+                      //           child: Text(
+                      //             status,
+                      //             style: TextStyle(
+                      //               fontFamily: 'Public Sans',
+                      //               fontSize: 13,
+                      //               fontWeight: FontWeight.w500,
+                      //               color: _getStatusColor(status),
+                      //             ),
+                      //           ),
+                      //         );
+                      //       }).toList(),
+                      //       onChanged: (val) {
+                      //         if (val != null) {
+                      //           setState(() => _selectedStatus = val);
+                      //         }
+                      //       },
+                      //     ),
+                      //   ),
+                      // ),
                       const SizedBox(height: 22),
 
                       // Buttons: Submit & Cancel
