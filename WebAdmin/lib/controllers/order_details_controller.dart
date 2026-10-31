@@ -40,27 +40,33 @@ class LineItemTaxModel {
 }
 
 class OrderItemModel {
+  final String sku;
   final String name;
   final String itemType;
   final String description;
   final String price;
-  final int qty;
-  final String total;
+  final RxInt qty;
+  final TextEditingController qtyController;
+  final RxString total;
   final List<LineItemTaxModel> lineItemTaxes;
   final RxBool isAccepted;
   final RxBool isRejected;
 
   OrderItemModel({
+    this.sku = '-',
     required this.name,
     required this.itemType,
     required this.description,
     required this.price,
-    required this.qty,
-    required this.total,
+    required int qty,
+    required String total,
     this.lineItemTaxes = const [],
     bool initialAccepted = false,
     bool initialRejected = false,
-  }) : isAccepted = initialAccepted.obs,
+  }) : qty = qty.obs,
+       qtyController = TextEditingController(text: qty.toString()),
+       total = total.obs,
+       isAccepted = initialAccepted.obs,
        isRejected = initialRejected.obs;
 
   String get merchant => description;
@@ -71,6 +77,26 @@ class DocumentModel {
   final String code;
 
   DocumentModel({required this.title, required this.code});
+}
+
+class ShippingDriverModel {
+  final String initials;
+  final String name;
+  final String vehicle;
+  final String distance;
+  final int activeOrders;
+  final String status;
+  final bool isPrimary;
+
+  ShippingDriverModel({
+    required this.initials,
+    required this.name,
+    required this.vehicle,
+    required this.distance,
+    required this.activeOrders,
+    required this.status,
+    this.isPrimary = false,
+  });
 }
 
 class ShippingActivityModel {
@@ -151,17 +177,131 @@ class OrderDetailsController extends GetxController {
   // Order Items List
   final RxList<OrderItemModel> orderItems = <OrderItemModel>[].obs;
 
-  // Shipping Activity Timeline
+  // Shipping Activity Timeline & Driver Assignment State
   final RxList<ShippingActivityModel> shippingActivities =
       <ShippingActivityModel>[].obs;
+  final RxInt currentShippingStep = 0.obs;
+  final RxString assignedDriverName = ''.obs;
+  final RxString driverSearchQuery = ''.obs;
+  final RxString selectedDriverAvailability = 'Available now'.obs;
+  final RxString selectedDriverSort = 'Nearest first'.obs;
+  final RxBool markAsPackedOnAssign = true.obs;
+  final RxBool notifyCustomerOnAssign = true.obs;
+
+  final List<String> shippingSteps = const [
+    'Accepted',
+    'Packed',
+    'Driver assigned',
+    'Picked up',
+    'In transit',
+    'Out for delivery',
+    'Delivered',
+  ];
+
+  final RxList<ShippingDriverModel> drivers = <ShippingDriverModel>[
+    ShippingDriverModel(
+      initials: 'JD',
+      name: 'Jhon Doe',
+      vehicle: 'Van',
+      distance: '1.2 km from store',
+      activeOrders: 2,
+      status: 'Online',
+      isPrimary: true,
+    ),
+    ShippingDriverModel(
+      initials: 'AK',
+      name: '[Driver name]',
+      vehicle: 'Bike',
+      distance: '3.8 km from store',
+      activeOrders: 0,
+      status: 'Online',
+    ),
+    ShippingDriverModel(
+      initials: 'MR',
+      name: '[Driver name]',
+      vehicle: 'Van',
+      distance: '6.1 km from store',
+      activeOrders: 4,
+      status: 'Busy',
+    ),
+    ShippingDriverModel(
+      initials: 'RK',
+      name: '[Driver name]',
+      vehicle: 'Bike',
+      distance: '2.4 km from store',
+      activeOrders: 1,
+      status: 'Online',
+    ),
+    ShippingDriverModel(
+      initials: 'SP',
+      name: '[Driver name]',
+      vehicle: 'Van',
+      distance: '4.5 km from store',
+      activeOrders: 3,
+      status: 'Busy',
+    ),
+  ].obs;
+
+  List<ShippingDriverModel> get filteredDrivers {
+    final q = driverSearchQuery.value.trim().toLowerCase();
+    return drivers.where((d) {
+      if (q.isNotEmpty && !d.name.toLowerCase().contains(q)) {
+        return false;
+      }
+      if (selectedDriverAvailability.value == 'Online' &&
+          d.status.toLowerCase() != 'online') {
+        return false;
+      }
+      if (selectedDriverAvailability.value == 'Busy' &&
+          d.status.toLowerCase() != 'busy') {
+        return false;
+      }
+      final distVal =
+          double.tryParse(d.distance.split(' ').first.trim()) ?? 0.0;
+      if (selectedDriverSort.value == 'Within 2KM' && distVal > 2.0) {
+        return false;
+      }
+      if (selectedDriverSort.value == 'Within 3KM' && distVal > 3.0) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  void assignDriver(ShippingDriverModel driver) {
+    assignedDriverName.value = driver.name;
+    if (markAsPackedOnAssign.value && currentShippingStep.value < 2) {
+      currentShippingStep.value = 2;
+    }
+    Get.snackbar(
+      'Driver Assigned',
+      'Order assigned to ${driver.name}.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: const Color(0xFF10B981),
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  void advanceShippingStatus() {
+    if (currentShippingStep.value < shippingSteps.length - 1) {
+      currentShippingStep.value++;
+    } else {
+      currentShippingStep.value = 0;
+    }
+    shipmentStatus.value = shippingSteps[currentShippingStep.value];
+  }
 
   final ScrollController leftScrollController = ScrollController();
   final ScrollController rightScrollController = ScrollController();
+  final ScrollController driverScrollController = ScrollController();
 
   @override
   void onClose() {
     leftScrollController.dispose();
     rightScrollController.dispose();
+    driverScrollController.dispose();
     super.onClose();
   }
 
@@ -947,7 +1087,23 @@ class OrderDetailsController extends GetxController {
             final isItemRejected =
                 statusStr == 'rejected' || statusStr == 'cancelled';
 
+            final rawSku =
+                item['sku'] ??
+                item['item_sku'] ??
+                item['sku_code'] ??
+                item['item_code'] ??
+                item['hsn_or_sac'] ??
+                item['itemid'] ??
+                item['item_id'] ??
+                '-';
+            final skuStr =
+                (rawSku.toString().trim().isEmpty ||
+                    rawSku.toString().trim() == 'null')
+                ? '-'
+                : rawSku.toString().trim();
+
             return OrderItemModel(
+              sku: skuStr,
               name: (item['name'] ?? '').toString(),
               itemType: (item['group_name'] ?? '').toString(),
               description: (item['description'] ?? '').toString(),
@@ -964,6 +1120,7 @@ class OrderDetailsController extends GetxController {
             );
           }
           return OrderItemModel(
+            sku: '-',
             name: '',
             itemType: '',
             description: '',
@@ -1454,8 +1611,10 @@ class OrderDetailsController extends GetxController {
     return sum;
   }
 
+  double get orderTotalValue => _parseItemAmount(grandTotal.value);
+
   double get dueAmountValue {
-    final total = _parseItemAmount(grandTotal.value);
+    final total = orderTotalValue;
     return total - totalSuccessTransactionAmount;
   }
 
@@ -1473,10 +1632,10 @@ class OrderDetailsController extends GetxController {
     double sum = 0.0;
     for (final item in orderItems) {
       if (item.isRejected.value) {
-        sum += _parseItemAmount(item.total);
+        sum += _parseItemAmount(item.total.value);
       }
     }
-    return '₹${sum.toStringAsFixed(2)}.';
+    return '₹${sum.toStringAsFixed(2)}';
   }
 
   int get totalAcceptedItems =>
@@ -1486,10 +1645,52 @@ class OrderDetailsController extends GetxController {
     double sum = 0.0;
     for (final item in orderItems) {
       if (item.isAccepted.value) {
-        sum += _parseItemAmount(item.total);
+        sum += _parseItemAmount(item.total.value);
       }
     }
     return '₹${sum.toStringAsFixed(2)}';
+  }
+
+  void updateItemQty(int index, String value) {
+    if (index >= 0 && index < orderItems.length) {
+      final item = orderItems[index];
+      final parsed = int.tryParse(value.trim());
+      final newQty = (parsed != null && parsed >= 0) ? parsed : 0;
+      item.qty.value = newQty;
+      final unitPrice = _parseItemAmount(item.price);
+      item.total.value = '₹ ${(unitPrice * newQty).toStringAsFixed(2)}';
+    }
+  }
+
+  void incrementItemQty(int index) {
+    if (index >= 0 && index < orderItems.length) {
+      final item = orderItems[index];
+      item.qty.value++;
+      final textVal = item.qty.value.toString();
+      item.qtyController.value = TextEditingValue(
+        text: textVal,
+        selection: TextSelection.collapsed(offset: textVal.length),
+      );
+      final unitPrice = _parseItemAmount(item.price);
+      item.total.value = '₹ ${(unitPrice * item.qty.value).toStringAsFixed(2)}';
+    }
+  }
+
+  void decrementItemQty(int index) {
+    if (index >= 0 && index < orderItems.length) {
+      final item = orderItems[index];
+      if (item.qty.value > 1) {
+        item.qty.value--;
+        final textVal = item.qty.value.toString();
+        item.qtyController.value = TextEditingValue(
+          text: textVal,
+          selection: TextSelection.collapsed(offset: textVal.length),
+        );
+        final unitPrice = _parseItemAmount(item.price);
+        item.total.value =
+            '₹ ${(unitPrice * item.qty.value).toStringAsFixed(2)}';
+      }
+    }
   }
 
   void toggleAcceptItem(int index) {

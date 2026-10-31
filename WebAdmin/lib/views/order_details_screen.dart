@@ -3,10 +3,10 @@ import 'package:admin_app/utils/color_manager.dart';
 import 'package:admin_app/utils/receipt_picker.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:admin_app/controllers/order_details_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
-import 'widgets/header.dart';
 import 'widgets/sidebar.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
@@ -36,8 +36,14 @@ class OrderDetailsScreen extends StatelessWidget {
             padding: EdgeInsets.only(left: isMobileOrTablet ? 0.0 : 72.0),
             child: Column(
               children: [
-                // Navigation Header Bar
-                //const Header(),
+                // Order Details Top Header Bar
+                Obx(
+                  () => _buildOrderHeaderBar(
+                    context,
+                    controller,
+                    isMobileOrTablet,
+                  ),
+                ),
 
                 // Top Action Bar with Go Back (Fixed / Non-scrolling)
                 Container(
@@ -49,10 +55,10 @@ class OrderDetailsScreen extends StatelessWidget {
                     dynamicPadding,
                     12,
                   ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: _buildGoBackButton(context),
-                  ),
+                  // child: Align(
+                  //   alignment: Alignment.centerLeft,
+                  //   child: _buildGoBackButton(context),
+                  // ),
                 ),
 
                 // Main Content
@@ -229,6 +235,379 @@ class OrderDetailsScreen extends StatelessWidget {
               bottom: 0,
               child: Sidebar(activeRoute: '/orders'),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderHeaderBar(
+    BuildContext context,
+    OrderDetailsController controller,
+    bool isMobileOrTablet,
+  ) {
+    final horizontalPadding = Responsive.dynamicPadding(context);
+    final rawOrderNo = controller.orderNo.value.trim();
+    final displayOrderNo = (rawOrderNo.isEmpty || rawOrderNo == '-')
+        ? '-'
+        : (rawOrderNo.startsWith('#') ? rawOrderNo : '#$rawOrderNo');
+
+    final paymentText = controller.paymentDueDisplay;
+    final isDue = paymentText.contains('₹');
+
+    final rawShipment = controller.shipmentStatus.value.trim();
+    final shipmentText =
+        (rawShipment.isEmpty || rawShipment == 'null' || rawShipment == '-')
+        ? '-'
+        : rawShipment[0].toUpperCase() + rawShipment.substring(1);
+
+    final List<String> metaParts = [
+      'ZOHO BOOKS${rawOrderNo.isNotEmpty && rawOrderNo != '-' ? ' $displayOrderNo' : ''}',
+      if (controller.date.value.trim().isNotEmpty &&
+          controller.date.value.trim() != '-')
+        controller.date.value.trim(),
+      if (controller.customer.value.trim().isNotEmpty &&
+          controller.customer.value.trim() != '-')
+        controller.customer.value.trim(),
+      if (controller.company.value.trim().isNotEmpty &&
+          controller.company.value.trim() != '-')
+        controller.company.value.trim(),
+    ];
+
+    final dueVal =
+        (controller.transactions.isEmpty || controller.dueAmountValue <= 0)
+        ? 0.0
+        : controller.dueAmountValue;
+
+    final totalDisplay = controller.grandTotal.value.trim().isEmpty
+        ? '₹0.00'
+        : controller.grandTotal.value.replaceAll('₹ ', '₹');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      margin: EdgeInsets.only(
+        left: Responsive.w(context, 2),
+        top: Responsive.w(context, 2),
+        right: Responsive.w(context, 2),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(
+          Radius.circular(horizontalPadding * 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.2),
+            blurRadius: 5,
+            offset: const Offset(0, 0.5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Left Section: Back button + Order Title, Badges & Metadata
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (isMobileOrTablet) ...[
+                  IconButton(
+                    icon: const Icon(
+                      Icons.menu_rounded,
+                      color: Color(0xFF1E293B),
+                      size: 22,
+                    ),
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                InkWell(
+                  onTap: () => Get.back(),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.chevron_left_rounded,
+                        size: 20,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Text(
+                            'Order $displayOrderNo',
+                            style: const TextStyle(
+                              fontFamily: 'Public Sans',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          // Payment Pill
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDue
+                                  ? const Color(0xFFFFEDD5)
+                                  : const Color(0xFFDCFCE7),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: _buildRupeeText(
+                              paymentText,
+                              style: TextStyle(
+                                fontFamily: 'Public Sans',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isDue
+                                    ? const Color(0xFFEA580C)
+                                    : const Color(0xFF15803D),
+                              ),
+                            ),
+                          ),
+                          // Shipment Pill
+                          if (shipmentText != '-')
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDBEAFE),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                shipmentText,
+                                style: const TextStyle(
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1D4ED8),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        metaParts.join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Public Sans',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          // Right Section: ORDER TOTAL + Generate Invoice + Collect Button
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'ORDER TOTAL',
+                    style: TextStyle(
+                      fontFamily: 'Public Sans',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF94A3B8),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  _buildRupeeText(
+                    totalDisplay,
+                    style: const TextStyle(
+                      fontFamily: 'Public Sans',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              // Generate Invoice / Invoice Download Button
+              Builder(
+                builder: (context) {
+                  final isDownloaded = controller.isInvoiceDownloaded.value;
+                  final isLoading = controller.isDownloadingInvoice.value;
+                  final hasInvoiceId =
+                      controller.invoiceId.value.trim().isNotEmpty &&
+                      controller.invoiceId.value.trim() != 'null';
+                  final displayCode =
+                      (controller.invoiceNumber.value.trim().isNotEmpty &&
+                          controller.invoiceNumber.value.trim() != 'null')
+                      ? controller.invoiceNumber.value.trim()
+                      : (hasInvoiceId
+                            ? controller.invoiceId.value.trim()
+                            : '-');
+                  final hasValidInvoice =
+                      hasInvoiceId &&
+                      displayCode.isNotEmpty &&
+                      displayCode != '-';
+
+                  if (!isDownloaded) {
+                    return InkWell(
+                      onTap: isLoading
+                          ? null
+                          : () => controller.generateInvoice(),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        height: 36,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: const Center(
+                          widthFactor: 1.0,
+                          child: Text(
+                            'Generate Invoice',
+                            style: TextStyle(
+                              fontFamily: 'Public Sans',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (!hasValidInvoice) {
+                    return Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Center(
+                        widthFactor: 1.0,
+                        child: Text(
+                          '-',
+                          style: TextStyle(
+                            fontFamily: 'Public Sans',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return InkWell(
+                    onTap: isLoading
+                        ? null
+                        : () => controller.downloadInvoiceById(
+                            controller.invoiceId.value,
+                          ),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          isLoading
+                              ? const SizedBox(
+                                  width: 15,
+                                  height: 15,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF475569),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.file_download_outlined,
+                                  size: 16,
+                                  color: Color(0xFF475569),
+                                ),
+                          const SizedBox(width: 6),
+                          Text(
+                            displayCode,
+                            style: const TextStyle(
+                              fontFamily: 'Public Sans',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 10),
+              // Collect Button
+              Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCF4340),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Center(
+                  widthFactor: 1.0,
+                  child: _buildRupeeText(
+                    'Collect ₹${dueVal.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontFamily: 'Public Sans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -1420,6 +1799,64 @@ class OrderDetailsScreen extends StatelessWidget {
             dashGapLength: 2.0,
             dashGapColor: Colors.transparent,
           ),
+          // Payment Progress Line Bar
+          Obx(() {
+            final total = controller.orderTotalValue;
+            final hasTransactions = controller.transactions.isNotEmpty;
+            final paid = hasTransactions
+                ? controller.totalSuccessTransactionAmount
+                : total;
+            final due = hasTransactions
+                ? (controller.dueAmountValue > 0
+                      ? controller.dueAmountValue
+                      : 0.0)
+                : 0.0;
+            final progress = total > 0 ? (paid / total).clamp(0.0, 1.0) : 0.0;
+
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildRupeeText(
+                        '₹${paid.toStringAsFixed(2)}  of  ₹${total.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontFamily: 'Public Sans',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      _buildRupeeText(
+                        '₹${due.toStringAsFixed(2)} due',
+                        style: const TextStyle(
+                          fontFamily: 'Public Sans',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF991B1B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: const Color(0xFFEDF2F7),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF16A34A),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
           LayoutBuilder(
             builder: (context, constraints) {
               final double tableWidth = constraints.maxWidth < 450
@@ -1834,7 +2271,20 @@ class OrderDetailsScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 7,
+                              flex: 2,
+                              child: Text(
+                                'SKU',
+                                style: TextStyle(
+                                  fontFamily: 'Public Sans',
+                                  fontSize: Responsive.sp(context, 10.8),
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
                               child: Text(
                                 'PRODUCT',
                                 style: TextStyle(
@@ -1949,7 +2399,23 @@ class OrderDetailsScreen extends StatelessWidget {
                                                 ),
                                               ),
                                               Expanded(
-                                                flex: 7,
+                                                flex: 2,
+                                                child: Text(
+                                                  (item.sku.trim().isEmpty ||
+                                                          item.sku.trim() ==
+                                                              'null')
+                                                      ? '-'
+                                                      : item.sku,
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    fontFamily: 'Public Sans',
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Color(0xFF64748B),
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                flex: 5,
                                                 child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -1979,27 +2445,29 @@ class OrderDetailsScreen extends StatelessWidget {
                                                               ),
                                                             ),
                                                           ),
-                                                          TextSpan(
-                                                            text:
-                                                                (item.itemType
-                                                                        .trim()
-                                                                        .isEmpty ||
-                                                                    item.itemType
-                                                                            .trim() ==
-                                                                        'null')
-                                                                ? '-'
-                                                                : '  ${item.itemType}',
-                                                            style: const TextStyle(
-                                                              fontSize: 12,
-                                                              fontFamily:
-                                                                  'Public Sans',
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color: ColorManager
-                                                                  .secondary,
+                                                          if (item.itemType
+                                                                  .trim()
+                                                                  .isNotEmpty &&
+                                                              item.itemType
+                                                                      .trim() !=
+                                                                  'null' &&
+                                                              item.itemType
+                                                                      .trim() !=
+                                                                  '-')
+                                                            TextSpan(
+                                                              text:
+                                                                  '  ${item.itemType}',
+                                                              style: const TextStyle(
+                                                                fontSize: 12,
+                                                                fontFamily:
+                                                                    'Public Sans',
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                color: ColorManager
+                                                                    .secondary,
+                                                              ),
                                                             ),
-                                                          ),
                                                           if (item.description
                                                                   .trim()
                                                                   .isNotEmpty &&
@@ -2051,29 +2519,132 @@ class OrderDetailsScreen extends StatelessWidget {
                                               ),
                                               Expanded(
                                                 flex: 2,
-                                                child: Text(
-                                                  '${item.qty}',
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Color(0xFF64748B),
+                                                child: Center(
+                                                  child: Container(
+                                                    width: 68,
+                                                    height: 30,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: const Color(
+                                                          0xFFCBD5E1,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Expanded(
+                                                          child: TextField(
+                                                            controller: item
+                                                                .qtyController,
+                                                            keyboardType:
+                                                                TextInputType
+                                                                    .number,
+                                                            inputFormatters: [
+                                                              FilteringTextInputFormatter
+                                                                  .digitsOnly,
+                                                            ],
+                                                            onChanged: (val) =>
+                                                                controller
+                                                                    .updateItemQty(
+                                                                      index,
+                                                                      val,
+                                                                    ),
+                                                            style: const TextStyle(
+                                                              fontFamily:
+                                                                  'Public Sans',
+                                                              fontSize: 13,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color: Color(
+                                                                0xFF64748B,
+                                                              ),
+                                                            ),
+                                                            decoration:
+                                                                const InputDecoration(
+                                                                  isDense: true,
+                                                                  contentPadding:
+                                                                      EdgeInsets
+                                                                          .zero,
+                                                                  border:
+                                                                      InputBorder
+                                                                          .none,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                        Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            InkWell(
+                                                              onTap: () =>
+                                                                  controller
+                                                                      .incrementItemQty(
+                                                                        index,
+                                                                      ),
+                                                              child: const Icon(
+                                                                Icons
+                                                                    .keyboard_arrow_up_rounded,
+                                                                size: 13,
+                                                                color: Color(
+                                                                  0xFF64748B,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            InkWell(
+                                                              onTap: () =>
+                                                                  controller
+                                                                      .decrementItemQty(
+                                                                        index,
+                                                                      ),
+                                                              child: const Icon(
+                                                                Icons
+                                                                    .keyboard_arrow_down_rounded,
+                                                                size: 13,
+                                                                color: Color(
+                                                                  0xFF64748B,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                               Expanded(
                                                 flex: 2,
-                                                child: _buildRupeeText(
-                                                  (item.total.contains('₹')
-                                                          ? item.total
-                                                          : '₹${item.total}')
-                                                      .replaceAll('₹ ', '₹'),
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Color(0xFF64748B),
+                                                child: Obx(
+                                                  () => _buildRupeeText(
+                                                    (item.total.value.contains(
+                                                              '₹',
+                                                            )
+                                                            ? item.total.value
+                                                            : '₹${item.total.value}')
+                                                        .replaceAll('₹ ', '₹'),
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: Color(0xFF64748B),
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -2218,117 +2789,73 @@ class OrderDetailsScreen extends StatelessWidget {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            RichText(
-                                              text: TextSpan(
-                                                style: const TextStyle(
-                                                  fontFamily: 'Public Sans',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF475569),
-                                                ),
-                                                children: [
-                                                  const TextSpan(
-                                                    text:
-                                                        'Total Rejected Items: ',
-                                                  ),
-                                                  TextSpan(
-                                                    text:
-                                                        '${controller.totalRejectedItems}',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Color(0xFF1E293B),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                        RichText(
+                                          text: TextSpan(
+                                            style: const TextStyle(
+                                              fontFamily: 'Public Sans',
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF1E293B),
                                             ),
-                                            const SizedBox(width: 18),
-                                            RichText(
-                                              text: TextSpan(
-                                                style: const TextStyle(
-                                                  fontFamily: 'Public Sans',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF475569),
+                                            children: [
+                                              const TextSpan(
+                                                text: 'Accepted ',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF0F172A),
                                                 ),
-                                                children: [
-                                                  const TextSpan(
-                                                    text:
-                                                        'Total Declined Amount: ',
-                                                  ),
-                                                  TextSpan(
-                                                    text: controller
-                                                        .totalDeclinedAmount,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Color(0xFF1E293B),
-                                                    ),
-                                                  ),
-                                                ],
                                               ),
-                                            ),
-                                          ],
+                                              TextSpan(
+                                                text:
+                                                    '${controller.totalAcceptedItems} · ',
+                                              ),
+                                              const TextSpan(
+                                                text: '₹',
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: controller
+                                                    .acceptedOrderAmount
+                                                    .replaceAll('₹', ''),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            RichText(
-                                              text: TextSpan(
-                                                style: const TextStyle(
-                                                  fontFamily: 'Public Sans',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF475569),
-                                                ),
-                                                children: [
-                                                  const TextSpan(
-                                                    text:
-                                                        'Total Accepted Items: ',
-                                                  ),
-                                                  TextSpan(
-                                                    text:
-                                                        '${controller.totalAcceptedItems}',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Color(0xFF1E293B),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                        RichText(
+                                          text: TextSpan(
+                                            style: const TextStyle(
+                                              fontFamily: 'Public Sans',
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF1E293B),
                                             ),
-                                            const SizedBox(width: 18),
-                                            RichText(
-                                              text: TextSpan(
-                                                style: const TextStyle(
-                                                  fontFamily: 'Public Sans',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF475569),
+                                            children: [
+                                              const TextSpan(
+                                                text: 'Rejected ',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF0F172A),
                                                 ),
-                                                children: [
-                                                  const TextSpan(
-                                                    text:
-                                                        'Accepted Order Amount: ',
-                                                  ),
-                                                  TextSpan(
-                                                    text: controller
-                                                        .acceptedOrderAmount,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Color(0xFF1E293B),
-                                                    ),
-                                                  ),
-                                                ],
                                               ),
-                                            ),
-                                          ],
+                                              TextSpan(
+                                                text:
+                                                    '${controller.totalRejectedItems} · ',
+                                              ),
+                                              const TextSpan(
+                                                text: '₹',
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: controller
+                                                    .totalDeclinedAmount
+                                                    .replaceAll('₹', ''),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -2359,7 +2886,7 @@ class OrderDetailsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Color(0xFFE5E5E6),
             blurRadius: 6.0,
@@ -2367,127 +2894,649 @@ class OrderDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Shipping Activity',
-            style: TextStyle(
-              fontFamily: 'Public-Sans',
-              fontSize: Responsive.sp(context, 15),
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
+          // Top Header & Shipment Row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Shipping Activity',
+                  style: TextStyle(
+                    fontFamily: 'Public-Sans',
+                    fontSize: Responsive.sp(context, 15),
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Shipment',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Obx(() {
+                          final assigned =
+                              controller.assignedDriverName.value.isNotEmpty;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: assigned
+                                  ? const Color(0xFFDCFCE7)
+                                  : const Color(0xFFEDF2F7),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              assigned
+                                  ? 'Assigned · ${controller.assignedDriverName.value}'
+                                  : 'Not assigned',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: assigned
+                                    ? const Color(0xFF15803D)
+                                    : const Color(0xFF475569),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                    InkWell(
+                      onTap: () => controller.advanceShippingStatus(),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        height: 34,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: const Text(
+                          'Update status',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
-          Obx(
-            () => controller.shippingActivities.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text("No shipping activity found!"),
-                    ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: controller.shippingActivities.length,
-                    itemBuilder: (context, index) {
-                      final activity = controller.shippingActivities[index];
-                      final isLast =
-                          index == controller.shippingActivities.length - 1;
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
 
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Timeline dot and connecting vertical line
-                          Column(
+          // 7-Step Horizontal Stepper
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 20, 12, 22),
+            child: Obx(() {
+              final activeStep = controller.currentShippingStep.value;
+              final steps = controller.shippingSteps;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(steps.length, (index) {
+                  final isCompleted = index < activeStep;
+                  final isActive = index == activeStep;
+                  final isFirst = index == 0;
+                  final isLast = index == steps.length - 1;
+
+                  return Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 20,
+                          child: Row(
                             children: [
-                              const SizedBox(height: 3),
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: activity.isCompleted
-                                      ? const Color(0xFF10B981)
-                                      : const Color(0xFF94A3B8),
+                              Expanded(
+                                child: Container(
+                                  height: 2,
+                                  color: isFirst
+                                      ? Colors.transparent
+                                      : (index <= activeStep
+                                            ? const Color(0xFF16A34A)
+                                            : const Color(0xFFE2E8F0)),
                                 ),
                               ),
-                              if (!isLast)
-                                Container(
-                                  width: 2,
-                                  height: 48,
-                                  color: const Color(0xFFE2E8F0),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(width: 16),
-                          // Activity Title, Timestamp, Description
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 20.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: RichText(
-                                          text: TextSpan(
-                                            style: const TextStyle(
-                                              fontFamily: 'Public Sans',
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1E293B),
+                              GestureDetector(
+                                onTap: () =>
+                                    controller.currentShippingStep.value =
+                                        index,
+                                child: MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: isActive
+                                      ? Container(
+                                          width: 18,
+                                          height: 18,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.white,
+                                            border: Border.all(
+                                              color: const Color(0xFF16A34A),
+                                              width: 4.5,
                                             ),
-                                            children: [
-                                              TextSpan(text: activity.title),
-                                              if (activity.highlightText !=
-                                                  null) ...[
-                                                const TextSpan(text: ' '),
-                                                TextSpan(
-                                                  text: activity.highlightText!,
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Public Sans',
-                                                    color: Color(0xFFCF4340),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 14,
+                                          height: 14,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: isCompleted
+                                                ? const Color(0xFF16A34A)
+                                                : const Color(0xFFCBD5E1),
                                           ),
                                         ),
-                                      ),
-                                      Text(
-                                        activity.timestamp,
-                                        style: const TextStyle(
-                                          fontFamily: 'Public Sans',
-                                          fontSize: 12,
-                                          color: Color(0xFF94A3B8),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    activity.description,
-                                    style: const TextStyle(
-                                      fontFamily: 'Public Sans',
-                                      fontSize: 12,
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 2,
+                                  color: isLast
+                                      ? Colors.transparent
+                                      : (index < activeStep
+                                            ? const Color(0xFF16A34A)
+                                            : const Color(0xFFE2E8F0)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            steps[index],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12,
+                              fontWeight: isActive
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: (isActive || isCompleted)
+                                  ? const Color(0xFF1E293B)
+                                  : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              );
+            }),
+          ),
+
+          // Assign a driver Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Public-Sans',
+                      fontSize: 13,
+                      color: Color(0xFF1E293B),
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Assign a driver',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      TextSpan(
+                        text:
+                            ' · the order is sent to the Driver App instantly',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Search & Filter Bar
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: TextField(
+                          onChanged: (value) =>
+                              controller.driverSearchQuery.value = value,
+                          style: const TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 12.5,
+                            color: Color(0xFF1E293B),
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Search driver by name or phone',
+                            hintStyle: const TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                              color: Color(0xFFCBD5E1),
+                            ),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF94A3B8),
                               ),
                             ),
                           ),
-                        ],
-                      );
-                    },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Obx(
+                      () => Container(
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: controller.selectedDriverAvailability.value,
+                            isDense: true,
+                            dropdownColor: Colors.white,
+                            icon: const Padding(
+                              padding: EdgeInsets.only(left: 4),
+                              child: Icon(
+                                Icons.arrow_drop_down,
+                                size: 18,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E293B),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Available now',
+                                child: Text('Available now'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Online',
+                                child: Text('Online'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Busy',
+                                child: Text('Busy'),
+                              ),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                controller.selectedDriverAvailability.value =
+                                    val;
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Obx(
+                      () => Container(
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: controller.selectedDriverSort.value,
+                            isDense: true,
+                            dropdownColor: Colors.white,
+                            icon: const Padding(
+                              padding: EdgeInsets.only(left: 4),
+                              child: Icon(
+                                Icons.arrow_drop_down,
+                                size: 18,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E293B),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Nearest first',
+                                child: Text('Nearest first'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Within 2KM',
+                                child: Text('Within 2KM'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Within 3KM',
+                                child: Text('Within 3KM'),
+                              ),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                controller.selectedDriverSort.value = val;
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Driver List (Scrollable)
+                Obx(() {
+                  final driverList = controller.filteredDrivers;
+                  final assignedName = controller.assignedDriverName.value;
+
+                  if (driverList.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: Text(
+                          'No matching drivers found',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 12.5,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 195),
+                    child: ScrollbarTheme(
+                      data: ScrollbarThemeData(
+                        thickness: WidgetStateProperty.all(3),
+                      ),
+                      child: Scrollbar(
+                        controller: controller.driverScrollController,
+                        thumbVisibility: true,
+                        thickness: 3,
+                        radius: const Radius.circular(4),
+                        child: SingleChildScrollView(
+                          controller: controller.driverScrollController,
+                          child: Column(
+                            children: List.generate(driverList.length, (index) {
+                              final driver = driverList[index];
+                              final isOnline = driver.status == 'Online';
+                              final isSelectedDriver = assignedName.isNotEmpty
+                                  ? assignedName == driver.name
+                                  : driver.isPrimary;
+                              final isLast = index == driverList.length - 1;
+
+                              return Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 38,
+                                          height: 38,
+                                          alignment: Alignment.center,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Color(0xFFEDF2F7),
+                                          ),
+                                          child: Text(
+                                            driver.initials,
+                                            style: const TextStyle(
+                                              fontFamily: 'Public-Sans',
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF1E293B),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                driver.name,
+                                                style: const TextStyle(
+                                                  fontFamily: 'Public-Sans',
+                                                  fontSize: 13.5,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF1E293B),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '${driver.vehicle} · ${driver.distance} · ${driver.activeOrders} active orders',
+                                                style: const TextStyle(
+                                                  fontFamily: 'Public-Sans',
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isOnline
+                                                ? const Color(0xFFE6F4EA)
+                                                : const Color(0xFFFEF3C7),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            driver.status,
+                                            style: TextStyle(
+                                              fontFamily: 'Public-Sans',
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w500,
+                                              color: isOnline
+                                                  ? const Color(0xFF15803D)
+                                                  : const Color(0xFFB45309),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        InkWell(
+                                          onTap: () =>
+                                              controller.assignDriver(driver),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          child: Container(
+                                            height: 32,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                            ),
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: isSelectedDriver
+                                                  ? const Color(0xFFCF4340)
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: isSelectedDriver
+                                                    ? const Color(0xFFCF4340)
+                                                    : const Color(0xFFE2E8F0),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              assignedName == driver.name
+                                                  ? 'Assigned'
+                                                  : 'Assign',
+                                              style: TextStyle(
+                                                fontFamily: 'Public-Sans',
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: isSelectedDriver
+                                                    ? Colors.white
+                                                    : const Color(0xFF1E293B),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (!isLast)
+                                    const Divider(
+                                      height: 1,
+                                      thickness: 1,
+                                      color: Color(0xFFF1F5F9),
+                                    ),
+                                ],
+                              );
+                            }),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 8),
+
+                // Bottom Checkboxes Bar
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Obx(
+                    () => Wrap(
+                      spacing: 28,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _buildShippingCheckbox(
+                          label: 'Mark as Packed when driver is assigned',
+                          value: controller.markAsPackedOnAssign.value,
+                          onChanged: (v) =>
+                              controller.markAsPackedOnAssign.value = v,
+                        ),
+                        _buildShippingCheckbox(
+                          label: 'Notify customer with tracking link',
+                          value: controller.notifyCustomerOnAssign.value,
+                          onChanged: (v) =>
+                              controller.notifyCustomerOnAssign.value = v,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShippingCheckbox({
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 16,
+            height: 16,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(3.5),
+              border: Border.all(
+                color: value
+                    ? const Color(0xFF0EA5E9)
+                    : const Color(0xFFCBD5E1),
+                width: 1.5,
+              ),
+            ),
+            child: value
+                ? const Icon(Icons.check, size: 12, color: Color(0xFF0EA5E9))
+                : null,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Public-Sans',
+              fontSize: 12.5,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF475569),
+            ),
           ),
         ],
       ),
