@@ -2913,78 +2913,368 @@ class OrderDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                Obx(() {
+                  final step = controller.currentShippingStep.value;
+                  final isDeliveredMode = step == 6;
+                  final isInTransitMode = step >= 4 && step < 6;
+                  final assigned =
+                      controller.assignedDriverName.value.isNotEmpty;
+
+                  if (isDeliveredMode) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Shipment',
-                          style: TextStyle(
-                            fontFamily: 'Public-Sans',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1E293B),
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Shipment',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE6F4EA),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'Delivered',
+                                style: TextStyle(
+                                  fontFamily: 'Public-Sans',
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF15803D),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'SHP-3350-01',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        Obx(() {
-                          final assigned =
-                              controller.assignedDriverName.value.isNotEmpty;
-                          return Container(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () {},
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Download POD',
+                                  style: TextStyle(
+                                    fontFamily: 'Public-Sans',
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () {},
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Print Delivery Challan',
+                                  style: TextStyle(
+                                    fontFamily: 'Public-Sans',
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+
+                  if (isInTransitMode) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Shipment',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDBEAFE),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                controller.shippingSteps[step],
+                                style: const TextStyle(
+                                  fontFamily: 'Public-Sans',
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF1D4ED8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'SHP-3350-01',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () => controller.setShippingStep(0),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Reassign driver',
+                                  style: TextStyle(
+                                    fontFamily: 'Public-Sans',
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () {},
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Share tracking link',
+                                  style: TextStyle(
+                                    fontFamily: 'Public-Sans',
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            PopupMenuButton<int>(
+                              tooltip: '',
+                              color: Colors.white,
+                              offset: const Offset(0, 38),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              onSelected: (stepIndex) =>
+                                  controller.setShippingStep(stepIndex),
+                              itemBuilder: (context) => List.generate(
+                                controller.shippingSteps.length,
+                                (i) => PopupMenuItem<int>(
+                                  value: i,
+                                  height: 36,
+                                  child: Text(
+                                    controller.shippingSteps[i],
+                                    style: TextStyle(
+                                      fontFamily: 'Public-Sans',
+                                      fontSize: 12.5,
+                                      fontWeight:
+                                          controller
+                                                  .currentShippingStep
+                                                  .value ==
+                                              i
+                                          ? FontWeight.w700
+                                          : FontWeight.w400,
+                                      color: const Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFCF4340),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'Update status ▾',
+                                  style: TextStyle(
+                                    fontFamily: 'Public-Sans',
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Shipment',
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: assigned
-                                  ? const Color(0xFFDCFCE7)
-                                  : const Color(0xFFEDF2F7),
+                              color: step >= 2
+                                  ? const Color(0xFFDBEAFE)
+                                  : (assigned
+                                        ? const Color(0xFFDCFCE7)
+                                        : const Color(0xFFEDF2F7)),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              assigned
-                                  ? 'Assigned · ${controller.assignedDriverName.value}'
-                                  : 'Not assigned',
+                              step > 0
+                                  ? controller.shippingSteps[step]
+                                  : (assigned
+                                        ? 'Assigned · ${controller.assignedDriverName.value}'
+                                        : 'Not assigned'),
                               style: TextStyle(
                                 fontFamily: 'Public-Sans',
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w500,
-                                color: assigned
-                                    ? const Color(0xFF15803D)
-                                    : const Color(0xFF475569),
+                                color: step >= 2
+                                    ? const Color(0xFF1D4ED8)
+                                    : (assigned
+                                          ? const Color(0xFF15803D)
+                                          : const Color(0xFF475569)),
                               ),
                             ),
-                          );
-                        }),
-                      ],
-                    ),
-                    InkWell(
-                      onTap: () => controller.advanceShippingStatus(),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        height: 34,
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: const Text(
-                          'Update status',
-                          style: TextStyle(
-                            fontFamily: 'Public-Sans',
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1E293B),
+                          ),
+                        ],
+                      ),
+                      InkWell(
+                        onTap: () => controller.advanceShippingStatus(),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          height: 34,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: const Text(
+                            'Update status',
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E293B),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -2996,39 +3286,39 @@ class OrderDetailsScreen extends StatelessWidget {
             child: Obx(() {
               final activeStep = controller.currentShippingStep.value;
               final steps = controller.shippingSteps;
+              final isAllDelivered = activeStep == steps.length - 1;
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: List.generate(steps.length, (index) {
-                  final isCompleted = index < activeStep;
-                  final isActive = index == activeStep;
+                  final isCompleted = isAllDelivered || index < activeStep;
+                  final isActive = !isAllDelivered && index == activeStep;
                   final isFirst = index == 0;
                   final isLast = index == steps.length - 1;
 
                   return Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          height: 20,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 2,
-                                  color: isFirst
-                                      ? Colors.transparent
-                                      : (index <= activeStep
-                                            ? const Color(0xFF16A34A)
-                                            : const Color(0xFFE2E8F0)),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () =>
-                                    controller.currentShippingStep.value =
-                                        index,
-                                child: MouseRegion(
-                                  cursor: SystemMouseCursors.click,
-                                  child: isActive
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => controller.setShippingStep(index),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: 20,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 2,
+                                      color: isFirst
+                                          ? Colors.transparent
+                                          : (index <= activeStep
+                                                ? const Color(0xFF16A34A)
+                                                : const Color(0xFFE2E8F0)),
+                                    ),
+                                  ),
+                                  isActive
                                       ? Container(
                                           width: 18,
                                           height: 18,
@@ -3051,40 +3341,42 @@ class OrderDetailsScreen extends StatelessWidget {
                                                 : const Color(0xFFCBD5E1),
                                           ),
                                         ),
-                                ),
+                                  Expanded(
+                                    child: Container(
+                                      height: 2,
+                                      color: isLast
+                                          ? Colors.transparent
+                                          : (index < activeStep
+                                                ? const Color(0xFF16A34A)
+                                                : const Color(0xFFE2E8F0)),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Expanded(
-                                child: Container(
-                                  height: 2,
-                                  color: isLast
-                                      ? Colors.transparent
-                                      : (index < activeStep
-                                            ? const Color(0xFF16A34A)
-                                            : const Color(0xFFE2E8F0)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Text(
-                            steps[index],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Public-Sans',
-                              fontSize: 12,
-                              fontWeight: isActive
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: (isActive || isCompleted)
-                                  ? const Color(0xFF1E293B)
-                                  : const Color(0xFF64748B),
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
+                              child: Text(
+                                steps[index],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Public-Sans',
+                                  fontSize: 12,
+                                  fontWeight: isActive
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isActive
+                                      ? const Color(0xFF1E293B)
+                                      : const Color(0xFF64748B),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 }),
@@ -3092,409 +3384,1352 @@ class OrderDetailsScreen extends StatelessWidget {
             }),
           ),
 
-          // Assign a driver Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: const TextSpan(
+          // Body Section: Accepted vs In Transit vs Delivered Mode
+          Obx(() {
+            if (controller.currentShippingStep.value == 6) {
+              return _buildDeliveredShippingContent(context, controller);
+            }
+            if (controller.currentShippingStep.value >= 4) {
+              return _buildInTransitShippingContent(context, controller);
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: const TextSpan(
+                      style: TextStyle(
+                        fontFamily: 'Public-Sans',
+                        fontSize: 13,
+                        color: Color(0xFF1E293B),
+                      ),
+                      children: [
+                        TextSpan(
+                          text: 'Assign a driver',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        TextSpan(
+                          text:
+                              ' · the order is sent to the Driver App instantly',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Search & Filter Bar
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 38,
+                          child: TextField(
+                            onChanged: (value) =>
+                                controller.driverSearchQuery.value = value,
+                            style: const TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                              color: Color(0xFF1E293B),
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Search driver by name or phone',
+                              hintStyle: const TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                color: Color(0xFFCBD5E1),
+                              ),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Obx(
+                        () => Container(
+                          height: 38,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value:
+                                  controller.selectedDriverAvailability.value,
+                              isDense: true,
+                              dropdownColor: Colors.white,
+                              icon: const Padding(
+                                padding: EdgeInsets.only(left: 4),
+                                child: Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 18,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              style: const TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1E293B),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'Available now',
+                                  child: Text('Available now'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Online',
+                                  child: Text('Online'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Busy',
+                                  child: Text('Busy'),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  controller.selectedDriverAvailability.value =
+                                      val;
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Obx(
+                        () => Container(
+                          height: 38,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: controller.selectedDriverSort.value,
+                              isDense: true,
+                              dropdownColor: Colors.white,
+                              icon: const Padding(
+                                padding: EdgeInsets.only(left: 4),
+                                child: Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 18,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              style: const TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1E293B),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'Nearest first',
+                                  child: Text('Nearest first'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Within 2KM',
+                                  child: Text('Within 2KM'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Within 3KM',
+                                  child: Text('Within 3KM'),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  controller.selectedDriverSort.value = val;
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Driver List (Scrollable)
+                  Obx(() {
+                    final driverList = controller.filteredDrivers;
+                    final assignedName = controller.assignedDriverName.value;
+
+                    if (driverList.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: Text(
+                            'No matching drivers found',
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 195),
+                      child: ScrollbarTheme(
+                        data: ScrollbarThemeData(
+                          thickness: WidgetStateProperty.all(3),
+                        ),
+                        child: Scrollbar(
+                          controller: controller.driverScrollController,
+                          thumbVisibility: true,
+                          thickness: 3,
+                          radius: const Radius.circular(4),
+                          child: SingleChildScrollView(
+                            controller: controller.driverScrollController,
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Column(
+                              children: List.generate(driverList.length, (
+                                index,
+                              ) {
+                                final driver = driverList[index];
+                                final isOnline = driver.status == 'Online';
+                                final isSelectedDriver = assignedName.isNotEmpty
+                                    ? assignedName == driver.name
+                                    : driver.isPrimary;
+                                final isLast = index == driverList.length - 1;
+
+                                return Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 38,
+                                            height: 38,
+                                            alignment: Alignment.center,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Color(0xFFEDF2F7),
+                                            ),
+                                            child: Text(
+                                              driver.initials,
+                                              style: const TextStyle(
+                                                fontFamily: 'Public-Sans',
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF1E293B),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  driver.name,
+                                                  style: const TextStyle(
+                                                    fontFamily: 'Public-Sans',
+                                                    fontSize: 13.5,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Color(0xFF1E293B),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  '${driver.vehicle} · ${driver.distance} · ${driver.activeOrders} active orders',
+                                                  style: const TextStyle(
+                                                    fontFamily: 'Public-Sans',
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: Color(0xFF64748B),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isOnline
+                                                  ? const Color(0xFFE6F4EA)
+                                                  : const Color(0xFFFEF3C7),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              driver.status,
+                                              style: TextStyle(
+                                                fontFamily: 'Public-Sans',
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w500,
+                                                color: isOnline
+                                                    ? const Color(0xFF15803D)
+                                                    : const Color(0xFFB45309),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          InkWell(
+                                            onTap: () =>
+                                                controller.assignDriver(driver),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            child: Container(
+                                              height: 32,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 14,
+                                                  ),
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                color: isSelectedDriver
+                                                    ? const Color(0xFFCF4340)
+                                                    : Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: isSelectedDriver
+                                                      ? const Color(0xFFCF4340)
+                                                      : const Color(0xFFE2E8F0),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                assignedName == driver.name
+                                                    ? 'Assigned'
+                                                    : 'Assign',
+                                                style: TextStyle(
+                                                  fontFamily: 'Public-Sans',
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isSelectedDriver
+                                                      ? Colors.white
+                                                      : const Color(0xFF1E293B),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (!isLast)
+                                      const Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: Color(0xFFF1F5F9),
+                                      ),
+                                  ],
+                                );
+                              }),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: 8),
+
+                  // Bottom Checkboxes Bar
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Obx(
+                      () => Wrap(
+                        spacing: 28,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _buildShippingCheckbox(
+                            label: 'Mark as Packed when driver is assigned',
+                            value: controller.markAsPackedOnAssign.value,
+                            onChanged: (v) =>
+                                controller.markAsPackedOnAssign.value = v,
+                          ),
+                          _buildShippingCheckbox(
+                            label: 'Notify customer with tracking link',
+                            value: controller.notifyCustomerOnAssign.value,
+                            onChanged: (v) =>
+                                controller.notifyCustomerOnAssign.value = v,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveredShippingContent(
+    BuildContext context,
+    OrderDetailsController controller,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Proof of delivery header
+              Row(
+                children: [
+                  const Text(
+                    'Proof of delivery',
                     style: TextStyle(
                       fontFamily: 'Public-Sans',
                       fontSize: 13,
+                      fontWeight: FontWeight.w700,
                       color: Color(0xFF1E293B),
                     ),
-                    children: [
-                      TextSpan(
-                        text: 'Assign a driver',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE6F4EA),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Verified',
+                      style: TextStyle(
+                        fontFamily: 'Public-Sans',
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF15803D),
                       ),
-                      TextSpan(
-                        text:
-                            ' · the order is sent to the Driver App instantly',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Photo, Signature & Details Row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 116,
+                    height: 88,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDF2F7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Delivery photo',
+                      style: TextStyle(
+                        fontFamily: 'Public-Sans',
+                        fontSize: 11.5,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 116,
+                    height: 88,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDF2F7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Signature',
+                      style: TextStyle(
+                        fontFamily: 'Public-Sans',
+                        fontSize: 11.5,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Received by  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: 'Christian Teigland',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Delivered  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: 'Tue, 11:29 AM',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'OTP  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: 'Verified',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              TextSpan(
+                                text: '  · Location  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: 'Matched to address',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Driver  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: 'Jhon Doe',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              TextSpan(
+                                text: '  · Duration  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: '2 h 49 min',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Customer note: [Driver remarks from app]',
+                style: TextStyle(
+                  fontFamily: 'Public-Sans',
+                  fontSize: 12.5,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+        const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Status reference (Driver App sync)',
+                style: TextStyle(
+                  fontFamily: 'Public-Sans',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildStatusRefPill(
+                    'Accepted · Admin',
+                    const Color(0xFFEDF2F7),
+                    const Color(0xFF475569),
+                  ),
+                  _buildStatusRefPill(
+                    'Packed · Admin',
+                    const Color(0xFFEDF2F7),
+                    const Color(0xFF475569),
+                  ),
+                  _buildStatusRefPill(
+                    'Driver assigned · Admin',
+                    const Color(0xFFDBEAFE),
+                    const Color(0xFF1D4ED8),
+                  ),
+                  _buildStatusRefPill(
+                    'Picked up · Driver',
+                    const Color(0xFFDBEAFE),
+                    const Color(0xFF1D4ED8),
+                  ),
+                  _buildStatusRefPill(
+                    'In transit · Driver',
+                    const Color(0xFFDBEAFE),
+                    const Color(0xFF1D4ED8),
+                  ),
+                  _buildStatusRefPill(
+                    'Out for delivery · Driver',
+                    const Color(0xFFDBEAFE),
+                    const Color(0xFF1D4ED8),
+                  ),
+                  _buildStatusRefPill(
+                    'Delivered · Driver (POD)',
+                    const Color(0xFFE6F4EA),
+                    const Color(0xFF15803D),
+                  ),
+                  _buildStatusRefPill(
+                    'Rescheduled · Admin / Driver',
+                    const Color(0xFFFEF3C7),
+                    const Color(0xFFB45309),
+                  ),
+                  _buildStatusRefPill(
+                    'Delivery failed · Driver (reason)',
+                    const Color(0xFFFEE2E2),
+                    const Color(0xFFB91C1C),
+                  ),
+                  _buildStatusRefPill(
+                    'Returned · Admin',
+                    const Color(0xFFFEE2E2),
+                    const Color(0xFFB91C1C),
+                  ),
+                  _buildStatusRefPill(
+                    'Cancelled · Admin',
+                    const Color(0xFFFEE2E2),
+                    const Color(0xFFB91C1C),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusRefPill(String label, Color bgColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Public-Sans',
+          fontSize: 11.5,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInTransitShippingContent(
+    BuildContext context,
+    OrderDetailsController controller,
+  ) {
+    const driverName = 'Jhon Doe';
+    const deliverToName = 'Christian Teigland';
+
+    final activities = [
+      {
+        'time': 'Today 14:40',
+        'title': 'In transit',
+        'subtitle': 'Left pickup hub · Driver App',
+      },
+      {
+        'time': 'Today 14:12',
+        'title': 'Picked up by Jhon Doe',
+        'subtitle': '12 items scanned and verified · Driver App',
+      },
+      {
+        'time': 'Today 13:50',
+        'title': 'Driver assigned: Jhon Doe',
+        'subtitle': 'Assigned by [Admin name] · Admin',
+      },
+      {'time': 'Today 13:20', 'title': 'Packed', 'subtitle': 'System'},
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 3 Info Cards Row (DRIVER, TRACKING, DELIVER TO)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 1. DRIVER Card
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'DRIVER',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.4,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              alignment: Alignment.center,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFEDF2F7),
+                              ),
+                              child: const Text(
+                                'JD',
+                                style: TextStyle(
+                                  fontFamily: 'Public-Sans',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    driverName,
+                                    style: TextStyle(
+                                      fontFamily: 'Public-Sans',
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    '+44 7700 900123',
+                                    style: TextStyle(
+                                      fontFamily: 'Public-Sans',
+                                      fontSize: 12,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE6F4EA),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Accepted in Driver App',
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF15803D),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Van · WB24BK 12345',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: () {},
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            height: 30,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Call driver',
+                                  style: TextStyle(
+                                    fontFamily: 'Public-Sans',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // 2. TRACKING Card
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'TRACKING',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.4,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            const Text(
+                              'Tracking ID',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const Text(
+                              '[TRK-ID]',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () {},
+                              child: const Text(
+                                'Copy',
+                                style: TextStyle(
+                                  fontFamily: 'Public-Sans',
+                                  fontSize: 12,
+                                  color: Color(0xFFCF4340),
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Color(0xFFCF4340),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'ETA  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: 'Today, 4:30 PM',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Distance left  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: '12.4 km',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Last location  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: '2 min ago',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: () {},
+                          child: const Text(
+                            'Open live map',
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                              color: Color(0xFFCF4340),
+                              decoration: TextDecoration.underline,
+                              decorationColor: Color(0xFFCF4340),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // 3. DELIVER TO Card
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'DELIVER TO',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.4,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          deliverToName,
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          '45 Roker Terrace Latheronwheel,\nKW5 8NW, London · 743144',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 12,
+                            height: 1.4,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: 'Slot  ',
+                                style: TextStyle(color: Color(0xFF64748B)),
+                              ),
+                              TextSpan(
+                                text: '2 PM – 6 PM',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Note: [Delivery instructions]',
+                          style: TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 22),
+
+          // Delivery activity header
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(
+                fontFamily: 'Public-Sans',
+                fontSize: 13,
+                color: Color(0xFF1E293B),
+              ),
+              children: [
+                TextSpan(
+                  text: 'Delivery activity',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                TextSpan(
+                  text: ' · synced live from Driver App',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+
+          // Activity timeline rows
+          ...List.generate(activities.length, (index) {
+            final item = activities[index];
+            final isLast = index == activities.length - 1;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          item['time']!,
+                          style: const TextStyle(
+                            fontFamily: 'Public-Sans',
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['title']!,
+                              style: const TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item['subtitle']!,
+                              style: const TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFF1F5F9),
+                  ),
+              ],
+            );
+          }),
+
+          const SizedBox(height: 14),
+
+          // Proof of delivery container
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Proof of delivery',
                         style: TextStyle(
-                          fontWeight: FontWeight.w400,
+                          fontFamily: 'Public-Sans',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        'Photo, signature and OTP will appear here once the driver completes delivery',
+                        style: TextStyle(
+                          fontFamily: 'Public-Sans',
+                          fontSize: 12,
                           color: Color(0xFF64748B),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // Search & Filter Bar
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 38,
-                        child: TextField(
-                          onChanged: (value) =>
-                              controller.driverSearchQuery.value = value,
-                          style: const TextStyle(
-                            fontFamily: 'Public-Sans',
-                            fontSize: 12.5,
-                            color: Color(0xFF1E293B),
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Search driver by name or phone',
-                            hintStyle: const TextStyle(
-                              fontFamily: 'Public-Sans',
-                              fontSize: 12.5,
-                              color: Color(0xFFCBD5E1),
-                            ),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE2E8F0),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Obx(
-                      () => Container(
-                        height: 38,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: controller.selectedDriverAvailability.value,
-                            isDense: true,
-                            dropdownColor: Colors.white,
-                            icon: const Padding(
-                              padding: EdgeInsets.only(left: 4),
-                              child: Icon(
-                                Icons.arrow_drop_down,
-                                size: 18,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                            style: const TextStyle(
-                              fontFamily: 'Public-Sans',
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF1E293B),
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'Available now',
-                                child: Text('Available now'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Online',
-                                child: Text('Online'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Busy',
-                                child: Text('Busy'),
-                              ),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                controller.selectedDriverAvailability.value =
-                                    val;
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Obx(
-                      () => Container(
-                        height: 38,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: controller.selectedDriverSort.value,
-                            isDense: true,
-                            dropdownColor: Colors.white,
-                            icon: const Padding(
-                              padding: EdgeInsets.only(left: 4),
-                              child: Icon(
-                                Icons.arrow_drop_down,
-                                size: 18,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                            style: const TextStyle(
-                              fontFamily: 'Public-Sans',
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF1E293B),
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'Nearest first',
-                                child: Text('Nearest first'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Within 2KM',
-                                child: Text('Within 2KM'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Within 3KM',
-                                child: Text('Within 3KM'),
-                              ),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                controller.selectedDriverSort.value = val;
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // Driver List (Scrollable)
-                Obx(() {
-                  final driverList = controller.filteredDrivers;
-                  final assignedName = controller.assignedDriverName.value;
-
-                  if (driverList.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: Text(
-                          'No matching drivers found',
-                          style: TextStyle(
-                            fontFamily: 'Public-Sans',
-                            fontSize: 12.5,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 195),
-                    child: ScrollbarTheme(
-                      data: ScrollbarThemeData(
-                        thickness: WidgetStateProperty.all(3),
-                      ),
-                      child: Scrollbar(
-                        controller: controller.driverScrollController,
-                        thumbVisibility: true,
-                        thickness: 3,
-                        radius: const Radius.circular(4),
-                        child: SingleChildScrollView(
-                          controller: controller.driverScrollController,
-                          child: Column(
-                            children: List.generate(driverList.length, (index) {
-                              final driver = driverList[index];
-                              final isOnline = driver.status == 'Online';
-                              final isSelectedDriver = assignedName.isNotEmpty
-                                  ? assignedName == driver.name
-                                  : driver.isPrimary;
-                              final isLast = index == driverList.length - 1;
-
-                              return Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 38,
-                                          height: 38,
-                                          alignment: Alignment.center,
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Color(0xFFEDF2F7),
-                                          ),
-                                          child: Text(
-                                            driver.initials,
-                                            style: const TextStyle(
-                                              fontFamily: 'Public-Sans',
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w700,
-                                              color: Color(0xFF1E293B),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                driver.name,
-                                                style: const TextStyle(
-                                                  fontFamily: 'Public-Sans',
-                                                  fontSize: 13.5,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Color(0xFF1E293B),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                '${driver.vehicle} · ${driver.distance} · ${driver.activeOrders} active orders',
-                                                style: const TextStyle(
-                                                  fontFamily: 'Public-Sans',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: Color(0xFF64748B),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isOnline
-                                                ? const Color(0xFFE6F4EA)
-                                                : const Color(0xFFFEF3C7),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            driver.status,
-                                            style: TextStyle(
-                                              fontFamily: 'Public-Sans',
-                                              fontSize: 11.5,
-                                              fontWeight: FontWeight.w500,
-                                              color: isOnline
-                                                  ? const Color(0xFF15803D)
-                                                  : const Color(0xFFB45309),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        InkWell(
-                                          onTap: () =>
-                                              controller.assignDriver(driver),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          child: Container(
-                                            height: 32,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                            ),
-                                            alignment: Alignment.center,
-                                            decoration: BoxDecoration(
-                                              color: isSelectedDriver
-                                                  ? const Color(0xFFCF4340)
-                                                  : Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              border: Border.all(
-                                                color: isSelectedDriver
-                                                    ? const Color(0xFFCF4340)
-                                                    : const Color(0xFFE2E8F0),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              assignedName == driver.name
-                                                  ? 'Assigned'
-                                                  : 'Assign',
-                                              style: TextStyle(
-                                                fontFamily: 'Public-Sans',
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: isSelectedDriver
-                                                    ? Colors.white
-                                                    : const Color(0xFF1E293B),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (!isLast)
-                                    const Divider(
-                                      height: 1,
-                                      thickness: 1,
-                                      color: Color(0xFFF1F5F9),
-                                    ),
-                                ],
-                              );
-                            }),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-
-                const SizedBox(height: 8),
-
-                // Bottom Checkboxes Bar
+                const SizedBox(width: 12),
                 Container(
-                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                    horizontal: 12,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(8),
+                    color: const Color(0xFFEDF2F7),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Obx(
-                    () => Wrap(
-                      spacing: 28,
-                      runSpacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _buildShippingCheckbox(
-                          label: 'Mark as Packed when driver is assigned',
-                          value: controller.markAsPackedOnAssign.value,
-                          onChanged: (v) =>
-                              controller.markAsPackedOnAssign.value = v,
-                        ),
-                        _buildShippingCheckbox(
-                          label: 'Notify customer with tracking link',
-                          value: controller.notifyCustomerOnAssign.value,
-                          onChanged: (v) =>
-                              controller.notifyCustomerOnAssign.value = v,
-                        ),
-                      ],
+                  child: const Text(
+                    'Awaiting',
+                    style: TextStyle(
+                      fontFamily: 'Public-Sans',
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF475569),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          // Bottom Problem? Row
+          Row(
+            children: [
+              const Text(
+                'Problem?',
+                style: TextStyle(
+                  fontFamily: 'Public-Sans',
+                  fontSize: 12.5,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(width: 12),
+              _buildShippingActionBtn('Mark delivery failed', onTap: () {}),
+              const SizedBox(width: 8),
+              _buildShippingActionBtn('Reschedule', onTap: () {}),
+              const SizedBox(width: 8),
+              _buildShippingActionBtn('Cancel shipment', onTap: () {}),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildShippingActionBtn(String label, {required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Public-Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF1E293B),
+          ),
+        ),
       ),
     );
   }

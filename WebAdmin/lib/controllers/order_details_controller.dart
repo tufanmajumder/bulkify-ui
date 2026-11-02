@@ -284,11 +284,20 @@ class OrderDetailsController extends GetxController {
     );
   }
 
+  void setShippingStep(int index) {
+    if (index >= 0 && index < shippingSteps.length) {
+      currentShippingStep.value = index;
+      shipmentStatus.value = shippingSteps[index];
+    }
+  }
+
   void advanceShippingStatus() {
-    if (currentShippingStep.value < shippingSteps.length - 1) {
-      currentShippingStep.value++;
+    if (currentShippingStep.value < 4) {
+      currentShippingStep.value = 4; // Switch to 'In transit'
+    } else if (currentShippingStep.value < 6) {
+      currentShippingStep.value = 6; // Switch to 'Delivered'
     } else {
-      currentShippingStep.value = 0;
+      currentShippingStep.value = 0; // Switch back to 'Accepted'
     }
     shipmentStatus.value = shippingSteps[currentShippingStep.value];
   }
@@ -328,6 +337,12 @@ class OrderDetailsController extends GetxController {
       }
       if (args.orderStatus.isNotEmpty) {
         shipmentStatus.value = args.orderStatus;
+        final lowerStatus = args.orderStatus.toLowerCase();
+        if (lowerStatus.contains('deliver') && !lowerStatus.contains('out')) {
+          currentShippingStep.value = 6;
+        } else if (lowerStatus.contains('transit')) {
+          currentShippingStep.value = 4;
+        }
       }
       if (args.amount.isNotEmpty) {
         grandTotal.value = _formatPriceVal(args.amount);
@@ -590,6 +605,13 @@ class OrderDetailsController extends GetxController {
                 data['order_status'])
             ?.toString() ??
         '';
+    final lowerShipStatus = shipmentStatus.value.toLowerCase();
+    if (lowerShipStatus.contains('deliver') &&
+        !lowerShipStatus.contains('out')) {
+      currentShippingStep.value = 6;
+    } else if (lowerShipStatus.contains('transit')) {
+      currentShippingStep.value = 4;
+    }
 
     if (shipMap is Map) {
       shippingName.value =
