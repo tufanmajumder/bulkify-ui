@@ -2916,7 +2916,7 @@ class OrderDetailsScreen extends StatelessWidget {
                 Obx(() {
                   final step = controller.currentShippingStep.value;
                   final isDeliveredMode = step == 6;
-                  final isInTransitMode = step >= 4 && step < 6;
+                  final isInTransitMode = step >= 2 && step < 6;
                   final assigned =
                       controller.assignedDriverName.value.isNotEmpty;
 
@@ -3384,12 +3384,12 @@ class OrderDetailsScreen extends StatelessWidget {
             }),
           ),
 
-          // Body Section: Accepted vs In Transit vs Delivered Mode
+          // Body Section: Accepted vs Driver Assigned/In Transit vs Delivered Mode
           Obx(() {
             if (controller.currentShippingStep.value == 6) {
               return _buildDeliveredShippingContent(context, controller);
             }
-            if (controller.currentShippingStep.value >= 4) {
+            if (controller.currentShippingStep.value >= 2) {
               return _buildInTransitShippingContent(context, controller);
             }
             return Padding(
@@ -4131,18 +4131,21 @@ class OrderDetailsScreen extends StatelessWidget {
   ) {
     const driverName = 'Jhon Doe';
     const deliverToName = 'Christian Teigland';
+    final step = controller.currentShippingStep.value;
 
-    final activities = [
-      {
-        'time': 'Today 14:40',
-        'title': 'In transit',
-        'subtitle': 'Left pickup hub · Driver App',
-      },
-      {
-        'time': 'Today 14:12',
-        'title': 'Picked up by Jhon Doe',
-        'subtitle': '12 items scanned and verified · Driver App',
-      },
+    final activities = <Map<String, String>>[
+      if (step >= 4)
+        {
+          'time': 'Today 14:40',
+          'title': 'In transit',
+          'subtitle': 'Left pickup hub · Driver App',
+        },
+      if (step >= 3)
+        {
+          'time': 'Today 14:12',
+          'title': 'Picked up by Jhon Doe',
+          'subtitle': '12 items scanned and verified · Driver App',
+        },
       {
         'time': 'Today 13:50',
         'title': 'Driver assigned: Jhon Doe',

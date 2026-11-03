@@ -270,9 +270,8 @@ class OrderDetailsController extends GetxController {
 
   void assignDriver(ShippingDriverModel driver) {
     assignedDriverName.value = driver.name;
-    if (markAsPackedOnAssign.value && currentShippingStep.value < 2) {
-      currentShippingStep.value = 2;
-    }
+    currentShippingStep.value = 2; // Switch to 'Driver assigned'
+    shipmentStatus.value = shippingSteps[2];
     Get.snackbar(
       'Driver Assigned',
       'Order assigned to ${driver.name}.',

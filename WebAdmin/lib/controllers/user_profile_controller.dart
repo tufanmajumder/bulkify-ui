@@ -290,10 +290,12 @@ class UserProfileController extends GetxController {
 
   /// Calls ApiManager.userDetails (users/v1/get-by-key) via UserService with userkey & token.
   Future<void> fetchUserDetails([String? targetUserKey]) async {
+    print("token user key...$targetUserKey");
     final String keyToFetch =
         (targetUserKey != null && targetUserKey.trim().isNotEmpty)
         ? targetUserKey.trim()
         : userkey.value;
+    print("token user key...$keyToFetch");
     if (keyToFetch.isEmpty) {
       _redirectToUsersList('User key not found');
       return;
@@ -336,58 +338,64 @@ class UserProfileController extends GetxController {
     }
   }
 
+  String _valOrDash(String? val) {
+    if (val == null) return '-';
+    final s = val.trim();
+    if (s.isEmpty || s.toLowerCase() == 'null') return '-';
+    return s;
+  }
+
+  String _formatDateOrDash(String? raw, String pattern) {
+    final cleaned = _valOrDash(raw);
+    if (cleaned == '-') return '-';
+    final parsed = DateTime.tryParse(cleaned);
+    if (parsed == null) return cleaned;
+    return DateFormat(pattern).format(parsed);
+  }
+
+  String _capitalizeOrDash(String? raw) {
+    final cleaned = _valOrDash(raw);
+    if (cleaned == '-') return '-';
+    return cleaned[0].toUpperCase() + cleaned.substring(1).toLowerCase();
+  }
+
   void setUserProfileModel(UserProfileModel p) {
     profileModel.value = p;
-    if (p.name.isNotEmpty) {
-      name.value = p.name;
-      basicName.value = p.name;
-    }
-    if (p.email.isNotEmpty) email.value = p.email;
-    if (p.role.isNotEmpty) role.value = p.role;
-    if (p.status.isNotEmpty) status.value = p.status;
-    if (p.mobile.isNotEmpty) mobile.value = p.mobile;
-    if (p.country.isNotEmpty) country.value = p.country;
-    if (p.createdOn.isNotEmpty)
-      createdOn.value = DateFormat(
-        'dd-MM-yyyy hh:mm:ss a',
-      ).format(DateTime.parse(p.createdOn));
-    if (p.gender.isNotEmpty) gender.value = p.gender;
-    if (p.dob.isNotEmpty)
-      dob.value = DateFormat('dd-MM-yyyy').format(DateTime.parse(p.dob));
-    if (p.type.isNotEmpty)
-      type.value = p.type[0].toUpperCase() + p.type.substring(1).toLowerCase();
-    if (p.language.isNotEmpty) language.value = p.language;
-    if (p.vehicleNo.isNotEmpty) vehicleNo.value = p.vehicleNo;
-    if (p.portal.isNotEmpty) portal.value = p.portal;
-    if (p.emergencyContact.isNotEmpty)
-      emergencyContact.value = p.emergencyContact;
-    if (p.emergencyContactName.isNotEmpty)
-      emergencyContactName.value = p.emergencyContactName;
-    if (p.whatsapp.isNotEmpty) whatsapp.value = p.whatsapp;
-    if (p.docType.isNotEmpty)
-      docType.value =
-          p.docType[0].toUpperCase() + p.docType.substring(1).toLowerCase();
-    if (p.docNumber.isNotEmpty) docNumber.value = p.docNumber;
-    if (p.docExpiry.isNotEmpty)
-      docExpiry.value = DateFormat(
-        'dd-MM-yyyy',
-      ).format(DateTime.parse(p.docExpiry));
-    if (p.avatarUrl.isNotEmpty) avatarUrl.value = p.avatarUrl;
+    final cleanName = _valOrDash(p.name);
+    name.value = cleanName;
+    basicName.value = cleanName;
+    email.value = _valOrDash(p.email);
+    role.value = _valOrDash(p.role);
+    status.value = _valOrDash(p.status);
+    mobile.value = _valOrDash(p.mobile);
+    country.value = _valOrDash(p.country);
+    createdOn.value = _formatDateOrDash(p.createdOn, 'dd-MM-yyyy hh:mm:ss a');
+    gender.value = _valOrDash(p.gender);
+    dob.value = _formatDateOrDash(p.dob, 'dd-MM-yyyy');
+    type.value = _capitalizeOrDash(p.type);
+    language.value = _valOrDash(p.language);
+    vehicleNo.value = _valOrDash(p.vehicleNo);
+    portal.value = _valOrDash(p.portal);
+    emergencyContact.value = _valOrDash(p.emergencyContact);
+    emergencyContactName.value = _valOrDash(p.emergencyContactName);
+    whatsapp.value = _valOrDash(p.whatsapp);
+    docType.value = _capitalizeOrDash(p.docType);
+    docNumber.value = _valOrDash(p.docNumber);
+    docExpiry.value = _formatDateOrDash(p.docExpiry, 'dd-MM-yyyy');
+    avatarUrl.value = p.avatarUrl;
   }
 
   void setUserModel(UserModel u) {
     if (u.name.isNotEmpty) {
-      name.value = u.name;
-      basicName.value = u.name;
+      name.value = _valOrDash(u.name);
+      basicName.value = _valOrDash(u.name);
     }
-    if (u.email.isNotEmpty) email.value = u.email;
-    if (u.role.isNotEmpty) role.value = u.role;
-    if (u.status.isNotEmpty) status.value = u.status;
+    if (u.email.isNotEmpty) email.value = _valOrDash(u.email);
+    if (u.role.isNotEmpty) role.value = _valOrDash(u.role);
+    if (u.status.isNotEmpty) status.value = _valOrDash(u.status);
     final mob = u.mobNo.isNotEmpty ? u.mobNo : (u.contact ?? '');
     if (mob.isNotEmpty) {
-      mobile.value = mob;
-      emergencyContact.value = mob;
-      whatsapp.value = mob;
+      mobile.value = _valOrDash(mob);
     }
   }
 

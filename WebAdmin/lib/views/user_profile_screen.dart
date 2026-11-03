@@ -196,18 +196,24 @@ class UserProfileScreen extends StatelessWidget {
                         color: const Color(0xFFFEE2E2),
                         child: controller.avatarUrl.value.trim().isNotEmpty
                             ? (controller.avatarUrl.value.startsWith('http')
-                                ? Image.network(
-                                    controller.avatarUrl.value,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        _buildNameAvatar(controller.name.value),
-                                  )
-                                : Image.asset(
-                                    controller.avatarUrl.value,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        _buildNameAvatar(controller.name.value),
-                                  ))
+                                  ? Image.network(
+                                      controller.avatarUrl.value,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              _buildNameAvatar(
+                                                controller.name.value,
+                                              ),
+                                    )
+                                  : Image.asset(
+                                      controller.avatarUrl.value,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              _buildNameAvatar(
+                                                controller.name.value,
+                                              ),
+                                    ))
                             : _buildNameAvatar(controller.name.value),
                       ),
                     ),
@@ -395,6 +401,10 @@ class UserProfileScreen extends StatelessWidget {
     String value, {
     bool showDivider = true,
   }) {
+    final displayValue =
+        (value.trim().isEmpty || value.trim().toLowerCase() == 'null')
+        ? '-'
+        : value;
     return Column(
       children: [
         Padding(
@@ -412,7 +422,7 @@ class UserProfileScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                value,
+                displayValue,
                 style: TextStyle(
                   fontFamily: 'Public Sans',
                   fontSize: 13,
@@ -509,6 +519,10 @@ class UserProfileScreen extends StatelessWidget {
     String value, {
     bool showDivider = true,
   }) {
+    final displayValue =
+        (value.trim().isEmpty || value.trim().toLowerCase() == 'null')
+        ? '-'
+        : value;
     return Column(
       children: [
         Padding(
@@ -533,7 +547,7 @@ class UserProfileScreen extends StatelessWidget {
               ),
               Flexible(
                 child: Text(
-                  value,
+                  displayValue,
                   textAlign: TextAlign.end,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

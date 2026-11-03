@@ -924,6 +924,8 @@ class UserService extends GetxService {
     }
 
     final String baseUrlStr = "${ApiManager.baseUrl}${ApiManager.userDetails}";
+    print("base url in print...$baseUrlStr");
+    print("base url in print...$activeToken");
     // final String getUrlWithParam =
     //     "$baseUrlStr?userkey=${Uri.encodeComponent(userkey)}";
 
@@ -934,6 +936,7 @@ class UserService extends GetxService {
     };
 
     final Map<String, dynamic> payload = {"userkey": userkey};
+    print("base url in print...$payload");
 
     dynamic responseData;
     int? responseStatusCode;
@@ -957,6 +960,7 @@ class UserService extends GetxService {
 
         // print("Response from post request: $baseUrlStr");
         // print("Response from post request: $payload");
+        print("Response from post request: $responseStatusCode");
 
         // If POST returns 405 Method Not Allowed or 404, fallback to GET
         if (httpResponse.statusCode == 405 || httpResponse.statusCode == 404) {
@@ -966,7 +970,7 @@ class UserService extends GetxService {
           );
           responseStatusCode = httpResponse.statusCode;
         }
-
+        print("Response from post request: ${httpResponse.body}");
         if (httpResponse.body.isNotEmpty) {
           try {
             responseData = jsonDecode(httpResponse.body);
