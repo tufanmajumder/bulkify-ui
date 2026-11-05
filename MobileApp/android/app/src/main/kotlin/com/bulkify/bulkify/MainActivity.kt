@@ -1,4 +1,4 @@
-package com.bulkify.bulkify
+package com.bulkify.click
 
 import io.flutter.embedding.android.FlutterActivity
 

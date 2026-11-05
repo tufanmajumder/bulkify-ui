@@ -38,12 +38,16 @@ dependencies:
   flutter_screenutil: ^5.6.0
   flutter_svg: ^2.2.0
   dio: ^5.10.0
+  http: ^1.6.0
   shared_preferences: ^2.5.5
   location: ^7.0.1
   image_picker: ^1.1.2
   webview_flutter: ^4.14.1
   url_launcher: ^6.3.2
   device_info_plus: ^10.1.2
+  firebase_core: ^3.0.0 # Use the latest versions
+  firebase_messaging: ^15.0.0
+  flutter_local_notifications: ^22.3.3
 
 dev_dependencies:
   flutter_test:

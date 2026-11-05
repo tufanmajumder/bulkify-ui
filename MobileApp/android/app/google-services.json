@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "304750331007",
+    "project_id": "bulkify-70c28",
+    "storage_bucket": "bulkify-70c28.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:304750331007:android:5cfe774fc867024329ab4a",
+        "android_client_info": {
+          "package_name": "com.bulkify.click"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCan0xVEBdWQysN0Tbf9YASAzBbi-qHS6Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+
