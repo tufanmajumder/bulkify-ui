@@ -1542,7 +1542,7 @@ class OrderDetailsController extends GetxController {
               !res.containsKey('error'));
 
       final formattedAmount = _formatPriceVal(cleanAmount);
-      print("IsSuccess in order details....$isSuccess");
+      //print("IsSuccess in order details....$isSuccess");
 
       if (isSuccess) {
         transactions.insert(

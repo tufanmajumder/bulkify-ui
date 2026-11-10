@@ -290,12 +290,12 @@ class UserProfileController extends GetxController {
 
   /// Calls ApiManager.userDetails (users/v1/get-by-key) via UserService with userkey & token.
   Future<void> fetchUserDetails([String? targetUserKey]) async {
-    print("token user key...$targetUserKey");
+    //print("token user key...$targetUserKey");
     final String keyToFetch =
         (targetUserKey != null && targetUserKey.trim().isNotEmpty)
         ? targetUserKey.trim()
         : userkey.value;
-    print("token user key...$keyToFetch");
+    //print("token user key...$keyToFetch");
     if (keyToFetch.isEmpty) {
       _redirectToUsersList('User key not found');
       return;
