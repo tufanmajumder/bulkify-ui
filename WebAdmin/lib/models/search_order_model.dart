@@ -199,7 +199,8 @@ class SearchOrderModel {
       companyName: '',
       customerEmail: customeremail.isNotEmpty ? customeremail : '-',
       paymentStatus: formattedPaymentStatus,
-      orderStatus: formattedOrderStatus,
+      orderStatus: orderstatus.isNotEmpty ? orderstatus : formattedOrderStatus,
+      shippingStatus: shippingstatus.isNotEmpty ? shippingstatus : 'Pending',
       amount: finalamount.toStringAsFixed(2),
     );
   }

@@ -45,7 +45,7 @@ class OrderController extends GetxController {
     final int targetPerPage = perPage ?? rowsPerPage.value;
     try {
       final token = await AuthService.getAuthToken();
-      // print("token....$token");
+      //print("token....$token");
       if (token.trim().isEmpty) {
         if (kDebugMode) {
           //debugPrint('[OrderController] No token — redirecting to login');
@@ -206,7 +206,8 @@ class OrderController extends GetxController {
   }
 
   void nextPage() {
-    if (!isLoading.value && (hasMorePage.value || currentPage.value < totalPages)) {
+    if (!isLoading.value &&
+        (hasMorePage.value || currentPage.value < totalPages)) {
       fetchOrders(page: currentPage.value + 1);
     }
   }

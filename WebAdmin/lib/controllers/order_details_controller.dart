@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:admin_app/controllers/order_controller.dart';
 import 'package:admin_app/models/order_model.dart';
 import 'package:admin_app/service/order_service.dart';
 import 'package:admin_app/utils/blob_downloader.dart';
@@ -87,6 +89,9 @@ class ShippingDriverModel {
   final int activeOrders;
   final String status;
   final bool isPrimary;
+  final String? driverKey;
+  final String? driverUserKey;
+  final String? phone;
 
   ShippingDriverModel({
     required this.initials,
@@ -96,7 +101,188 @@ class ShippingDriverModel {
     required this.activeOrders,
     required this.status,
     this.isPrimary = false,
+    this.driverKey,
+    this.driverUserKey,
+    this.phone,
   });
+
+  factory ShippingDriverModel.fromJson(Map<String, dynamic> json) {
+    final String rawName =
+        (json['name'] ??
+                json['drivername'] ??
+                json['driver_name'] ??
+                json['fullname'] ??
+                json['full_name'] ??
+                json['username'] ??
+                json['first_name'] ??
+                'Driver')
+            .toString()
+            .trim();
+
+    String initials = (json['initials'] ?? '').toString().trim();
+    if (initials.isEmpty) {
+      final parts = rawName.split(' ').where((p) => p.isNotEmpty).toList();
+      if (parts.length >= 2) {
+        initials = '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      } else if (rawName.isNotEmpty) {
+        initials = rawName
+            .substring(0, rawName.length >= 2 ? 2 : 1)
+            .toUpperCase();
+      } else {
+        initials = 'DR';
+      }
+    }
+
+    dynamic vehicleData =
+        json['vehicle'] ??
+        json['vehicletype'] ??
+        json['vehicle_type'] ??
+        json['transport_type'] ??
+        json['transport'] ??
+        json['mode'];
+
+    String vehicle = '';
+    if (vehicleData is Map) {
+      final vName = (vehicleData['name'] ?? '').toString().trim();
+      final vType = (vehicleData['type'] ?? '').toString().trim();
+      final vReg =
+          (vehicleData['registrationnumber'] ??
+                  vehicleData['registration_number'] ??
+                  vehicleData['reg_number'] ??
+                  vehicleData['regnumber'] ??
+                  '')
+              .toString()
+              .trim();
+      final parts = [
+        vName,
+        vType,
+        vReg,
+      ].where((s) => s.isNotEmpty && s != 'null').toList();
+      vehicle = parts.join(', ');
+    } else if (vehicleData != null) {
+      String str = vehicleData.toString().trim();
+      str = str
+          .replaceAll('{', '')
+          .replaceAll('}', '')
+          .replaceAll('name:', '')
+          .replaceAll('name :', '')
+          .replaceAll('type:', '')
+          .replaceAll('type :', '')
+          .replaceAll('registrationnumber:', '')
+          .replaceAll('registrationnumber :', '')
+          .replaceAll('registration_number:', '')
+          .replaceAll('registration_number :', '');
+      vehicle = str
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty && s != 'null')
+          .join(', ');
+    }
+
+    if (vehicle.isEmpty) {
+      vehicle = 'Van';
+    }
+
+    dynamic rawDist =
+        json['distance'] ??
+        json['distancetext'] ??
+        json['distance_text'] ??
+        json['distance_km'] ??
+        json['distance_in_km'] ??
+        json['distance_from_store'] ??
+        json['km'];
+    String distance = '';
+    if (rawDist is num) {
+      distance = '${rawDist.toStringAsFixed(1)} km from store';
+    } else if (rawDist != null && rawDist.toString().trim().isNotEmpty) {
+      String distStr = rawDist.toString().trim();
+      if (!distStr.toLowerCase().contains('store') &&
+          !distStr.toLowerCase().contains('km')) {
+        distance = '$distStr km from store';
+      } else if (!distStr.toLowerCase().contains('store')) {
+        distance = '$distStr from store';
+      } else {
+        distance = distStr;
+      }
+    } else {
+      distance = '1.0 km from store';
+    }
+
+    final dynamic rawOrders =
+        json['activeorders'] ??
+        json['active_orders'] ??
+        json['current_orders'] ??
+        json['orders_count'] ??
+        json['activeordercount'] ??
+        json['runningorders'] ??
+        json['orders'];
+    final int activeOrders = rawOrders is int
+        ? rawOrders
+        : (int.tryParse(rawOrders?.toString() ?? '0') ?? 0);
+
+    final dynamic rawOnline =
+        json['status'] ??
+        json['onlinestatus'] ??
+        json['online_status'] ??
+        json['driverstatus'] ??
+        json['availability'];
+    String status = 'Online';
+    if (rawOnline != null) {
+      final s = rawOnline.toString().trim().toLowerCase();
+      if (s == 'online' || s == 'available' || s == 'active') {
+        status = 'Online';
+      } else if (s == 'busy' || s == 'on_trip' || s == 'delivering') {
+        status = 'Busy';
+      } else if (s == 'offline' || s == 'inactive') {
+        status = 'Offline';
+      } else {
+        status = s.length == 1
+            ? s.toUpperCase()
+            : s[0].toUpperCase() + s.substring(1);
+      }
+    } else if (json['isonline'] == false || json['is_online'] == false) {
+      status = 'Offline';
+    } else if (json['isbusy'] == true || json['is_busy'] == true) {
+      status = 'Busy';
+    }
+
+    final bool isPrimary =
+        json['isprimary'] == true ||
+        json['is_primary'] == true ||
+        json['primary'] == true;
+
+    final String? resolvedDriverUserKey = (json['driveruserkey'] ??
+            json['driver_user_key'] ??
+            json['userkey'] ??
+            json['user_key'] ??
+            json['driverkey'] ??
+            json['driver_key'] ??
+            json['driverid'] ??
+            json['driver_id'] ??
+            json['id'] ??
+            json['key'])
+        ?.toString()
+        .trim();
+
+    final String? phone = (json['mobile'] ??
+            json['mobilenumber'] ??
+            json['phone'] ??
+            json['phonenumber'])
+        ?.toString();
+
+    return ShippingDriverModel(
+      initials: initials,
+      name: rawName,
+      vehicle: vehicle,
+      distance: distance,
+      activeOrders: activeOrders,
+      status: status,
+      isPrimary: isPrimary,
+      driverKey: resolvedDriverUserKey,
+      driverUserKey: resolvedDriverUserKey,
+      phone: phone,
+    );
+  }
 }
 
 class ShippingActivityModel {
@@ -125,14 +311,61 @@ class OrderDetailsController extends GetxController {
   // Summary Fields
   final RxString orderKey = ''.obs;
   final RxString orderId = ''.obs;
+  final RxString salesOrderId = ''.obs;
+  final RxBool isAcceptingOrder = false.obs;
+  final RxBool isOrderAccepted = false.obs;
   final RxString customerId = ''.obs;
+
+  bool get isDraftOrPending {
+    if (isOrderAccepted.value) return false;
+    final status = orderStatus.value.trim().toLowerCase();
+    if (status == 'invoiced' || status == 'open') return false;
+    return status == 'draft' || status == 'pending';
+  }
+
+  bool get shouldShowShippingActivity {
+    final rawStatus = orderStatus.value.trim().toLowerCase();
+    if (rawStatus == 'invoiced' || rawStatus == 'open') {
+      return true;
+    }
+
+    // If order status is draft or pending, always show "no shipping activity found"
+    if (isDraftOrPending) return false;
+
+    if (isOrderAccepted.value) return true;
+    if (orderItems.isNotEmpty &&
+        orderItems.any((item) => item.isAccepted.value)) {
+      return true;
+    }
+
+    if (rawStatus == 'accepted' ||
+        rawStatus == 'confirmed' ||
+        rawStatus == 'approved' ||
+        rawStatus == 'fulfilled') {
+      return true;
+    }
+
+    final rawShip = shipmentStatus.value.trim().toLowerCase();
+    if (rawShip == 'packed' ||
+        rawShip == 'dispatched' ||
+        rawShip == 'shipped' ||
+        rawShip.contains('transit') ||
+        rawShip.contains('deliver')) {
+      return true;
+    }
+
+    return false;
+  }
+
   final RxBool isSubmittingPayment = false.obs;
   final RxString orderNo = ''.obs;
   final RxString date = ''.obs;
   final RxString time = ''.obs;
   final RxString customer = ''.obs;
   final RxString company = ''.obs;
+  final RxString channel = ''.obs;
   final RxString paymentMethod = ''.obs;
+  final RxString orderStatus = ''.obs;
   final RxString shipmentStatus = ''.obs;
 
   // Shipping Address
@@ -160,6 +393,9 @@ class OrderDetailsController extends GetxController {
   final RxString sgst = ''.obs;
   final RxString igst = ''.obs;
   final RxString grandTotal = ''.obs;
+  final RxDouble dueAmount = 0.0.obs;
+  final RxDouble paidAmount = 0.0.obs;
+  final RxBool hasExplicitDueAmount = false.obs;
 
   // Invoice details
   final RxString invoiceId = ''.obs;
@@ -197,6 +433,8 @@ class OrderDetailsController extends GetxController {
     'Out for delivery',
     'Delivered',
   ];
+
+  final RxBool isLoadingDrivers = false.obs;
 
   final RxList<ShippingDriverModel> drivers = <ShippingDriverModel>[
     ShippingDriverModel(
@@ -242,10 +480,71 @@ class OrderDetailsController extends GetxController {
     ),
   ].obs;
 
+  Future<void> fetchDrivers({String? orderKeyParam, String? searchKey}) async {
+    final String targetOrderKey =
+        (orderKeyParam != null && orderKeyParam.trim().isNotEmpty)
+        ? orderKeyParam.trim()
+        : orderKey.value.trim();
+
+    if (targetOrderKey.isEmpty) {
+      return;
+    }
+
+    final String query = (searchKey ?? driverSearchQuery.value).trim();
+    isLoadingDrivers.value = true;
+
+    try {
+      final res = await _orderService.getDriverList(
+        orderkey: targetOrderKey,
+        search: query,
+        sort: 'nearest',
+        includeoffline: true,
+        limit: 50,
+      );
+
+      if (res != null) {
+        List<dynamic>? rawList;
+        final data = res['data'];
+        if (data is List) {
+          rawList = data;
+        } else if (data is Map) {
+          if (data['drivers'] is List) {
+            rawList = data['drivers'] as List;
+          } else if (data['items'] is List) {
+            rawList = data['items'] as List;
+          } else if (data['list'] is List) {
+            rawList = data['list'] as List;
+          }
+        } else if (res['drivers'] is List) {
+          rawList = res['drivers'] as List;
+        }
+
+        if (rawList != null && rawList.isNotEmpty) {
+          final parsed = rawList
+              .whereType<Map>()
+              .map(
+                (d) =>
+                    ShippingDriverModel.fromJson(Map<String, dynamic>.from(d)),
+              )
+              .toList();
+          if (parsed.isNotEmpty) {
+            drivers.value = parsed;
+          }
+        }
+      }
+    } catch (_) {
+      // Keep existing list on error
+    } finally {
+      isLoadingDrivers.value = false;
+    }
+  }
+
   List<ShippingDriverModel> get filteredDrivers {
     final q = driverSearchQuery.value.trim().toLowerCase();
     return drivers.where((d) {
-      if (q.isNotEmpty && !d.name.toLowerCase().contains(q)) {
+      if (q.isNotEmpty &&
+          !d.name.toLowerCase().contains(q) &&
+          !(d.phone ?? '').toLowerCase().contains(q)) {
         return false;
       }
       if (selectedDriverAvailability.value == 'Online' &&
@@ -268,19 +567,314 @@ class OrderDetailsController extends GetxController {
     }).toList();
   }
 
-  void assignDriver(ShippingDriverModel driver) {
-    assignedDriverName.value = driver.name;
-    currentShippingStep.value = 2; // Switch to 'Driver assigned'
-    shipmentStatus.value = shippingSteps[2];
-    Get.snackbar(
-      'Driver Assigned',
-      'Order assigned to ${driver.name}.',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF10B981),
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-      duration: const Duration(seconds: 2),
+  final RxBool isAssigningDriver = false.obs;
+  final RxString assigningDriverUserKey = ''.obs;
+
+  final RxMap<String, int> driverAssignClickCount = <String, int>{}.obs;
+  final RxMap<String, int> driverAssignCooldown = <String, int>{}.obs;
+  final RxMap<String, String> driverAssignmentKeys = <String, String>{}.obs;
+  final RxMap<String, bool> driverIsCheckingStatus = <String, bool>{}.obs;
+  final RxMap<String, bool> driverHasAccepted = <String, bool>{}.obs;
+  final Map<String, Timer> _driverCooldownTimers = <String, Timer>{};
+
+  String getDriverIdentifier(ShippingDriverModel driver) {
+    final key = (driver.driverUserKey ?? driver.driverKey ?? driver.phone ?? driver.name).trim();
+    return key.isNotEmpty ? key : driver.name.trim();
+  }
+
+  void _clearDriverTimers() {
+    for (final timer in _driverCooldownTimers.values) {
+      timer.cancel();
+    }
+    _driverCooldownTimers.clear();
+    driverAssignCooldown.clear();
+    driverAssignmentKeys.clear();
+    driverIsCheckingStatus.clear();
+    driverHasAccepted.clear();
+  }
+
+  void _startDriverCooldown(
+    String driverId,
+    int seconds,
+    ShippingDriverModel driver,
+  ) {
+    _driverCooldownTimers[driverId]?.cancel();
+    driverAssignCooldown[driverId] = seconds;
+    _driverCooldownTimers[driverId] = Timer.periodic(
+      const Duration(seconds: 1),
+      (timer) async {
+        final current = driverAssignCooldown[driverId] ?? 0;
+        if (current <= 1) {
+          driverAssignCooldown[driverId] = 0;
+          timer.cancel();
+          _driverCooldownTimers.remove(driverId);
+          // After 10s wait, check if driver accepted the order
+          await _checkDriverAcceptance(driverId, driver);
+        } else {
+          driverAssignCooldown[driverId] = current - 1;
+        }
+      },
     );
+  }
+
+  Future<void> _checkDriverAcceptance(
+    String driverId,
+    ShippingDriverModel driver,
+  ) async {
+    final String assignmentKey = driverAssignmentKeys[driverId] ?? '';
+    if (assignmentKey.isEmpty) {
+      print('[CheckDriverAcceptance] No assignmentKey found for $driverId');
+      return;
+    }
+
+    driverIsCheckingStatus[driverId] = true;
+
+    try {
+      final res = await _orderService.checkAssignmentStatus(
+        assignmentKey: assignmentKey,
+      );
+
+      print('=== CHECK ASSIGNMENT STATUS RESPONSE ===');
+      print(res);
+      print('========================================');
+
+      final dynamic data = (res != null && res['data'] is Map)
+          ? res['data']
+          : res;
+
+      final String state = (data?['state'] ??
+              data?['status'] ??
+              res?['state'] ??
+              res?['status'] ??
+              '')
+          .toString()
+          .toLowerCase()
+          .trim();
+
+      final bool isAccepted = state == 'accepted' ||
+          state == 'order_accepted' ||
+          data?['is_accepted'] == true ||
+          data?['accepted'] == true ||
+          res?['is_accepted'] == true ||
+          res?['accepted'] == true;
+
+      if (isAccepted) {
+        driverHasAccepted[driverId] = true;
+        assignedDriverName.value = driver.name;
+        currentShippingStep.value = 2; // Switch to 'Driver assigned'
+        shipmentStatus.value = shippingSteps[2];
+
+        Get.snackbar(
+          'Driver Accepted',
+          '${driver.name} has accepted the order!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF10B981),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        // Driver did not accept yet
+        driverHasAccepted[driverId] = false;
+        assignedDriverName.value = '';
+        final int attemptsUsed = driverAssignClickCount[driverId] ?? 0;
+        if (attemptsUsed >= 3) {
+          Get.snackbar(
+            'Driver Did Not Accept',
+            '${driver.name} did not accept. Please choose another driver.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: const Color(0xFFEF4444),
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 4),
+          );
+        } else {
+          Get.snackbar(
+            'Order Not Accepted Yet',
+            '${driver.name} has not accepted yet. You can assign again.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: const Color(0xFFF59E0B),
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          );
+        }
+      }
+    } catch (e) {
+      print('[CheckDriverAcceptance] Error: $e');
+    } finally {
+      driverIsCheckingStatus[driverId] = false;
+    }
+  }
+
+  Future<void> assignDriver(ShippingDriverModel driver) async {
+    final String driverId = getDriverIdentifier(driver);
+    final int currentClicks = driverAssignClickCount[driverId] ?? 0;
+
+    // If driver already accepted
+    if (driverHasAccepted[driverId] == true) {
+      Get.snackbar(
+        'Already Accepted',
+        '${driver.name} has already accepted this order.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF10B981),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    // If currently checking acceptance status
+    if (driverIsCheckingStatus[driverId] == true) {
+      Get.snackbar(
+        'Checking Status',
+        'Checking if ${driver.name} accepted the order. Please wait a moment.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFF59E0B),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    // If already clicked 3 times, 4th click shows "Please choose another driver"
+    if (currentClicks >= 3) {
+      Get.snackbar(
+        'Driver Assignment',
+        'Please choose another driver',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    // Cooldown check: admin must wait 10 seconds between clicks
+    final int cooldown = driverAssignCooldown[driverId] ?? 0;
+    if (cooldown > 0) {
+      Get.snackbar(
+        'Please Wait',
+        'Please wait $cooldown seconds before clicking again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFF59E0B),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    final String currentOrderKey = orderKey.value.trim();
+    if (currentOrderKey.isEmpty) {
+      Get.snackbar(
+        'Order Key Missing',
+        'Cannot assign driver without order key.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    final String driverKeyToAssign =
+        (driver.driverUserKey ?? driver.driverKey ?? '').trim();
+    if (driverKeyToAssign.isEmpty) {
+      Get.snackbar(
+        'Driver Key Missing',
+        'Cannot assign driver: driveruserkey not found.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+      return;
+    }
+
+    isAssigningDriver.value = true;
+    assigningDriverUserKey.value = driverKeyToAssign;
+
+    try {
+      final res = await _orderService.assignDriver(
+        orderkey: currentOrderKey,
+        driveruserkey: driverKeyToAssign,
+        force: false,
+        remarks: "Manual assignment from ops portal",
+      );
+
+      print('=== ASSIGN DRIVER API RESPONSE ===');
+      print(res);
+      print('===================================');
+
+      final isSuccess = res != null &&
+          (res['success'] == true ||
+              res['code'] == 200 ||
+              res['code'] == '200' ||
+              res['status'] == 'success' ||
+              res['status'] == true);
+
+      if (isSuccess) {
+        // Extract assignment key from response
+        final dynamic dataMap = res['data'];
+        String extractedKey = '';
+        if (dataMap is Map) {
+          extractedKey = (dataMap['assignmentkey'] ??
+                  dataMap['assignment_key'] ??
+                  dataMap['key'] ??
+                  dataMap['id'] ??
+                  '')
+              .toString()
+              .trim();
+        } else if (res['assignmentkey'] != null) {
+          extractedKey = res['assignmentkey'].toString().trim();
+        }
+        if (extractedKey.isNotEmpty) {
+          driverAssignmentKeys[driverId] = extractedKey;
+        }
+
+        // Increment the attempt count and start the 10-second wait timer ONLY on success
+        final int updatedClicks = (driverAssignClickCount[driverId] ?? 0) + 1;
+        driverAssignClickCount[driverId] = updatedClicks;
+        _startDriverCooldown(driverId, 10, driver);
+
+        if (markAsPackedOnAssign.value && currentShippingStep.value == 0) {
+          currentShippingStep.value = 1;
+          shipmentStatus.value = shippingSteps[1];
+        }
+      } else {
+        final errMsg = res?['message']?.toString() ??
+            res?['error']?.toString() ??
+            'Failed to assign driver.';
+        Get.snackbar(
+          'Assignment Failed',
+          errMsg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFEF4444),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      print('=== ASSIGN DRIVER ERROR ===');
+      print(e);
+      print('===========================');
+      Get.snackbar(
+        'Assignment Error',
+        'An error occurred while assigning driver.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      isAssigningDriver.value = false;
+      assigningDriverUserKey.value = '';
+    }
   }
 
   void setShippingStep(int index) {
@@ -307,6 +901,7 @@ class OrderDetailsController extends GetxController {
 
   @override
   void onClose() {
+    _clearDriverTimers();
     leftScrollController.dispose();
     rightScrollController.dispose();
     driverScrollController.dispose();
@@ -331,17 +926,43 @@ class OrderDetailsController extends GetxController {
       if (args.companyName.isNotEmpty) {
         company.value = args.companyName;
       }
+      if (args.channel.isNotEmpty) {
+        channel.value = args.channel;
+      }
       if (args.paymentStatus.isNotEmpty) {
         paymentMethod.value = args.paymentStatus;
       }
       if (args.orderStatus.isNotEmpty) {
-        shipmentStatus.value = args.orderStatus;
-        final lowerStatus = args.orderStatus.toLowerCase();
-        if (lowerStatus.contains('deliver') && !lowerStatus.contains('out')) {
+        orderStatus.value = args.orderStatus;
+      }
+      final lowerOrderStatus = args.orderStatus.toLowerCase().trim();
+      final lowerShippingStatus = args.shippingStatus.toLowerCase().trim();
+      if (args.shippingStatus.isNotEmpty) {
+        shipmentStatus.value = args.shippingStatus;
+        if (lowerShippingStatus.contains('deliver') &&
+            !lowerShippingStatus.contains('out')) {
           currentShippingStep.value = 6;
-        } else if (lowerStatus.contains('transit')) {
+        } else if (lowerShippingStatus.contains('transit')) {
           currentShippingStep.value = 4;
+        } else if (lowerShippingStatus == 'packed' ||
+            lowerOrderStatus == 'invoiced' ||
+            lowerOrderStatus == 'open') {
+          currentShippingStep.value = 1;
         }
+      } else if (lowerOrderStatus == 'invoiced' || lowerOrderStatus == 'open') {
+        currentShippingStep.value = 1;
+      }
+      if (lowerOrderStatus == 'accepted' ||
+          lowerOrderStatus == 'confirmed' ||
+          lowerOrderStatus == 'approved' ||
+          lowerOrderStatus == 'open' ||
+          lowerOrderStatus == 'invoiced' ||
+          lowerShippingStatus == 'packed' ||
+          lowerShippingStatus == 'dispatched' ||
+          lowerShippingStatus == 'shipped' ||
+          lowerShippingStatus.contains('transit') ||
+          lowerShippingStatus.contains('deliver')) {
+        isOrderAccepted.value = true;
       }
       if (args.amount.isNotEmpty) {
         grandTotal.value = _formatPriceVal(args.amount);
@@ -369,6 +990,11 @@ class OrderDetailsController extends GetxController {
     } else {
       _redirectToOrderList('Order key not found');
     }
+    debounce(driverSearchQuery, (_) {
+      if (orderKey.value.trim().isNotEmpty) {
+        fetchDrivers();
+      }
+    }, time: const Duration(milliseconds: 400));
   }
 
   bool _isRedirecting = false;
@@ -409,6 +1035,8 @@ class OrderDetailsController extends GetxController {
     isLoading.value = true;
     isError.value = false;
     isInvoiceDownloaded.value = false;
+    _clearDriverTimers();
+    driverAssignClickCount.clear();
 
     try {
       final responseMap = await _orderService.getOrderDetails(
@@ -436,6 +1064,7 @@ class OrderDetailsController extends GetxController {
         }
 
         _populateFromApiResponse(responseMap);
+        fetchDrivers(orderKeyParam: orderKey.value);
 
         if (orderNo.value.isEmpty && orderItems.isEmpty) {
           isError.value = true;
@@ -527,6 +1156,46 @@ class OrderDetailsController extends GetxController {
       orderId.value = rawOrderId.toString().trim();
     }
 
+    final rawOrderKey =
+        data['orderkey'] ??
+        data['order_key'] ??
+        (responseMap['data'] is Map ? responseMap['data']['orderkey'] : null) ??
+        responseMap['orderkey'];
+    if (rawOrderKey != null &&
+        rawOrderKey.toString().trim().isNotEmpty &&
+        rawOrderKey.toString().trim() != 'null') {
+      orderKey.value = rawOrderKey.toString().trim();
+    }
+
+    final rawSalesOrderId =
+        data['salesorderid'] ??
+        data['salesorder_id'] ??
+        data['sales_order_id'] ??
+        data['sales_orderid'] ??
+        data['zoho_salesorder_id'] ??
+        data['zoho_salesorderid'] ??
+        data['zoho_order_id'] ??
+        data['zoho_orderid'] ??
+        responseMap['salesorderid'] ??
+        responseMap['salesorder_id'] ??
+        (responseMap['salesorder'] is Map
+            ? responseMap['salesorder']['salesorder_id'] ??
+                  responseMap['salesorder']['salesorderid']
+            : null) ??
+        (responseMap['data'] is Map
+            ? responseMap['data']['salesorderid'] ??
+                  responseMap['data']['salesorder_id'] ??
+                  responseMap['data']['sales_order_id']
+            : null);
+    if (rawSalesOrderId != null &&
+        rawSalesOrderId.toString().trim().isNotEmpty &&
+        rawSalesOrderId.toString().trim() != 'null') {
+      salesOrderId.value = rawSalesOrderId.toString().trim();
+    } else if (orderKey.value.isNotEmpty &&
+        int.tryParse(orderKey.value) != null) {
+      salesOrderId.value = orderKey.value.trim();
+    }
+
     final rawCustomerId = data['customerid'] ?? data['customer_id'];
     if (rawCustomerId != null && rawCustomerId.toString().trim().isNotEmpty) {
       customerId.value = rawCustomerId.toString().trim();
@@ -584,6 +1253,19 @@ class OrderDetailsController extends GetxController {
             ?.toString() ??
         '';
 
+    final rawChannel =
+        data['channel'] ??
+        data['channel_name'] ??
+        data['channelName'] ??
+        data['sales_channel'];
+    if (rawChannel != null &&
+        rawChannel.toString().trim().isNotEmpty &&
+        rawChannel.toString().trim() != 'null') {
+      channel.value = rawChannel.toString().trim();
+    } else {
+      channel.value = '';
+    }
+
     paymentMethod.value =
         (data['paymentstatus'] ??
                 data['paid_status'] ??
@@ -594,22 +1276,40 @@ class OrderDetailsController extends GetxController {
             ?.toString() ??
         '';
 
+    final rawOrderStat =
+        (data['orderstatus'] ??
+                data['order_status'] ??
+                data['salesorder_status'] ??
+                data['status'])
+            ?.toString()
+            .trim();
+    orderStatus.value =
+        (rawOrderStat != null &&
+            rawOrderStat.isNotEmpty &&
+            rawOrderStat != 'null')
+        ? rawOrderStat
+        : 'Pending';
+
     shipmentStatus.value =
         (data['shippingstatus'] ??
-                data['shipped_status'] ??
-                data['shipment_status'] ??
-                data['orderstatus'] ??
-                data['status'] ??
-                data['salesorder_status'] ??
-                data['order_status'])
-            ?.toString() ??
-        '';
-    final lowerShipStatus = shipmentStatus.value.toLowerCase();
+                data['shipping_status'] ??
+                data['shipped_status'])
+            ?.toString()
+            .trim() ??
+        'Pending';
+    final lowerShipStatus = shipmentStatus.value.toLowerCase().trim();
+    final lowerOrderStatus = orderStatus.value.toLowerCase().trim();
     if (lowerShipStatus.contains('deliver') &&
         !lowerShipStatus.contains('out')) {
       currentShippingStep.value = 6;
     } else if (lowerShipStatus.contains('transit')) {
       currentShippingStep.value = 4;
+    } else if (lowerShipStatus == 'packed' ||
+        lowerOrderStatus == 'invoiced' ||
+        lowerOrderStatus == 'open') {
+      currentShippingStep.value = 1;
+    } else {
+      currentShippingStep.value = 0;
     }
 
     if (shipMap is Map) {
@@ -903,6 +1603,48 @@ class OrderDetailsController extends GetxController {
 
     grandTotal.value = _formatPriceVal(data['finalamount']);
 
+    // Extract dueamount & paidamount directly from API data
+    if (data.containsKey('dueamount') ||
+        data.containsKey('due_amount') ||
+        data.containsKey('dueAmount')) {
+      final rawDue =
+          data['dueamount'] ?? data['due_amount'] ?? data['dueAmount'];
+      if (rawDue != null) {
+        final cleanDue = rawDue
+            .toString()
+            .replaceAll('₹', '')
+            .replaceAll('\$', '')
+            .replaceAll(',', '')
+            .trim();
+        final parsedDue = double.tryParse(cleanDue);
+        if (parsedDue != null) {
+          dueAmount.value = parsedDue;
+          hasExplicitDueAmount.value = true;
+        }
+      }
+    } else {
+      hasExplicitDueAmount.value = false;
+    }
+
+    if (data.containsKey('paidamount') ||
+        data.containsKey('paid_amount') ||
+        data.containsKey('paidAmount')) {
+      final rawPaid =
+          data['paidamount'] ?? data['paid_amount'] ?? data['paidAmount'];
+      if (rawPaid != null) {
+        final cleanPaid = rawPaid
+            .toString()
+            .replaceAll('₹', '')
+            .replaceAll('\$', '')
+            .replaceAll(',', '')
+            .trim();
+        final parsedPaid = double.tryParse(cleanPaid);
+        if (parsedPaid != null) {
+          paidAmount.value = parsedPaid;
+        }
+      }
+    }
+
     // Extract invoice_id & invoice_number from data['invoices'] list or top-level keys
     invoiceId.value = '';
     invoiceNumber.value = '';
@@ -911,6 +1653,23 @@ class OrderDetailsController extends GetxController {
     if (invoicesList is List && invoicesList.isNotEmpty) {
       for (final inv in invoicesList) {
         if (inv is Map) {
+          if (!hasExplicitDueAmount.value &&
+              (inv.containsKey('dueamount') || inv.containsKey('due_amount'))) {
+            final rawDue = inv['dueamount'] ?? inv['due_amount'];
+            if (rawDue != null) {
+              final parsedDue = double.tryParse(
+                rawDue
+                    .toString()
+                    .replaceAll('₹', '')
+                    .replaceAll(',', '')
+                    .trim(),
+              );
+              if (parsedDue != null) {
+                dueAmount.value = parsedDue;
+                hasExplicitDueAmount.value = true;
+              }
+            }
+          }
           final id = (inv['invoiceid']).toString().trim();
           if (id.isNotEmpty && id != 'null') {
             invoiceId.value = id;
@@ -920,6 +1679,20 @@ class OrderDetailsController extends GetxController {
         }
       }
     } else if (invoicesList is Map) {
+      if (!hasExplicitDueAmount.value &&
+          (invoicesList.containsKey('dueamount') ||
+              invoicesList.containsKey('due_amount'))) {
+        final rawDue = invoicesList['dueamount'] ?? invoicesList['due_amount'];
+        if (rawDue != null) {
+          final parsedDue = double.tryParse(
+            rawDue.toString().replaceAll('₹', '').replaceAll(',', '').trim(),
+          );
+          if (parsedDue != null) {
+            dueAmount.value = parsedDue;
+            hasExplicitDueAmount.value = true;
+          }
+        }
+      }
       final id = (invoicesList['invoiceid']).toString().trim();
       if (id.isNotEmpty && id != 'null') {
         invoiceId.value = id;
@@ -1153,6 +1926,43 @@ class OrderDetailsController extends GetxController {
       );
     } else {
       orderItems.clear();
+    }
+
+    final rawOrderStatus = orderStatus.value.trim().toLowerCase();
+    final rawShipStatus = shipmentStatus.value.trim().toLowerCase();
+
+    final isDraftOrPendingStatus =
+        rawOrderStatus == 'draft' || rawOrderStatus == 'pending';
+
+    final isStatusAccepted =
+        !isDraftOrPendingStatus &&
+        (rawOrderStatus == 'accepted' ||
+            rawOrderStatus == 'confirmed' ||
+            rawOrderStatus == 'approved' ||
+            rawOrderStatus == 'open' ||
+            rawOrderStatus == 'invoiced' ||
+            rawOrderStatus == 'fulfilled' ||
+            rawShipStatus == 'packed' ||
+            rawShipStatus == 'dispatched' ||
+            rawShipStatus == 'shipped' ||
+            rawShipStatus.contains('transit') ||
+            rawShipStatus.contains('deliver'));
+
+    final hasAcceptedItems =
+        !isDraftOrPendingStatus &&
+        orderItems.isNotEmpty &&
+        orderItems.any((item) => item.isAccepted.value);
+
+    final isExplicitlyAccepted =
+        !isDraftOrPendingStatus &&
+        (data['is_accepted'] == true ||
+            data['isAccepted'] == true ||
+            data['accepted'] == true);
+
+    if (isStatusAccepted || hasAcceptedItems || isExplicitlyAccepted) {
+      isOrderAccepted.value = true;
+    } else {
+      isOrderAccepted.value = false;
     }
 
     // 8. Shipping Activities (if key missing -> empty list)
@@ -1625,22 +2435,53 @@ class OrderDetailsController extends GetxController {
   double get totalSuccessTransactionAmount {
     double sum = 0.0;
     for (final tx in transactions) {
-      if (tx.status.trim().toLowerCase() == 'success') {
+      final s = tx.status.trim().toLowerCase();
+      if (s == 'success' || s == 'paid' || s == 'completed') {
         sum += _parseItemAmount(tx.amount);
       }
     }
+    if (sum > 0) return sum;
+    if (paidAmount.value > 0) return paidAmount.value;
     return sum;
+  }
+
+  double get paidAmountValue {
+    if (hasExplicitDueAmount.value) {
+      if (paidAmount.value > 0) {
+        return paidAmount.value;
+      }
+      final total = orderTotalValue;
+      final derived = total - dueAmount.value;
+      return derived >= 0 ? derived : 0.0;
+    }
+    if (paidAmount.value > 0) {
+      return paidAmount.value;
+    }
+    return totalSuccessTransactionAmount;
   }
 
   double get orderTotalValue => _parseItemAmount(grandTotal.value);
 
   double get dueAmountValue {
+    if (hasExplicitDueAmount.value) {
+      return dueAmount.value;
+    }
     final total = orderTotalValue;
-    return total - totalSuccessTransactionAmount;
+    return (total - totalSuccessTransactionAmount).clamp(0.0, double.infinity);
   }
 
   String get paymentDueDisplay {
-    if (transactions.isEmpty || dueAmountValue <= 0) {
+    if (hasExplicitDueAmount.value) {
+      if (dueAmount.value <= 0) {
+        return 'Paid';
+      }
+      return 'Due ₹ ${dueAmount.value.toStringAsFixed(2)}';
+    }
+    final pStatus = paymentMethod.value.trim().toLowerCase();
+    if (pStatus == 'paid') {
+      return 'Paid';
+    }
+    if (dueAmountValue <= 0) {
       return 'Paid';
     }
     return 'Due ₹ ${dueAmountValue.toStringAsFixed(2)}';
@@ -1718,10 +2559,10 @@ class OrderDetailsController extends GetxController {
     if (index >= 0 && index < orderItems.length) {
       final item = orderItems[index];
       if (item.isAccepted.value) {
-        item.isAccepted.value = false;
+        // item.isAccepted.value = false;
       } else {
-        item.isAccepted.value = true;
-        item.isRejected.value = false;
+        // item.isAccepted.value = true;
+        // item.isRejected.value = false;
       }
     }
   }
@@ -1730,24 +2571,133 @@ class OrderDetailsController extends GetxController {
     if (index >= 0 && index < orderItems.length) {
       final item = orderItems[index];
       if (item.isRejected.value) {
-        item.isRejected.value = false;
+        //item.isRejected.value = false;
       } else {
-        item.isRejected.value = true;
-        item.isAccepted.value = false;
+        // item.isRejected.value = true;
+        // item.isAccepted.value = false;
       }
     }
   }
 
-  void acceptAllItems() {
-    for (final item in orderItems) {
-      item.isAccepted.value = true;
-      item.isRejected.value = false;
+  Future<void> acceptAllItems() async {
+    if (isAcceptingOrder.value) return;
+
+    final String targetSalesOrderId = (salesOrderId.value.trim().isNotEmpty
+        ? salesOrderId.value.trim()
+        : orderId.value.trim());
+
+    if (targetSalesOrderId.isEmpty || targetSalesOrderId == 'null') {
+      Get.snackbar(
+        'Error',
+        'Sales order ID not found',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFCF4340),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+      );
+      return;
     }
+
+    try {
+      isAcceptingOrder.value = true;
+      final response = await _orderService.acceptAllOrder(
+        salesOrderId: targetSalesOrderId,
+      );
+
+      final isFailure =
+          response == null ||
+          response['success'] == false ||
+          response['status'] == false ||
+          (response.containsKey('code') &&
+              response['code'] != 0 &&
+              response['code'] != 200 &&
+              response['code'] != '0' &&
+              response['code'] != '200') ||
+          (response['error'] != null &&
+              response['error'].toString().trim().isNotEmpty);
+
+      if (!isFailure) {
+        // 1. Immediately hide accept/reject buttons and mark order as accepted
+        isAcceptingOrder.value = false;
+        isOrderAccepted.value = true;
+        orderStatus.value = 'Accepted';
+
+        for (final item in orderItems) {
+          item.isAccepted.value = true;
+          item.isRejected.value = false;
+        }
+
+        final successMsg =
+            (response['message'] ??
+                    response['msg'] ??
+                    'All order items have been accepted.')
+                .toString();
+
+        Get.snackbar(
+          'Success',
+          successMsg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF10B981),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 2),
+        );
+
+        // Also refresh the order list in background if registered
+        try {
+          if (Get.isRegistered<OrderController>()) {
+            Get.find<OrderController>().fetchOrders();
+          }
+        } catch (_) {}
+      } else {
+        final errorMsg =
+            (response?['message'] ??
+                    response?['error'] ??
+                    response?['msg'] ??
+                    'Failed to accept order')
+                .toString();
+        Get.snackbar(
+          'Error',
+          errorMsg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFCF4340),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred while accepting order: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFCF4340),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      isAcceptingOrder.value = false;
+    }
+  }
+
+  void rejectAllItems() {
+    for (final item in orderItems) {
+      item.isRejected.value = true;
+      item.isAccepted.value = false;
+    }
+    isOrderAccepted.value = false;
+    orderStatus.value = 'Rejected';
     Get.snackbar(
-      'Accepted',
-      'All order items have been accepted.',
+      'Rejected',
+      'All order items have been rejected.',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF10B981),
+      backgroundColor: const Color(0xFFCF4340),
       colorText: Colors.white,
       margin: const EdgeInsets.all(16),
       borderRadius: 8,
