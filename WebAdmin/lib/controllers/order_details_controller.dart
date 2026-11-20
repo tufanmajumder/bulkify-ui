@@ -251,24 +251,26 @@ class ShippingDriverModel {
         json['is_primary'] == true ||
         json['primary'] == true;
 
-    final String? resolvedDriverUserKey = (json['driveruserkey'] ??
-            json['driver_user_key'] ??
-            json['userkey'] ??
-            json['user_key'] ??
-            json['driverkey'] ??
-            json['driver_key'] ??
-            json['driverid'] ??
-            json['driver_id'] ??
-            json['id'] ??
-            json['key'])
-        ?.toString()
-        .trim();
+    final String? resolvedDriverUserKey =
+        (json['driveruserkey'] ??
+                json['driver_user_key'] ??
+                json['userkey'] ??
+                json['user_key'] ??
+                json['driverkey'] ??
+                json['driver_key'] ??
+                json['driverid'] ??
+                json['driver_id'] ??
+                json['id'] ??
+                json['key'])
+            ?.toString()
+            .trim();
 
-    final String? phone = (json['mobile'] ??
-            json['mobilenumber'] ??
-            json['phone'] ??
-            json['phonenumber'])
-        ?.toString();
+    final String? phone =
+        (json['mobile'] ??
+                json['mobilenumber'] ??
+                json['phone'] ??
+                json['phonenumber'])
+            ?.toString();
 
     return ShippingDriverModel(
       initials: initials,
@@ -426,11 +428,10 @@ class OrderDetailsController extends GetxController {
 
   final List<String> shippingSteps = const [
     'Accepted',
-    'Packed',
-    'Driver assigned',
-    'Picked up',
-    'In transit',
-    'Out for delivery',
+    'Driver Assigned',
+    'Picked Up',
+    'In Transit',
+    'Out for Delivery',
     'Delivered',
   ];
 
@@ -578,7 +579,12 @@ class OrderDetailsController extends GetxController {
   final Map<String, Timer> _driverCooldownTimers = <String, Timer>{};
 
   String getDriverIdentifier(ShippingDriverModel driver) {
-    final key = (driver.driverUserKey ?? driver.driverKey ?? driver.phone ?? driver.name).trim();
+    final key =
+        (driver.driverUserKey ??
+                driver.driverKey ??
+                driver.phone ??
+                driver.name)
+            .trim();
     return key.isNotEmpty ? key : driver.name.trim();
   }
 
@@ -642,16 +648,18 @@ class OrderDetailsController extends GetxController {
           ? res['data']
           : res;
 
-      final String state = (data?['state'] ??
-              data?['status'] ??
-              res?['state'] ??
-              res?['status'] ??
-              '')
-          .toString()
-          .toLowerCase()
-          .trim();
+      final String state =
+          (data?['state'] ??
+                  data?['status'] ??
+                  res?['state'] ??
+                  res?['status'] ??
+                  '')
+              .toString()
+              .toLowerCase()
+              .trim();
 
-      final bool isAccepted = state == 'accepted' ||
+      final bool isAccepted =
+          state == 'accepted' ||
           state == 'order_accepted' ||
           data?['is_accepted'] == true ||
           data?['accepted'] == true ||
@@ -661,8 +669,8 @@ class OrderDetailsController extends GetxController {
       if (isAccepted) {
         driverHasAccepted[driverId] = true;
         assignedDriverName.value = driver.name;
-        currentShippingStep.value = 2; // Switch to 'Driver assigned'
-        shipmentStatus.value = shippingSteps[2];
+        currentShippingStep.value = 1; // Switch to 'Driver assigned'
+        shipmentStatus.value = shippingSteps[1];
 
         Get.snackbar(
           'Driver Accepted',
@@ -809,7 +817,8 @@ class OrderDetailsController extends GetxController {
       print(res);
       print('===================================');
 
-      final isSuccess = res != null &&
+      final isSuccess =
+          res != null &&
           (res['success'] == true ||
               res['code'] == 200 ||
               res['code'] == '200' ||
@@ -821,13 +830,14 @@ class OrderDetailsController extends GetxController {
         final dynamic dataMap = res['data'];
         String extractedKey = '';
         if (dataMap is Map) {
-          extractedKey = (dataMap['assignmentkey'] ??
-                  dataMap['assignment_key'] ??
-                  dataMap['key'] ??
-                  dataMap['id'] ??
-                  '')
-              .toString()
-              .trim();
+          extractedKey =
+              (dataMap['assignmentkey'] ??
+                      dataMap['assignment_key'] ??
+                      dataMap['key'] ??
+                      dataMap['id'] ??
+                      '')
+                  .toString()
+                  .trim();
         } else if (res['assignmentkey'] != null) {
           extractedKey = res['assignmentkey'].toString().trim();
         }
@@ -839,13 +849,9 @@ class OrderDetailsController extends GetxController {
         final int updatedClicks = (driverAssignClickCount[driverId] ?? 0) + 1;
         driverAssignClickCount[driverId] = updatedClicks;
         _startDriverCooldown(driverId, 10, driver);
-
-        if (markAsPackedOnAssign.value && currentShippingStep.value == 0) {
-          currentShippingStep.value = 1;
-          shipmentStatus.value = shippingSteps[1];
-        }
       } else {
-        final errMsg = res?['message']?.toString() ??
+        final errMsg =
+            res?['message']?.toString() ??
             res?['error']?.toString() ??
             'Failed to assign driver.';
         Get.snackbar(
@@ -885,10 +891,10 @@ class OrderDetailsController extends GetxController {
   }
 
   void advanceShippingStatus() {
-    if (currentShippingStep.value < 4) {
-      currentShippingStep.value = 4; // Switch to 'In transit'
-    } else if (currentShippingStep.value < 6) {
-      currentShippingStep.value = 6; // Switch to 'Delivered'
+    if (currentShippingStep.value < 3) {
+      currentShippingStep.value = 3; // Switch to 'In transit'
+    } else if (currentShippingStep.value < 5) {
+      currentShippingStep.value = 5; // Switch to 'Delivered'
     } else {
       currentShippingStep.value = 0; // Switch back to 'Accepted'
     }
@@ -941,16 +947,21 @@ class OrderDetailsController extends GetxController {
         shipmentStatus.value = args.shippingStatus;
         if (lowerShippingStatus.contains('deliver') &&
             !lowerShippingStatus.contains('out')) {
-          currentShippingStep.value = 6;
-        } else if (lowerShippingStatus.contains('transit')) {
+          currentShippingStep.value = 5;
+        } else if (lowerShippingStatus.contains('out')) {
           currentShippingStep.value = 4;
-        } else if (lowerShippingStatus == 'packed' ||
-            lowerOrderStatus == 'invoiced' ||
-            lowerOrderStatus == 'open') {
+        } else if (lowerShippingStatus.contains('transit')) {
+          currentShippingStep.value = 3;
+        } else if (lowerShippingStatus.contains('pick')) {
+          currentShippingStep.value = 2;
+        } else if (lowerShippingStatus.contains('assign') ||
+            lowerShippingStatus.contains('driver')) {
           currentShippingStep.value = 1;
+        } else {
+          currentShippingStep.value = 0;
         }
-      } else if (lowerOrderStatus == 'invoiced' || lowerOrderStatus == 'open') {
-        currentShippingStep.value = 1;
+      } else {
+        currentShippingStep.value = 0;
       }
       if (lowerOrderStatus == 'accepted' ||
           lowerOrderStatus == 'confirmed' ||
@@ -1301,12 +1312,15 @@ class OrderDetailsController extends GetxController {
     final lowerOrderStatus = orderStatus.value.toLowerCase().trim();
     if (lowerShipStatus.contains('deliver') &&
         !lowerShipStatus.contains('out')) {
-      currentShippingStep.value = 6;
-    } else if (lowerShipStatus.contains('transit')) {
+      currentShippingStep.value = 5;
+    } else if (lowerShipStatus.contains('out')) {
       currentShippingStep.value = 4;
-    } else if (lowerShipStatus == 'packed' ||
-        lowerOrderStatus == 'invoiced' ||
-        lowerOrderStatus == 'open') {
+    } else if (lowerShipStatus.contains('transit')) {
+      currentShippingStep.value = 3;
+    } else if (lowerShipStatus.contains('pick')) {
+      currentShippingStep.value = 2;
+    } else if (lowerShipStatus.contains('assign') ||
+        lowerShipStatus.contains('driver')) {
       currentShippingStep.value = 1;
     } else {
       currentShippingStep.value = 0;
@@ -1961,6 +1975,10 @@ class OrderDetailsController extends GetxController {
 
     if (isStatusAccepted || hasAcceptedItems || isExplicitlyAccepted) {
       isOrderAccepted.value = true;
+      for (final item in orderItems) {
+        item.isAccepted.value = true;
+        item.isRejected.value = false;
+      }
     } else {
       isOrderAccepted.value = false;
     }
