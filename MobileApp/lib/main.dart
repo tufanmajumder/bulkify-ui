@@ -8,6 +8,7 @@ import 'app/data/utils/app_theme.dart';
 import 'app/routes/app_pages.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 @pragma('vm:entry-point')
@@ -54,13 +55,21 @@ void main() async {
     print("========================================");
     print("FCM TOKEN: $fcmToken");
     print("========================================");
+    if (fcmToken != null && fcmToken.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('fcmToken', fcmToken);
+    }
   } catch (e) {
     print("Error fetching FCM token: $e");
   }
 
   // Listen for token refresh
-  messaging.onTokenRefresh.listen((newToken) {
+  messaging.onTokenRefresh.listen((newToken) async {
     print("FCM Token Refreshed: $newToken");
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('fcmToken', newToken);
+    } catch (_) {}
   });
 
   // Handle foreground messages: show rich notification with Accept & Reject
