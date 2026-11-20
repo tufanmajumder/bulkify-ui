@@ -808,13 +808,17 @@ class OrderListScreen extends StatelessWidget {
                                     flex: 10,
                                     child: _buildOrderStatusBadge(
                                       context,
-                                      (order.orderStatus.trim().isEmpty ||
-                                              order.orderStatus.trim() ==
+                                      (order.shippingStatus.trim().isEmpty ||
+                                              order.shippingStatus.trim() ==
                                                   'null' ||
-                                              order.orderStatus.trim() == '-')
+                                              order.shippingStatus.trim() ==
+                                                  '-')
                                           ? '-'
-                                          : order.orderStatus[0].toUpperCase() +
-                                                order.orderStatus.substring(1),
+                                          : order.shippingStatus[0]
+                                                    .toUpperCase() +
+                                                order.shippingStatus.substring(
+                                                  1,
+                                                ),
                                     ),
                                   ),
 

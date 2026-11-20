@@ -336,8 +336,8 @@ class OrderService extends GetxService {
     }
 
     final String targetUrl = "${ApiManager.baseUrl}${ApiManager.getOrderList}";
-    print("targetUrl....$targetUrl");
-    print("token....$activeToken");
+    // print("targetUrl....$targetUrl");
+    // print("token....$activeToken");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -345,7 +345,7 @@ class OrderService extends GetxService {
     };
 
     final Map<String, dynamic> payload = {"page": page, "perpage": perPage};
-    print("order payload...$payload");
+    //print("order payload...$payload");
 
     final Map<String, dynamic> queryParams = {
       'page': page.toString(),
@@ -366,6 +366,8 @@ class OrderService extends GetxService {
           body: jsonEncode(payload),
         );
 
+        //print("httpResponse.statusCode....${httpResponse.statusCode}");
+
         if (httpResponse.statusCode < 200 ||
             httpResponse.statusCode >= 300 ||
             httpResponse.body.isEmpty) {
@@ -382,6 +384,8 @@ class OrderService extends GetxService {
             httpResponse.statusCode < 500 &&
             httpResponse.body.isNotEmpty) {
           responseData = jsonDecode(httpResponse.body);
+
+          //print("response body...$responseData");
         }
       } catch (e) {
         // if (kDebugMode) {
@@ -390,64 +394,64 @@ class OrderService extends GetxService {
       }
     }
 
-    if (responseData == null) {
-      try {
-        final response = await dio.post(
-          ApiManager.getOrderList,
-          data: jsonEncode(payload),
-          options: Options(
-            contentType: Headers.jsonContentType,
-            headers: requestHeaders,
-          ),
-        );
-        responseStatusCode = response.statusCode;
+    // if (responseData == null) {
+    //   try {
+    //     final response = await dio.post(
+    //       ApiManager.getOrderList,
+    //       data: jsonEncode(payload),
+    //       options: Options(
+    //         contentType: Headers.jsonContentType,
+    //         headers: requestHeaders,
+    //       ),
+    //     );
+    //     responseStatusCode = response.statusCode;
 
-        if (response.data != null) {
-          if (response.data is Map<String, dynamic> || response.data is List) {
-            responseData = response.data;
-          } else if (response.data is String) {
-            responseData = jsonDecode(response.data);
-          }
-        }
-      } on DioException catch (e) {
-        responseStatusCode = e.response?.statusCode;
-        // if (kDebugMode) {
-        //   debugPrint(
-        //     '[OrderService] DioException in getOrderListResult: $responseStatusCode',
-        //   );
-        // }
-        try {
-          final response = await dio.get(
-            ApiManager.getOrderList,
-            queryParameters: queryParams,
-            options: Options(
-              contentType: Headers.jsonContentType,
-              headers: requestHeaders,
-            ),
-          );
-          responseStatusCode = response.statusCode;
-          if (response.data != null) {
-            if (response.data is Map<String, dynamic> ||
-                response.data is List) {
-              responseData = response.data;
-            } else if (response.data is String) {
-              responseData = jsonDecode(response.data);
-            }
-          }
-        } catch (_) {
-          if (e.response?.data != null) {
-            if (e.response!.data is Map<String, dynamic> ||
-                e.response!.data is List) {
-              responseData = e.response!.data;
-            } else if (e.response!.data is String) {
-              try {
-                responseData = jsonDecode(e.response!.data);
-              } catch (_) {}
-            }
-          }
-        }
-      } catch (_) {}
-    }
+    //     if (response.data != null) {
+    //       if (response.data is Map<String, dynamic> || response.data is List) {
+    //         responseData = response.data;
+    //       } else if (response.data is String) {
+    //         responseData = jsonDecode(response.data);
+    //       }
+    //     }
+    //   } on DioException catch (e) {
+    //     responseStatusCode = e.response?.statusCode;
+    //     // if (kDebugMode) {
+    //     //   debugPrint(
+    //     //     '[OrderService] DioException in getOrderListResult: $responseStatusCode',
+    //     //   );
+    //     // }
+    //     try {
+    //       final response = await dio.get(
+    //         ApiManager.getOrderList,
+    //         queryParameters: queryParams,
+    //         options: Options(
+    //           contentType: Headers.jsonContentType,
+    //           headers: requestHeaders,
+    //         ),
+    //       );
+    //       responseStatusCode = response.statusCode;
+    //       if (response.data != null) {
+    //         if (response.data is Map<String, dynamic> ||
+    //             response.data is List) {
+    //           responseData = response.data;
+    //         } else if (response.data is String) {
+    //           responseData = jsonDecode(response.data);
+    //         }
+    //       }
+    //     } catch (_) {
+    //       if (e.response?.data != null) {
+    //         if (e.response!.data is Map<String, dynamic> ||
+    //             e.response!.data is List) {
+    //           responseData = e.response!.data;
+    //         } else if (e.response!.data is String) {
+    //           try {
+    //             responseData = jsonDecode(e.response!.data);
+    //           } catch (_) {}
+    //         }
+    //       }
+    //     }
+    //   } catch (_) {}
+    // }
 
     if (isTokenExpiredResponse(responseStatusCode, responseData)) {
       //if (kDebugMode) debugPrint('[OrderService] Token expiration detected');
@@ -457,6 +461,7 @@ class OrderService extends GetxService {
         isTokenExpired: true,
       );
     }
+    //print("response body3.3.3.3...$responseData");
 
     final orders = responseData != null
         ? _parseOrders(responseData)
@@ -691,20 +696,20 @@ class OrderService extends GetxService {
   List<OrderModel> _parseOrders(dynamic responseData) {
     List rawItems = [];
 
+    // print(
+    //   "rawItems111...$responseData...${responseData is List}...${responseData is Map}",
+    // );
+
     if (responseData is List) {
       rawItems = responseData;
+      //print("rawItems111...$rawItems");
     } else if (responseData is Map) {
       final dataField = responseData['data'];
+      //print("rawItems11100000...${dataField['salesorder'] is Map}");
       if (dataField is List) {
         rawItems = dataField;
       } else if (dataField is Map) {
-        final innerList =
-            dataField['salesorders'] ??
-            dataField['salesorder_list'] ??
-            dataField['items'] ??
-            dataField['orders'] ??
-            dataField['orderlist'] ??
-            dataField['list'];
+        final innerList = dataField['salesorder'];
         if (innerList is List) {
           rawItems = innerList;
         } else if (dataField['salesorder'] is Map) {
@@ -715,13 +720,7 @@ class OrderService extends GetxService {
           rawItems = [dataField];
         }
       } else {
-        final rootList =
-            responseData['salesorders'] ??
-            responseData['salesorder_list'] ??
-            responseData['items'] ??
-            responseData['orders'] ??
-            responseData['orderlist'] ??
-            responseData['list'];
+        final rootList = responseData['salesorder'];
         if (rootList is List) {
           rawItems = rootList;
         } else if (responseData['salesorder'] is Map) {
@@ -763,7 +762,7 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
     final String targetUrl =
         "${ApiManager.baseUrl}${ApiManager.getOrderDetails}";
-    print("order details..$targetUrl..$activeToken");
+    //print("order details..$targetUrl..$activeToken");
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -771,7 +770,7 @@ class OrderService extends GetxService {
     };
 
     final Map<String, dynamic> payload = {"orderkey": orderKey};
-    print("order details..$payload");
+    //print("order details..$payload");
 
     // if (kDebugMode) {
     //   debugPrint(
@@ -828,6 +827,84 @@ class OrderService extends GetxService {
         // if (kDebugMode) {
         //   debugPrint('[OrderService] Dio getOrderDetails exception: $e');
         // }
+      }
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    }
+    return null;
+  }
+
+  /// Calls orderAcceptAll API endpoint (zoho/v1/salesorder/accept) with {"salesorderid": salesOrderId}
+  Future<Map<String, dynamic>?> acceptAllOrder({
+    required String salesOrderId,
+    String? token,
+  }) async {
+    final cleanSalesOrderId = salesOrderId.trim();
+    print("accept.... $cleanSalesOrderId");
+    if (cleanSalesOrderId.isEmpty || cleanSalesOrderId == 'null') return null;
+
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String targetUrl =
+        "${ApiManager.baseUrl}${ApiManager.orderAcceptAll}";
+
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    print("active token....$activeToken");
+
+    final Map<String, dynamic> payload = {"salesorderid": cleanSalesOrderId};
+    print("active token....$payload");
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Web acceptAllOrder failed: $e');
+        }
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.orderAcceptAll,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Dio acceptAllOrder failed: $e');
+        }
       }
     }
 
@@ -1195,6 +1272,270 @@ class OrderService extends GetxService {
         }
       } catch (_) {}
     }
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    } else if (responseData is Map) {
+      return Map<String, dynamic>.from(responseData);
+    }
+    return null;
+  }
+
+  /// Calls dispatch/v1/drivers API endpoint (ApiManager.driverList).
+  Future<Map<String, dynamic>?> getDriverList({
+    required String orderkey,
+    String search = '',
+    String sort = 'nearest',
+    bool includeoffline = true,
+    int limit = 50,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String targetUrl = "${ApiManager.baseUrl}${ApiManager.driverList}";
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {
+      "orderkey": orderkey,
+      "search": search,
+      "sort": sort,
+      "includeoffline": includeoffline,
+      "limit": limit,
+    };
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        if (httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        // Fallback to dio below
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.driverList,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        if (e.response?.data != null) {
+          if (e.response!.data is Map<String, dynamic>) {
+            responseData = e.response!.data;
+          } else if (e.response!.data is String) {
+            try {
+              responseData = jsonDecode(e.response!.data);
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    } else if (responseData is Map) {
+      return Map<String, dynamic>.from(responseData);
+    }
+    return null;
+  }
+
+  /// Calls dispatch/v1/assign API endpoint (ApiManager.driverAssign).
+  Future<Map<String, dynamic>?> assignDriver({
+    required String orderkey,
+    required String driveruserkey,
+    bool force = false,
+    String remarks = "Manual assignment from ops portal",
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String base = ApiManager.baseUrl.trim();
+    final String endpoint = ApiManager.driverAssign.trim();
+    final String targetUrl = base.endsWith('/') ? '$base$endpoint' : '$base/$endpoint';
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {
+      "orderkey": orderkey.trim(),
+      "driveruserkey": driveruserkey.trim(),
+      "force": force,
+      "remarks": remarks,
+    };
+
+    print('[OrderService.assignDriver] Calling $targetUrl with payload: ${jsonEncode(payload)}');
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        print('[OrderService.assignDriver] http.post statusCode: ${httpResponse.statusCode}, body: ${httpResponse.body}');
+
+        if (httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        print('[OrderService.assignDriver] http.post error: $e');
+        // Fallback to dio below
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          endpoint,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        if (e.response?.data != null) {
+          if (e.response!.data is Map<String, dynamic>) {
+            responseData = e.response!.data;
+          } else if (e.response!.data is String) {
+            try {
+              responseData = jsonDecode(e.response!.data);
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+
+    print('[OrderService.assignDriver] Response received: $responseData');
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    } else if (responseData is Map) {
+      return Map<String, dynamic>.from(responseData);
+    }
+    return null;
+  }
+
+  /// Calls dispatch/v1/assignment API endpoint (ApiManager.driverOrderAccept)
+  /// with payload: {"key": assignmentKey}
+  Future<Map<String, dynamic>?> checkAssignmentStatus({
+    required String assignmentKey,
+    String? token,
+  }) async {
+    final cleanKey = assignmentKey.trim();
+    if (cleanKey.isEmpty) return null;
+
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String base = ApiManager.baseUrl.trim();
+    final String endpoint = ApiManager.driverOrderAccept.trim();
+    final String targetUrl =
+        base.endsWith('/') ? '$base$endpoint' : '$base/$endpoint';
+
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {
+      "key": cleanKey,
+    };
+
+    print('[OrderService.checkAssignmentStatus] Calling $targetUrl with payload: ${jsonEncode(payload)}');
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        print('[OrderService.checkAssignmentStatus] http.post statusCode: ${httpResponse.statusCode}, body: ${httpResponse.body}');
+
+        if (httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        print('[OrderService.checkAssignmentStatus] http.post error: $e');
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          endpoint,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        if (e.response?.data != null) {
+          if (e.response!.data is Map<String, dynamic>) {
+            responseData = e.response!.data;
+          } else if (e.response!.data is String) {
+            try {
+              responseData = jsonDecode(e.response!.data);
+            } catch (_) {}
+          }
+        }
+      } catch (e) {
+        print('[OrderService.checkAssignmentStatus] dio error: $e');
+      }
+    }
+
+    print('[OrderService.checkAssignmentStatus] Response received: $responseData');
 
     if (responseData is Map<String, dynamic>) {
       return responseData;

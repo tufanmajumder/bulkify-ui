@@ -395,7 +395,7 @@ class HomeController extends GetxController {
         model,
         brand,
       );
-      //print('data in block...$base64Data');
+      print('data in block...$base64Data');
     } catch (e) {
       deviceId = 'Error: $e';
     }

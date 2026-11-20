@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:bulkify/app/data/models/auth_models/login_model.dart';
@@ -9,6 +9,7 @@ import 'package:bulkify/app/data/models/order/reject_model.dart';
 import 'package:bulkify/app/data/utils/string_manager.dart';
 import 'package:bulkify/app/data/utils/widget_manager.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -87,6 +88,7 @@ class AuthService extends GetConnect implements GetxService {
     String deviceinfo = "",
     required String identifier,
     required String otp,
+    String? fcmtoken,
   }) async {
     final String url = ApiManager.verifyOtpUrl;
     final dynamic channelValue = int.tryParse(channel.toString()) ?? channel;
@@ -94,11 +96,32 @@ class AuthService extends GetConnect implements GetxService {
         ? identifier
         : '+91$identifier';
 
+    String resolvedFcmToken = (fcmtoken ?? '').trim();
+    if (resolvedFcmToken.isEmpty) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        resolvedFcmToken =
+            prefs.getString('fcmToken') ?? prefs.getString('fcmtoken') ?? '';
+      } catch (_) {}
+    }
+
+    if (resolvedFcmToken.isEmpty) {
+      try {
+        final token = await FirebaseMessaging.instance.getToken();
+        if (token != null && token.trim().isNotEmpty) {
+          resolvedFcmToken = token.trim();
+        }
+      } catch (e) {
+        // print("Error fetching FCM token in verifyOtp: $e");
+      }
+    }
+
     Map<String, dynamic> dataMap = {
       "channel": channelValue,
       "deviceinfo": deviceinfo,
       "identifier": formattedPhone,
       "otp": otp,
+      "fcmtoken": resolvedFcmToken,
     };
 
     try {
@@ -233,13 +256,13 @@ class AuthService extends GetConnect implements GetxService {
       "status": status,
     };
 
-    //print("url in getOrderList (GET with body)...${ApiManager.baseUrl}$url");
-    //print("token in getOrderList...$token");
-    //print("headers in getOrderList...$headers");
-    //print("body in getOrderList...$bodyData");
+    // print("url in getOrderList (GET with body)...${ApiManager.baseUrl}$url");
+    // print("token in getOrderList...$token");
+    // print("headers in getOrderList...$headers");
+    // print("body in getOrderList...$bodyData");
 
     try {
-      final response = await dio.get(
+      final response = await dio.post(
         url,
         data: bodyData,
         options: Options(headers: headers),
