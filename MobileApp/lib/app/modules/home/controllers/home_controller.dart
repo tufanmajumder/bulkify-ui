@@ -389,11 +389,19 @@ class HomeController extends GetxController {
         brand = linuxInfo.variant ?? 'Linux';
         deviceType = 'Desktop';
       }
+      String fcmToken = '';
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        fcmToken =
+            prefs.getString('fcmToken') ?? prefs.getString('fcmtoken') ?? '';
+      } catch (_) {}
+
       base64Data = AuthService().convertData(
         deviceType,
         deviceId,
         model,
         brand,
+        fcmToken,
       );
       print('data in block...$base64Data');
     } catch (e) {

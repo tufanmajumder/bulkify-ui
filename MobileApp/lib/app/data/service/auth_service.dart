@@ -121,7 +121,7 @@ class AuthService extends GetConnect implements GetxService {
       "deviceinfo": deviceinfo,
       "identifier": formattedPhone,
       "otp": otp,
-      "fcmtoken": resolvedFcmToken,
+      //"fcmtoken": resolvedFcmToken,
     };
 
     try {
@@ -442,15 +442,22 @@ class AuthService extends GetConnect implements GetxService {
     String phone,
     String deviceId,
     String model,
-    String brand,
-  ) {
+    String brand, [
+    String? fcmtoken,
+  ]) {
     // 1. Define your source Map
     final Map<String, dynamic> deviceData = {
       "devicetype": phone,
       "deviceid": deviceId,
       "model": model,
       "brand": brand,
+      "fcmtoken": (fcmtoken != null && fcmtoken.trim().isNotEmpty)
+          ? fcmtoken.trim()
+          : "",
     };
+
+    print("DeviceData auth....$deviceData");
+    print("DeviceData auth....${deviceData.runtimeType}");
 
     // 2. Format the Map into a pretty-printed JSON string with 2 spaces
     const JsonEncoder encoder = JsonEncoder.withIndent('  ');

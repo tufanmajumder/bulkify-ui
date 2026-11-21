@@ -7,13 +7,22 @@ import 'color_manager.dart';
 class WidgetManager {
   /// Formats snackbar text to sentence case where only the first letter is capitalized,
   /// preserving acronyms like OTP.
-  convertData(String phone, String deviceId, String model, String brand) {
+  convertData(
+    String phone,
+    String deviceId,
+    String model,
+    String brand, [
+    String? fcmtoken,
+  ]) {
     // 1. Define your source Map
     final Map<String, dynamic> deviceData = {
       "devicetype": phone,
       "deviceid": deviceId,
       "model": model,
       "brand": brand,
+      "fcmtoken": (fcmtoken != null && fcmtoken.trim().isNotEmpty)
+          ? fcmtoken.trim()
+          : "",
     };
 
     // 2. Format the Map into a pretty-printed JSON string with 2 spaces

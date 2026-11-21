@@ -5,6 +5,7 @@ import 'package:bulkify/app/data/utils/string_manager.dart';
 import 'package:bulkify/app/data/utils/widget_manager.dart';
 import 'package:bulkify/app/routes/app_pages.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -80,6 +81,10 @@ class OtpValidationController extends GetxController {
 
     isLoading.value = true;
     try {
+      if (deviceAllInfo.isEmpty && Get.context != null) {
+        await showDeviceInfo(Get.context!);
+      }
+
       final VerifyOtpModel? response = await _authService.verifyOtp(
         channel: 1,
         deviceinfo: deviceAllInfo,
@@ -154,6 +159,7 @@ class OtpValidationController extends GetxController {
     String deviceType = 'Phone';
     try {
       final deviceInfo = DeviceInfoPlugin();
+
       if (kIsWeb) {
         final webInfo = await deviceInfo.webBrowserInfo;
         //print("deviceInfo...${webInfo.userAgent}");
@@ -200,8 +206,25 @@ class OtpValidationController extends GetxController {
         brand = linuxInfo.variant ?? 'Linux';
         deviceType = 'Desktop';
       }
+      print("DeviceInfo....$deviceInfo");
     } catch (e) {
       deviceId = 'Error: $e';
+    }
+
+    String fcmToken = '';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      fcmToken =
+          prefs.getString('fcmToken') ?? prefs.getString('fcmtoken') ?? '';
+    } catch (_) {}
+
+    if (fcmToken.isEmpty) {
+      try {
+        final token = await FirebaseMessaging.instance.getToken();
+        if (token != null && token.trim().isNotEmpty) {
+          fcmToken = token.trim();
+        }
+      } catch (_) {}
     }
 
     final infoObj = _authService.convertData(
@@ -209,12 +232,14 @@ class OtpValidationController extends GetxController {
       deviceId,
       model,
       brand,
+      fcmToken,
     );
     deviceAllInfo = WidgetManager().convertData(
       deviceType,
       deviceId,
       model,
       brand,
+      fcmToken,
     );
     print("Generated plain deviceinfo payload: $infoObj");
     print("Generated plain deviceinfo payload: $deviceAllInfo");
