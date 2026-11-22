@@ -453,6 +453,51 @@ class OrderListScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    // Refresh Button
+                    InkWell(
+                      onTap: () => controller.refreshOrders(),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Obx(
+                              () => controller.isLoading.value
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFFCF4340),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.refresh_rounded,
+                                      size: 18,
+                                      color: Color(0xFF64748B),
+                                    ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Refresh',
+                              style: TextStyle(
+                                fontSize: fontSize,
+                                color: const Color(0xFF475569),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -462,7 +507,7 @@ class OrderListScreen extends StatelessWidget {
           // Scrollable Table Data Area
           LayoutBuilder(
             builder: (context, constraints) {
-              final double minTableWidth = 900.0;
+              final double minTableWidth = 1000.0;
               final double tableWidth = constraints.maxWidth < minTableWidth
                   ? minTableWidth
                   : constraints.maxWidth;
@@ -491,7 +536,7 @@ class OrderListScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              flex: 15,
+                              flex: 14,
                               child: _buildHeaderCell(
                                 context,
                                 'ORDER NO.',
@@ -499,7 +544,7 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 15,
+                              flex: 14,
                               child: _buildHeaderCell(
                                 context,
                                 'DATE & TIME',
@@ -507,7 +552,7 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 30,
+                              flex: 24,
                               child: _buildHeaderCell(
                                 context,
                                 'CUSTOMER',
@@ -515,9 +560,9 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 15,
+                              flex: 13,
                               child: Padding(
-                                padding: const EdgeInsets.only(right: 36),
+                                padding: const EdgeInsets.only(right: 28),
                                 child: _buildHeaderCell(
                                   context,
                                   'AMOUNT',
@@ -527,11 +572,15 @@ class OrderListScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
+                              flex: 11,
+                              child: _buildHeaderCell(context, 'STATUS', true),
+                            ),
+                            Expanded(
                               flex: 10,
                               child: _buildHeaderCell(context, 'PAYMENT', true),
                             ),
                             Expanded(
-                              flex: 10,
+                              flex: 9,
                               child: _buildHeaderCell(
                                 context,
                                 'SHIPMENT',
@@ -618,9 +667,9 @@ class OrderListScreen extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // ORDER ID (15%)
+                                  // ORDER ID (14%)
                                   Expanded(
-                                    flex: 15,
+                                    flex: 14,
                                     child: Text(
                                       order.id,
                                       textAlign: TextAlign.start,
@@ -634,9 +683,9 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // DATE & TIME (15%)
+                                  // DATE & TIME (14%)
                                   Expanded(
-                                    flex: 15,
+                                    flex: 14,
                                     child: Builder(
                                       builder: (context) {
                                         // print(
@@ -697,9 +746,9 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // CUSTOMER (30%)
+                                  // CUSTOMER (24%)
                                   Expanded(
-                                    flex: 30,
+                                    flex: 24,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -740,11 +789,11 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // AMOUNT (15%)
+                                  // AMOUNT (13%)
                                   Expanded(
-                                    flex: 15,
+                                    flex: 13,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(right: 36),
+                                      padding: const EdgeInsets.only(right: 28),
                                       child: Align(
                                         alignment: Alignment.centerRight,
                                         child: Text.rich(
@@ -785,6 +834,15 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
+                                  // ORDER STATUS (11%)
+                                  Expanded(
+                                    flex: 11,
+                                    child: _buildOrderStatusCell(
+                                      context,
+                                      order.orderStatus,
+                                    ),
+                                  ),
+
                                   // PAYMENT STATUS (10%)
                                   Expanded(
                                     flex: 10,
@@ -803,9 +861,9 @@ class OrderListScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // SHIPMENT STATUS (10%)
+                                  // SHIPMENT STATUS (9%)
                                   Expanded(
-                                    flex: 10,
+                                    flex: 9,
                                     child: _buildOrderStatusBadge(
                                       context,
                                       (order.shippingStatus.trim().isEmpty ||
@@ -962,6 +1020,40 @@ class OrderListScreen extends StatelessWidget {
             );
           }),
         ],
+      ),
+    );
+  }
+
+  // Order Status Cell
+  Widget _buildOrderStatusCell(BuildContext context, String status) {
+    final cleanStatus = status.trim();
+    if (cleanStatus.isEmpty || cleanStatus == 'null' || cleanStatus == '-') {
+      return Text(
+        '-',
+        textAlign: TextAlign.start,
+        style: TextStyle(
+          fontFamily: 'Public Sans',
+          fontSize: Responsive.sp(context, 13),
+          fontWeight: FontWeight.w400,
+          color: const Color(0xB32F2B3D),
+        ),
+      );
+    }
+
+    final displayStatus = cleanStatus.length == 1
+        ? cleanStatus.toUpperCase()
+        : cleanStatus[0].toUpperCase() + cleanStatus.substring(1);
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        displayStatus,
+        style: TextStyle(
+          fontFamily: 'Public Sans',
+          fontSize: Responsive.sp(context, 13),
+          fontWeight: FontWeight.w400,
+          color: const Color(0xB32F2B3D),
+        ),
       ),
     );
   }

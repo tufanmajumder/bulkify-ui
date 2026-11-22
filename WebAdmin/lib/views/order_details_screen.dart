@@ -5,12 +5,28 @@ import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:admin_app/controllers/order_controller.dart';
 import 'package:admin_app/controllers/order_details_controller.dart';
 import 'package:admin_app/utils/responsive.dart';
 import 'widgets/sidebar.dart';
 
 class OrderDetailsScreen extends StatelessWidget {
   const OrderDetailsScreen({super.key});
+
+  void _handleBack(OrderDetailsController controller) {
+    if (Get.isRegistered<OrderController>()) {
+      final orderCtrl = Get.find<OrderController>();
+      orderCtrl.syncOrderUpdates(
+        orderKey: controller.orderKey.value,
+        orderId: controller.orderId.value,
+        orderStatus: controller.orderStatus.value,
+        shippingStatus: controller.shipmentStatus.value,
+        paymentStatus: controller.paymentMethod.value,
+      );
+      orderCtrl.fetchOrders(page: orderCtrl.currentPage.value);
+    }
+    Get.back();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,72 +37,159 @@ class OrderDetailsScreen extends StatelessWidget {
     final dynamicPadding = Responsive.dynamicPadding(context);
     final spacingHeight = Responsive.h(context, 2.5).clamp(16.0, 24.0);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      drawer: isMobileOrTablet
-          ? const Drawer(
-              backgroundColor: Colors.white,
-              child: Sidebar(isDrawer: true, activeRoute: '/orders'),
-            )
-          : null,
-      body: Stack(
-        children: [
-          // Main Scrollable Area
-          Padding(
-            padding: EdgeInsets.only(left: isMobileOrTablet ? 0.0 : 72.0),
-            child: Column(
-              children: [
-                // Order Details Top Header Bar
-                Obx(
-                  () => _buildOrderHeaderBar(
-                    context,
-                    controller,
-                    isMobileOrTablet,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop && Get.isRegistered<OrderController>()) {
+          final orderCtrl = Get.find<OrderController>();
+          orderCtrl.syncOrderUpdates(
+            orderKey: controller.orderKey.value,
+            orderId: controller.orderId.value,
+            orderStatus: controller.orderStatus.value,
+            shippingStatus: controller.shipmentStatus.value,
+            paymentStatus: controller.paymentMethod.value,
+          );
+          orderCtrl.fetchOrders(page: orderCtrl.currentPage.value);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF6F7FB),
+        drawer: isMobileOrTablet
+            ? const Drawer(
+                backgroundColor: Colors.white,
+                child: Sidebar(isDrawer: true, activeRoute: '/orders'),
+              )
+            : null,
+        body: Stack(
+          children: [
+            // Main Scrollable Area
+            Padding(
+              padding: EdgeInsets.only(left: isMobileOrTablet ? 0.0 : 72.0),
+              child: Column(
+                children: [
+                  // Order Details Top Header Bar
+                  Obx(
+                    () => _buildOrderHeaderBar(
+                      context,
+                      controller,
+                      isMobileOrTablet,
+                    ),
                   ),
-                ),
 
-                // Top Action Bar with Go Back (Fixed / Non-scrolling)
-                Container(
-                  width: double.infinity,
-                  color: const Color(0xFFF6F7FB),
-                  padding: EdgeInsets.fromLTRB(
-                    dynamicPadding,
-                    14,
-                    dynamicPadding,
-                    12,
+                  // Top Action Bar with Go Back (Fixed / Non-scrolling)
+                  Container(
+                    width: double.infinity,
+                    color: const Color(0xFFF6F7FB),
+                    padding: EdgeInsets.fromLTRB(
+                      dynamicPadding,
+                      14,
+                      dynamicPadding,
+                      12,
+                    ),
+                    // child: Align(
+                    //   alignment: Alignment.centerLeft,
+                    //   child: _buildGoBackButton(context),
+                    // ),
                   ),
-                  // child: Align(
-                  //   alignment: Alignment.centerLeft,
-                  //   child: _buildGoBackButton(context),
-                  // ),
-                ),
 
-                // Main Content
-                Expanded(
-                  child: Obx(() {
-                    if (controller.isLoading.value &&
-                        controller.orderNo.value.isEmpty) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFCF4340),
+                  // Main Content
+                  Expanded(
+                    child: Obx(() {
+                      if (controller.isLoading.value &&
+                          controller.orderNo.value.isEmpty) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFCF4340),
+                          ),
+                        );
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: dynamicPadding,
                         ),
-                      );
-                    }
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final bool isDesktopView =
+                                constraints.maxWidth >= 1024;
+                            if (!isDesktopView) {
+                              return ScrollConfiguration(
+                                behavior: ScrollConfiguration.of(
+                                  context,
+                                ).copyWith(scrollbars: false),
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      child: ScrollbarTheme(
+                                        data: ScrollbarThemeData(
+                                          thickness: WidgetStateProperty.all(3),
+                                        ),
+                                        child: Scrollbar(
+                                          controller:
+                                              controller.leftScrollController,
+                                          thumbVisibility: true,
+                                          thickness: 3,
+                                          radius: const Radius.circular(4),
+                                          child: SingleChildScrollView(
+                                            controller:
+                                                controller.leftScrollController,
+                                            padding: EdgeInsets.only(
+                                              right: 6,
+                                              bottom: spacingHeight,
+                                            ),
+                                            child: _buildLeftSection(
+                                              context,
+                                              controller,
+                                              spacingHeight,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: spacingHeight),
+                                    Expanded(
+                                      child: ScrollbarTheme(
+                                        data: ScrollbarThemeData(
+                                          thickness: WidgetStateProperty.all(3),
+                                        ),
+                                        child: Scrollbar(
+                                          controller:
+                                              controller.rightScrollController,
+                                          thumbVisibility: true,
+                                          thickness: 3,
+                                          radius: const Radius.circular(4),
+                                          child: SingleChildScrollView(
+                                            controller: controller
+                                                .rightScrollController,
+                                            padding: EdgeInsets.only(
+                                              right: 6,
+                                              bottom: dynamicPadding,
+                                            ),
+                                            child: _buildRightSection(
+                                              context,
+                                              controller,
+                                              spacingHeight,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
 
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: dynamicPadding),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final bool isDesktopView =
-                              constraints.maxWidth >= 1024;
-                          if (!isDesktopView) {
                             return ScrollConfiguration(
                               behavior: ScrollConfiguration.of(
                                 context,
                               ).copyWith(scrollbars: false),
-                              child: Column(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
+                                  // Left Column (Order Details, Shipping/Billing, Price, Docs)
+                                  SizedBox(
+                                    width: 360,
+                                    height: double.infinity,
                                     child: ScrollbarTheme(
                                       data: ScrollbarThemeData(
                                         thickness: WidgetStateProperty.all(3),
@@ -95,14 +198,14 @@ class OrderDetailsScreen extends StatelessWidget {
                                         controller:
                                             controller.leftScrollController,
                                         thumbVisibility: true,
-                                        thickness: 3,
+                                        thickness: 2,
                                         radius: const Radius.circular(4),
                                         child: SingleChildScrollView(
                                           controller:
                                               controller.leftScrollController,
                                           padding: EdgeInsets.only(
                                             right: 6,
-                                            bottom: spacingHeight,
+                                            bottom: dynamicPadding,
                                           ),
                                           child: _buildLeftSection(
                                             context,
@@ -113,29 +216,33 @@ class OrderDetailsScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(height: spacingHeight),
+                                  SizedBox(width: spacingHeight),
+                                  // Right Column (Payments, Order Items, Shipping Activity)
                                   Expanded(
-                                    child: ScrollbarTheme(
-                                      data: ScrollbarThemeData(
-                                        thickness: WidgetStateProperty.all(3),
-                                      ),
-                                      child: Scrollbar(
-                                        controller:
-                                            controller.rightScrollController,
-                                        thumbVisibility: true,
-                                        thickness: 3,
-                                        radius: const Radius.circular(4),
-                                        child: SingleChildScrollView(
+                                    child: SizedBox(
+                                      height: double.infinity,
+                                      child: ScrollbarTheme(
+                                        data: ScrollbarThemeData(
+                                          thickness: WidgetStateProperty.all(3),
+                                        ),
+                                        child: Scrollbar(
                                           controller:
                                               controller.rightScrollController,
-                                          padding: EdgeInsets.only(
-                                            right: 6,
-                                            bottom: dynamicPadding,
-                                          ),
-                                          child: _buildRightSection(
-                                            context,
-                                            controller,
-                                            spacingHeight,
+                                          thumbVisibility: true,
+                                          thickness: 3,
+                                          radius: const Radius.circular(4),
+                                          child: SingleChildScrollView(
+                                            controller: controller
+                                                .rightScrollController,
+                                            padding: EdgeInsets.only(
+                                              right: 6,
+                                              bottom: dynamicPadding,
+                                            ),
+                                            child: _buildRightSection(
+                                              context,
+                                              controller,
+                                              spacingHeight,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -144,98 +251,25 @@ class OrderDetailsScreen extends StatelessWidget {
                                 ],
                               ),
                             );
-                          }
-
-                          return ScrollConfiguration(
-                            behavior: ScrollConfiguration.of(
-                              context,
-                            ).copyWith(scrollbars: false),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Left Column (Order Details, Shipping/Billing, Price, Docs)
-                                SizedBox(
-                                  width: 360,
-                                  height: double.infinity,
-                                  child: ScrollbarTheme(
-                                    data: ScrollbarThemeData(
-                                      thickness: WidgetStateProperty.all(3),
-                                    ),
-                                    child: Scrollbar(
-                                      controller:
-                                          controller.leftScrollController,
-                                      thumbVisibility: true,
-                                      thickness: 3,
-                                      radius: const Radius.circular(4),
-                                      child: SingleChildScrollView(
-                                        controller:
-                                            controller.leftScrollController,
-                                        padding: EdgeInsets.only(
-                                          right: 6,
-                                          bottom: dynamicPadding,
-                                        ),
-                                        child: _buildLeftSection(
-                                          context,
-                                          controller,
-                                          spacingHeight,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: spacingHeight),
-                                // Right Column (Payments, Order Items, Shipping Activity)
-                                Expanded(
-                                  child: SizedBox(
-                                    height: double.infinity,
-                                    child: ScrollbarTheme(
-                                      data: ScrollbarThemeData(
-                                        thickness: WidgetStateProperty.all(3),
-                                      ),
-                                      child: Scrollbar(
-                                        controller:
-                                            controller.rightScrollController,
-                                        thumbVisibility: true,
-                                        thickness: 3,
-                                        radius: const Radius.circular(4),
-                                        child: SingleChildScrollView(
-                                          controller:
-                                              controller.rightScrollController,
-                                          padding: EdgeInsets.only(
-                                            right: 6,
-                                            bottom: dynamicPadding,
-                                          ),
-                                          child: _buildRightSection(
-                                            context,
-                                            controller,
-                                            spacingHeight,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  }),
-                ),
-              ],
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // Permanent Desktop Sidebar Overlay
-          if (!isMobileOrTablet)
-            const Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: Sidebar(activeRoute: '/orders'),
-            ),
-        ],
+            // Permanent Desktop Sidebar Overlay
+            if (!isMobileOrTablet)
+              const Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Sidebar(activeRoute: '/orders'),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -333,7 +367,7 @@ class OrderDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 6),
                 ],
                 InkWell(
-                  onTap: () => Get.back(),
+                  onTap: () => _handleBack(controller),
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
                     width: 34,
@@ -503,126 +537,80 @@ class OrderDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               // Generate Invoice / Invoice Download Button
-              Builder(
-                builder: (context) {
-                  final isDownloaded = controller.isInvoiceDownloaded.value;
-                  final isLoading = controller.isDownloadingInvoice.value;
-                  final hasInvoiceId =
-                      controller.invoiceId.value.trim().isNotEmpty &&
-                      controller.invoiceId.value.trim() != 'null';
-                  final displayCode =
-                      (controller.invoiceNumber.value.trim().isNotEmpty &&
-                          controller.invoiceNumber.value.trim() != 'null')
-                      ? controller.invoiceNumber.value.trim()
-                      : (hasInvoiceId
-                            ? controller.invoiceId.value.trim()
-                            : '-');
-                  final hasValidInvoice =
-                      hasInvoiceId &&
-                      displayCode.isNotEmpty &&
-                      displayCode != '-';
+              Obx(() {
+                final isLoading = controller.isDownloadingInvoice.value;
+                final hasInvoiceId =
+                    controller.invoiceId.value.trim().isNotEmpty &&
+                    controller.invoiceId.value.trim() != 'null';
+                final displayCode =
+                    (controller.invoiceNumber.value.trim().isNotEmpty &&
+                        controller.invoiceNumber.value.trim() != 'null')
+                    ? controller.invoiceNumber.value.trim()
+                    : (hasInvoiceId ? controller.invoiceId.value.trim() : '-');
+                final hasValidInvoice =
+                    (hasInvoiceId &&
+                        displayCode.isNotEmpty &&
+                        displayCode != '-') ||
+                    controller.orderStatus.value.trim().toLowerCase() ==
+                        'invoiced';
 
-                  if (!isDownloaded) {
-                    return InkWell(
+                // When invoice is not generated/available, hide button completely
+                if (!hasValidInvoice) {
+                  return const SizedBox.shrink();
+                }
+
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
                       onTap: isLoading
                           ? null
-                          : () => controller.generateInvoice(),
+                          : () => controller.downloadInvoiceById(
+                              controller.invoiceId.value,
+                            ),
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
                         height: 36,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        child: const Center(
-                          widthFactor: 1.0,
-                          child: Text(
-                            'Generate Invoice',
-                            style: TextStyle(
-                              fontFamily: 'Public Sans',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (!hasValidInvoice) {
-                    return Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Center(
-                        widthFactor: 1.0,
-                        child: Text(
-                          '-',
-                          style: TextStyle(
-                            fontFamily: 'Public Sans',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return InkWell(
-                    onTap: isLoading
-                        ? null
-                        : () => controller.downloadInvoiceById(
-                            controller.invoiceId.value,
-                          ),
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          isLoading
-                              ? const SizedBox(
-                                  width: 15,
-                                  height: 15,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            isLoading
+                                ? const SizedBox(
+                                    width: 15,
+                                    height: 15,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF475569),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.file_download_outlined,
+                                    size: 16,
                                     color: Color(0xFF475569),
                                   ),
-                                )
-                              : const Icon(
-                                  Icons.file_download_outlined,
-                                  size: 16,
-                                  color: Color(0xFF475569),
-                                ),
-                          const SizedBox(width: 6),
-                          Text(
-                            displayCode,
-                            style: const TextStyle(
-                              fontFamily: 'Public Sans',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Download Invoice',
+                              style: TextStyle(
+                                fontFamily: 'Public Sans',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF475569),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(width: 10),
+                    const SizedBox(width: 10),
+                  ],
+                );
+              }),
               // Collect Button
               Container(
                 height: 36,
@@ -653,7 +641,12 @@ class OrderDetailsScreen extends StatelessWidget {
 
   Widget _buildGoBackButton(BuildContext context) {
     return InkWell(
-      onTap: () => Get.back(),
+      onTap: () {
+        if (Get.isRegistered<OrderController>()) {
+          Get.find<OrderController>().fetchOrders();
+        }
+        Get.back();
+      },
       borderRadius: BorderRadius.circular(6),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
@@ -1611,11 +1604,16 @@ class OrderDetailsScreen extends StatelessWidget {
 
               Widget actionWidget;
               if (isInvoiceRow) {
-                final isDownloaded = controller.isInvoiceDownloaded.value;
                 final isLoading = controller.isDownloadingInvoice.value;
+                final hasValidInvoice =
+                    (hasInvoiceId &&
+                        displayCode.isNotEmpty &&
+                        displayCode != '-') ||
+                    controller.orderStatus.value.trim().toLowerCase() ==
+                        'invoiced';
 
-                if (!isDownloaded) {
-                  // Step 1: "Generate Invoice" button (does NOT start download)
+                if (!hasValidInvoice) {
+                  // Step 1: "Refresh Invoice" button (always visible when no valid invoice is found)
                   actionWidget = InkWell(
                     onTap: () {
                       if (isLoading) return;
@@ -1635,11 +1633,20 @@ class OrderDetailsScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.sync_rounded,
-                            size: 14,
-                            color: Color(0xFF1E293B),
-                          ),
+                          isLoading
+                              ? const SizedBox(
+                                  width: 13,
+                                  height: 13,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.sync_rounded,
+                                  size: 14,
+                                  color: Color(0xFF1E293B),
+                                ),
                           const SizedBox(width: 4),
                           const Text(
                             'Refresh Invoice',
@@ -1654,70 +1661,54 @@ class OrderDetailsScreen extends StatelessWidget {
                     ),
                   );
                 } else {
-                  final hasValidInvoice =
-                      hasInvoiceId &&
-                      displayCode.isNotEmpty &&
-                      displayCode != '-';
-
-                  if (!hasValidInvoice) {
-                    actionWidget = const Text(
-                      '-',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF64748B),
+                  actionWidget = InkWell(
+                    onTap: () {
+                      if (isLoading) return;
+                      controller.downloadInvoiceById(
+                        controller.invoiceId.value,
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
                       ),
-                    );
-                  } else {
-                    actionWidget = InkWell(
-                      onTap: () {
-                        if (isLoading) return;
-                        controller.downloadInvoiceById(
-                          controller.invoiceId.value,
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            isLoading
-                                ? const SizedBox(
-                                    width: 15,
-                                    height: 15,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Color(0xFF475569),
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.file_download_outlined,
-                                    size: 16,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          isLoading
+                              ? const SizedBox(
+                                  width: 15,
+                                  height: 15,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                     color: Color(0xFF475569),
                                   ),
-                            const SizedBox(width: 6),
-                            Text(
-                              displayCode,
-                              style: const TextStyle(
-                                fontFamily: 'Public Sans',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF475569),
-                              ),
+                                )
+                              : const Icon(
+                                  Icons.file_download_outlined,
+                                  size: 16,
+                                  color: Color(0xFF475569),
+                                ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Download Invoice',
+                            style: TextStyle(
+                              fontFamily: 'Public Sans',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    );
-                  }
+                    ),
+                  );
                 }
               } else if (hasFile) {
                 actionWidget = InkWell(
@@ -1974,12 +1965,12 @@ class OrderDetailsScreen extends StatelessWidget {
                         ),
                       ),
                       _buildRupeeText(
-                        '₹${due.toStringAsFixed(2)} Due',
+                        'Due ₹${due.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontFamily: 'Public Sans',
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF991B1B),
+                          color: Color(0xFFEA580C),
                         ),
                       ),
                     ],
@@ -2242,7 +2233,11 @@ class OrderDetailsScreen extends StatelessWidget {
                                             Expanded(
                                               flex: 2,
                                               child: Text(
-                                                tx.rrnUtr,
+                                                (tx.rrnUtr.trim().isEmpty ||
+                                                        tx.rrnUtr.trim() ==
+                                                            'null')
+                                                    ? '-'
+                                                    : tx.rrnUtr.trim(),
                                                 style: const TextStyle(
                                                   fontSize: 13,
                                                   color: Color(0xFF64748B),
@@ -2269,7 +2264,13 @@ class OrderDetailsScreen extends StatelessWidget {
                                                         ),
                                                   ),
                                                   child: Text(
-                                                    tx.status,
+                                                    tx.status.trim().toLowerCase() == 'paid'
+                                                        ? 'Paid'
+                                                        : (tx.status.trim().isEmpty || tx.status.trim() == 'null'
+                                                            ? '-'
+                                                            : (tx.status.trim().length == 1
+                                                                ? tx.status.trim().toUpperCase()
+                                                                : tx.status.trim()[0].toUpperCase() + tx.status.trim().substring(1))),
                                                     style: const TextStyle(
                                                       fontSize: 13,
                                                       fontWeight:
@@ -3163,7 +3164,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 ? controller.shippingSteps[step]
                                 : (assigned
                                       ? 'Assigned · ${controller.assignedDriverName.value}'
-                                      : 'Not assigned'),
+                                      : 'Not Assigned'),
                             style: TextStyle(
                               fontFamily: 'Public-Sans',
                               fontSize: 11.5,
@@ -3241,7 +3242,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           ),
                         ],
                       )
-                    else
+                    else if (step > 0 && step < 4)
                       InkWell(
                         onTap: () => controller.setShippingStep(step + 1),
                         borderRadius: BorderRadius.circular(6),
@@ -3254,15 +3255,11 @@ class OrderDetailsScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            step == 0
-                                ? 'Mark as Driver Assigned'
-                                : step == 1
+                            step == 1
                                 ? 'Mark as Picked Up'
                                 : step == 2
                                 ? 'Mark as In Transit'
-                                : step == 3
-                                ? 'Mark as Out for Delivery'
-                                : 'Mark as Delivered',
+                                : 'Mark as Out for Delivery',
                             style: const TextStyle(
                               fontFamily: 'Public-Sans',
                               fontSize: 12.5,
@@ -3349,9 +3346,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 2,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
                             child: Text(
                               steps[index],
                               textAlign: TextAlign.center,
@@ -3380,707 +3375,588 @@ class OrderDetailsScreen extends StatelessWidget {
               if (controller.currentShippingStep.value == 5) {
                 return _buildDeliveredShippingContent(context, controller);
               }
-              if (controller.currentShippingStep.value >= 2) {
+              if (controller.currentShippingStep.value >= 1) {
                 return _buildInTransitShippingContent(context, controller);
               }
-              if (controller.currentShippingStep.value == 1) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: const TextSpan(
-                          style: TextStyle(
-                            fontFamily: 'Public-Sans',
-                            fontSize: 13,
-                            color: Color(0xFF1E293B),
-                          ),
-                          children: [
-                            TextSpan(
-                              text: 'Assign a driver',
-                              style: TextStyle(fontWeight: FontWeight.w700),
-                            ),
-                            TextSpan(
-                              text:
-                                  ' · the order is sent to the Driver App instantly',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: const TextSpan(
+                        style: TextStyle(
+                          fontFamily: 'Public-Sans',
+                          fontSize: 13,
+                          color: Color(0xFF1E293B),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Search & Filter Bar
-                      Row(
                         children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 38,
-                              child: TextField(
-                                onChanged: (value) =>
-                                    controller.driverSearchQuery.value = value,
-                                style: const TextStyle(
-                                  fontFamily: 'Public-Sans',
-                                  fontSize: 12.5,
-                                  color: Color(0xFF1E293B),
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Search driver by name or phone',
-                                  hintStyle: const TextStyle(
-                                    fontFamily: 'Public-Sans',
-                                    fontSize: 12.5,
-                                    color: Color(0xFFCBD5E1),
-                                  ),
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFE2E8F0),
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                          TextSpan(
+                            text: 'Assign a driver',
+                            style: TextStyle(fontWeight: FontWeight.w700),
                           ),
-                          const SizedBox(width: 10),
-                          Obx(
-                            () => Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: controller
-                                      .selectedDriverAvailability
-                                      .value,
-                                  isDense: true,
-                                  dropdownColor: Colors.white,
-                                  icon: const Padding(
-                                    padding: EdgeInsets.only(left: 4),
-                                    child: Icon(
-                                      Icons.arrow_drop_down,
-                                      size: 18,
-                                      color: Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                  style: const TextStyle(
-                                    fontFamily: 'Public-Sans',
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF1E293B),
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'Available now',
-                                      child: Text('Available now'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'Online',
-                                      child: Text('Online'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'Busy',
-                                      child: Text('Busy'),
-                                    ),
-                                  ],
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      controller
-                                              .selectedDriverAvailability
-                                              .value =
-                                          val;
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Obx(
-                            () => Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: controller.selectedDriverSort.value,
-                                  isDense: true,
-                                  dropdownColor: Colors.white,
-                                  icon: const Padding(
-                                    padding: EdgeInsets.only(left: 4),
-                                    child: Icon(
-                                      Icons.arrow_drop_down,
-                                      size: 18,
-                                      color: Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                  style: const TextStyle(
-                                    fontFamily: 'Public-Sans',
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF1E293B),
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'Nearest first',
-                                      child: Text('Nearest first'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'Within 2KM',
-                                      child: Text('Within 2KM'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'Within 3KM',
-                                      child: Text('Within 3KM'),
-                                    ),
-                                  ],
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      controller.selectedDriverSort.value = val;
-                                    }
-                                  },
-                                ),
-                              ),
+                          TextSpan(
+                            text:
+                                ' · The order is sent to the Driver App instantly',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF64748B),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                    ),
+                    const SizedBox(height: 12),
 
-                      // Driver List (Scrollable)
-                      Obx(() {
-                        final driverList = controller.filteredDrivers;
-                        final assignedName =
-                            controller.assignedDriverName.value;
-
-                        if (driverList.isEmpty) {
-                          if (controller.isLoadingDrivers.value) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 24),
-                              child: Center(
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(0xFFCF4340),
-                                    ),
-                                  ),
-                                ),
+                    // Search & Filter Bar
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 38,
+                            alignment: Alignment.centerLeft,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
                               ),
-                            );
-                          }
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: Text(
-                                'No matching drivers found',
-                                style: TextStyle(
+                            ),
+                            child: TextField(
+                              onChanged: (value) =>
+                                  controller.driverSearchQuery.value = value,
+                              style: const TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                color: Color(0xFF1E293B),
+                              ),
+                              decoration: const InputDecoration(
+                                hintText: 'Search driver by name or phone',
+                                hintStyle: TextStyle(
                                   fontFamily: 'Public-Sans',
                                   fontSize: 12.5,
-                                  color: Color(0xFF94A3B8),
+                                  color: Color(0xFFCBD5E1),
+                                ),
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 9,
+                                ),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Obx(() {
+                          final statuses = controller.availableDriverStatuses;
+                          if (statuses.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          final currentValue =
+                              statuses.contains(
+                                controller.selectedDriverAvailability.value,
+                              )
+                              ? controller.selectedDriverAvailability.value
+                              : statuses.first;
+
+                          return Container(
+                            height: 38,
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: currentValue,
+                                isDense: true,
+                                dropdownColor: Colors.white,
+                                icon: const Padding(
+                                  padding: EdgeInsets.only(left: 4),
+                                  child: Icon(
+                                    Icons.arrow_drop_down,
+                                    size: 18,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                                style: const TextStyle(
+                                  fontFamily: 'Public-Sans',
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF1E293B),
+                                ),
+                                items: statuses
+                                    .map(
+                                      (s) => DropdownMenuItem<String>(
+                                        value: s,
+                                        child: Text(s),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    controller
+                                            .selectedDriverAvailability
+                                            .value =
+                                        val;
+                                  }
+                                },
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Driver List (Scrollable)
+                    Obx(() {
+                      final driverList = controller.filteredDrivers;
+                      final assignedName = controller.assignedDriverName.value;
+
+                      if (driverList.isEmpty) {
+                        if (controller.isLoadingDrivers.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFCF4340),
+                                  ),
                                 ),
                               ),
                             ),
                           );
                         }
-
-                        return ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 195),
-                          child: ScrollbarTheme(
-                            data: ScrollbarThemeData(
-                              thickness: WidgetStateProperty.all(3),
-                            ),
-                            child: Scrollbar(
-                              controller: controller.driverScrollController,
-                              thumbVisibility: true,
-                              thickness: 3,
-                              radius: const Radius.circular(4),
-                              child: SingleChildScrollView(
-                                controller: controller.driverScrollController,
-                                padding: const EdgeInsets.only(right: 12),
-                                child: Column(
-                                  children: List.generate(driverList.length, (
-                                    index,
-                                  ) {
-                                    final driver = driverList[index];
-                                    final isOnline = driver.status == 'Online';
-                                    final isLast =
-                                        index == driverList.length - 1;
-
-                                    return Column(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 12,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Container(
-                                                width: 38,
-                                                height: 38,
-                                                alignment: Alignment.center,
-                                                decoration: const BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: Color(0xFFEDF2F7),
-                                                ),
-                                                child: Text(
-                                                  driver.initials,
-                                                  style: const TextStyle(
-                                                    fontFamily: 'Public-Sans',
-                                                    fontSize: 12.5,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF1E293B),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      driver.name,
-                                                      style: const TextStyle(
-                                                        fontFamily:
-                                                            'Public-Sans',
-                                                        fontSize: 13.5,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color: Color(
-                                                          0xFF1E293B,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 2),
-                                                    Text(
-                                                      '${driver.vehicle} · ${driver.distance} · ${driver.activeOrders} active orders',
-                                                      style: const TextStyle(
-                                                        fontFamily:
-                                                            'Public-Sans',
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        color: Color(
-                                                          0xFF64748B,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 4,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: isOnline
-                                                      ? const Color(0xFFE6F4EA)
-                                                      : const Color(0xFFFEF3C7),
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: Text(
-                                                  driver.status,
-                                                  style: TextStyle(
-                                                    fontFamily: 'Public-Sans',
-                                                    fontSize: 11.5,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: isOnline
-                                                        ? const Color(
-                                                            0xFF15803D,
-                                                          )
-                                                        : const Color(
-                                                            0xFFB45309,
-                                                          ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Obx(() {
-                                                final driverId = controller
-                                                    .getDriverIdentifier(
-                                                      driver,
-                                                    );
-                                                final isAssigningThis =
-                                                    controller
-                                                        .isAssigningDriver
-                                                        .value &&
-                                                    controller
-                                                            .assigningDriverUserKey
-                                                            .value ==
-                                                        (driver.driverUserKey ??
-                                                            driver.driverKey ??
-                                                            driver.name);
-                                                final isCheckingThis =
-                                                    controller
-                                                        .driverIsCheckingStatus[driverId] ==
-                                                    true;
-                                                final hasAcceptedThis =
-                                                    controller
-                                                        .driverHasAccepted[driverId] ==
-                                                    true;
-                                                final clickCount =
-                                                    controller
-                                                        .driverAssignClickCount[driverId] ??
-                                                    0;
-                                                final cooldown =
-                                                    controller
-                                                        .driverAssignCooldown[driverId] ??
-                                                    0;
-                                                final isMaxReached =
-                                                    clickCount >= 3;
-
-                                                Color bgColor;
-                                                Color borderColor;
-                                                Color textColor;
-                                                Widget content;
-
-                                                if (isAssigningThis) {
-                                                  bgColor = const Color(
-                                                    0xFFFEE2E2,
-                                                  );
-                                                  borderColor = const Color(
-                                                    0xFFCF4340,
-                                                  );
-                                                  content = const Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      SizedBox(
-                                                        width: 13,
-                                                        height: 13,
-                                                        child: CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                          valueColor:
-                                                              AlwaysStoppedAnimation<
-                                                                Color
-                                                              >(
-                                                                Color(
-                                                                  0xFFCF4340,
-                                                                ),
-                                                              ),
-                                                        ),
-                                                      ),
-                                                      SizedBox(width: 6),
-                                                      Text(
-                                                        'Assigning...',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Public-Sans',
-                                                          fontSize: 11.5,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color: Color(
-                                                            0xFFCF4340,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                } else if (isCheckingThis) {
-                                                  bgColor = const Color(
-                                                    0xFFFEF3C7,
-                                                  );
-                                                  borderColor = const Color(
-                                                    0xFFFCD34D,
-                                                  );
-                                                  content = const Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      SizedBox(
-                                                        width: 13,
-                                                        height: 13,
-                                                        child: CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                          valueColor:
-                                                              AlwaysStoppedAnimation<
-                                                                Color
-                                                              >(
-                                                                Color(
-                                                                  0xFFD97706,
-                                                                ),
-                                                              ),
-                                                        ),
-                                                      ),
-                                                      SizedBox(width: 6),
-                                                      Text(
-                                                        'Checking...',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Public-Sans',
-                                                          fontSize: 11.5,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color: Color(
-                                                            0xFFB45309,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                } else if (hasAcceptedThis) {
-                                                  bgColor = const Color(
-                                                    0xFFDCFCE7,
-                                                  );
-                                                  borderColor = const Color(
-                                                    0xFF86EFAC,
-                                                  );
-                                                  textColor = const Color(
-                                                    0xFF15803D,
-                                                  );
-                                                  content = Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      const Icon(
-                                                        Icons
-                                                            .check_circle_rounded,
-                                                        size: 13,
-                                                        color: Color(
-                                                          0xFF15803D,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 5),
-                                                      Text(
-                                                        'Accepted',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Public-Sans',
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: textColor,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                } else if (cooldown > 0) {
-                                                  bgColor = const Color(
-                                                    0xFFF8FAFC,
-                                                  );
-                                                  borderColor = const Color(
-                                                    0xFFCBD5E1,
-                                                  );
-                                                  textColor = const Color(
-                                                    0xFF64748B,
-                                                  );
-                                                  content = Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      const Icon(
-                                                        Icons
-                                                            .access_time_rounded,
-                                                        size: 13,
-                                                        color: Color(
-                                                          0xFF64748B,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 5),
-                                                      Text(
-                                                        'Wait ${cooldown}s',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Public-Sans',
-                                                          fontSize: 11.5,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color: textColor,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                } else if (isMaxReached) {
-                                                  bgColor = const Color(
-                                                    0xFFFEF2F2,
-                                                  );
-                                                  borderColor = const Color(
-                                                    0xFFFECACA,
-                                                  );
-                                                  textColor = const Color(
-                                                    0xFFDC2626,
-                                                  );
-                                                  content = Text(
-                                                    'Assign',
-                                                    style: TextStyle(
-                                                      fontFamily: 'Public-Sans',
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: textColor,
-                                                    ),
-                                                  );
-                                                } else {
-                                                  bgColor = Colors.white;
-                                                  borderColor = const Color(
-                                                    0xFFE2E8F0,
-                                                  );
-                                                  textColor = const Color(
-                                                    0xFF1E293B,
-                                                  );
-                                                  content = Text(
-                                                    'Assign',
-                                                    style: TextStyle(
-                                                      fontFamily: 'Public-Sans',
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: textColor,
-                                                    ),
-                                                  );
-                                                }
-
-                                                return Tooltip(
-                                                  message: isMaxReached
-                                                      ? 'Please choose another driver'
-                                                      : (hasAcceptedThis
-                                                            ? 'Driver accepted order'
-                                                            : (isCheckingThis
-                                                                  ? 'Checking driver acceptance...'
-                                                                  : (cooldown >
-                                                                            0
-                                                                        ? 'Please wait ${cooldown}s before assigning again'
-                                                                        : ''))),
-                                                  child: InkWell(
-                                                    onTap:
-                                                        (controller
-                                                                .isAssigningDriver
-                                                                .value ||
-                                                            isCheckingThis)
-                                                        ? null
-                                                        : () => controller
-                                                              .assignDriver(
-                                                                driver,
-                                                              ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          6,
-                                                        ),
-                                                    child: Container(
-                                                      height: 32,
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 14,
-                                                          ),
-                                                      alignment:
-                                                          Alignment.center,
-                                                      decoration: BoxDecoration(
-                                                        color: bgColor,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              6,
-                                                            ),
-                                                        border: Border.all(
-                                                          color: borderColor,
-                                                        ),
-                                                      ),
-                                                      child: content,
-                                                    ),
-                                                  ),
-                                                );
-                                              }),
-                                            ],
-                                          ),
-                                        ),
-                                        if (!isLast)
-                                          const Divider(
-                                            height: 1,
-                                            thickness: 1,
-                                            color: Color(0xFFF1F5F9),
-                                          ),
-                                      ],
-                                    );
-                                  }),
-                                ),
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: Text(
+                              'No matching drivers found',
+                              style: TextStyle(
+                                fontFamily: 'Public-Sans',
+                                fontSize: 12.5,
+                                color: Color(0xFF94A3B8),
                               ),
                             ),
                           ),
                         );
-                      }),
+                      }
 
-                      const SizedBox(height: 8),
+                      return ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 195),
+                        child: ScrollbarTheme(
+                          data: ScrollbarThemeData(
+                            thickness: WidgetStateProperty.all(3),
+                          ),
+                          child: Scrollbar(
+                            controller: controller.driverScrollController,
+                            thumbVisibility: true,
+                            thickness: 3,
+                            radius: const Radius.circular(4),
+                            child: SingleChildScrollView(
+                              controller: controller.driverScrollController,
+                              padding: const EdgeInsets.only(right: 12),
+                              child: Column(
+                                children: List.generate(driverList.length, (
+                                  index,
+                                ) {
+                                  final driver = driverList[index];
+                                  final isOnline = driver.status == 'Online';
+                                  final isLast = index == driverList.length - 1;
 
-                      // Bottom Checkboxes Bar
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Obx(
-                          () => Wrap(
-                            spacing: 28,
-                            runSpacing: 8,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              _buildShippingCheckbox(
-                                label: 'Notify customer with tracking link',
-                                value: controller.notifyCustomerOnAssign.value,
-                                onChanged: (v) =>
-                                    controller.notifyCustomerOnAssign.value = v,
+                                  return Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 38,
+                                              height: 38,
+                                              alignment: Alignment.center,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Color(0xFFEDF2F7),
+                                              ),
+                                              child: Text(
+                                                driver.initials,
+                                                style: const TextStyle(
+                                                  fontFamily: 'Public-Sans',
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF1E293B),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    driver.name,
+                                                    style: const TextStyle(
+                                                      fontFamily: 'Public-Sans',
+                                                      fontSize: 13.5,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Color(0xFF1E293B),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    driver.vehicle.isNotEmpty
+                                                        ? '${driver.vehicle} · ${driver.activeOrders} ${driver.activeOrders == 1 ? "Active Order" : "Active Orders"}'
+                                                        : '${driver.activeOrders} ${driver.activeOrders == 1 ? "Active Order" : "Active Orders"}',
+                                                    style: const TextStyle(
+                                                      fontFamily: 'Public-Sans',
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: Color(0xFF64748B),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: isOnline
+                                                    ? const Color(0xFFE6F4EA)
+                                                    : const Color(0xFFFEF3C7),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                driver.status,
+                                                style: TextStyle(
+                                                  fontFamily: 'Public-Sans',
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isOnline
+                                                      ? const Color(0xFF15803D)
+                                                      : const Color(0xFFB45309),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Obx(() {
+                                              final driverId = controller
+                                                  .getDriverIdentifier(driver);
+                                              final isAssigningThis =
+                                                  controller
+                                                      .isAssigningDriver
+                                                      .value &&
+                                                  controller
+                                                          .assigningDriverUserKey
+                                                          .value ==
+                                                      (driver.driverUserKey ??
+                                                          driver.driverKey ??
+                                                          driver.name);
+                                              final isCheckingThis =
+                                                  controller
+                                                      .driverIsCheckingStatus[driverId] ==
+                                                  true;
+                                              final hasAcceptedThis =
+                                                  controller
+                                                      .driverHasAccepted[driverId] ==
+                                                  true;
+                                              final clickCount =
+                                                  controller
+                                                      .driverAssignClickCount[driverId] ??
+                                                  0;
+                                              final cooldown =
+                                                  controller
+                                                      .driverAssignCooldown[driverId] ??
+                                                  0;
+                                              final isMaxReached =
+                                                  clickCount >= 3;
+
+                                              Color bgColor;
+                                              Color borderColor;
+                                              Color textColor;
+                                              Widget content;
+
+                                              if (isAssigningThis) {
+                                                bgColor = const Color(
+                                                  0xFFFEE2E2,
+                                                );
+                                                borderColor = const Color(
+                                                  0xFFCF4340,
+                                                );
+                                                content = const Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 13,
+                                                      height: 13,
+                                                      child: CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                              Color
+                                                            >(
+                                                              Color(0xFFCF4340),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 6),
+                                                    Text(
+                                                      'Assigning...',
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'Public-Sans',
+                                                        fontSize: 11.5,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: Color(
+                                                          0xFFCF4340,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (isCheckingThis) {
+                                                bgColor = const Color(
+                                                  0xFFFEF3C7,
+                                                );
+                                                borderColor = const Color(
+                                                  0xFFFCD34D,
+                                                );
+                                                content = const Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 13,
+                                                      height: 13,
+                                                      child: CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                              Color
+                                                            >(
+                                                              Color(0xFFD97706),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 6),
+                                                    Text(
+                                                      'Checking...',
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'Public-Sans',
+                                                        fontSize: 11.5,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: Color(
+                                                          0xFFB45309,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (hasAcceptedThis) {
+                                                bgColor = const Color(
+                                                  0xFFDCFCE7,
+                                                );
+                                                borderColor = const Color(
+                                                  0xFF86EFAC,
+                                                );
+                                                textColor = const Color(
+                                                  0xFF15803D,
+                                                );
+                                                content = Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons
+                                                          .check_circle_rounded,
+                                                      size: 13,
+                                                      color: Color(0xFF15803D),
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      'Accepted',
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'Public-Sans',
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: textColor,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (cooldown > 0) {
+                                                bgColor = const Color(
+                                                  0xFFF8FAFC,
+                                                );
+                                                borderColor = const Color(
+                                                  0xFFCBD5E1,
+                                                );
+                                                textColor = const Color(
+                                                  0xFF64748B,
+                                                );
+                                                content = Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.access_time_rounded,
+                                                      size: 13,
+                                                      color: Color(0xFF64748B),
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      'Wait ${cooldown}s',
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'Public-Sans',
+                                                        fontSize: 11.5,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: textColor,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (isMaxReached) {
+                                                bgColor = const Color(
+                                                  0xFFFEF2F2,
+                                                );
+                                                borderColor = const Color(
+                                                  0xFFFECACA,
+                                                );
+                                                textColor = const Color(
+                                                  0xFFDC2626,
+                                                );
+                                                content = Text(
+                                                  'Assign',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Public-Sans',
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: textColor,
+                                                  ),
+                                                );
+                                              } else {
+                                                bgColor = Colors.white;
+                                                borderColor = const Color(
+                                                  0xFFE2E8F0,
+                                                );
+                                                textColor = const Color(
+                                                  0xFF1E293B,
+                                                );
+                                                content = Text(
+                                                  'Assign',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Public-Sans',
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: textColor,
+                                                  ),
+                                                );
+                                              }
+
+                                              return Tooltip(
+                                                message: isMaxReached
+                                                    ? 'Please choose another driver'
+                                                    : (hasAcceptedThis
+                                                          ? 'Driver accepted order'
+                                                          : (isCheckingThis
+                                                                ? 'Checking driver acceptance...'
+                                                                : (cooldown > 0
+                                                                      ? 'Please wait ${cooldown}s before assigning again'
+                                                                      : ''))),
+                                                child: InkWell(
+                                                  onTap:
+                                                      (controller
+                                                              .isAssigningDriver
+                                                              .value ||
+                                                          isCheckingThis)
+                                                      ? null
+                                                      : () => controller
+                                                            .assignDriver(
+                                                              driver,
+                                                            ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  child: Container(
+                                                    height: 32,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 14,
+                                                        ),
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      color: bgColor,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
+                                                          ),
+                                                      border: Border.all(
+                                                        color: borderColor,
+                                                      ),
+                                                    ),
+                                                    child: content,
+                                                  ),
+                                                ),
+                                              );
+                                            }),
+                                          ],
+                                        ),
+                                      ),
+                                      if (!isLast)
+                                        const Divider(
+                                          height: 1,
+                                          thickness: 1,
+                                          color: Color(0xFFF1F5F9),
+                                        ),
+                                    ],
+                                  );
+                                }),
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
+                      );
+                    }),
+
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              );
             }),
           ],
         );
@@ -4409,8 +4285,14 @@ class OrderDetailsScreen extends StatelessWidget {
     BuildContext context,
     OrderDetailsController controller,
   ) {
-    const driverName = 'Jhon Doe';
-    const deliverToName = 'Christian Teigland';
+    final driverName = controller.assignedDriverName.value.isNotEmpty
+        ? controller.assignedDriverName.value
+        : 'Jhon Doe';
+    final deliverToName = controller.shippingName.value.isNotEmpty
+        ? controller.shippingName.value
+        : (controller.customer.value.isNotEmpty
+              ? controller.customer.value
+              : 'Christian Teigland');
     final step = controller.currentShippingStep.value;
 
     final activities = <Map<String, String>>[
@@ -4423,13 +4305,13 @@ class OrderDetailsScreen extends StatelessWidget {
       if (step >= 2)
         {
           'time': 'Today 14:12',
-          'title': 'Picked up by Jhon Doe',
+          'title': 'Picked up by $driverName',
           'subtitle': '12 items scanned and verified · Driver App',
         },
       if (step >= 1)
         {
           'time': 'Today 13:50',
-          'title': 'Driver assigned: Jhon Doe',
+          'title': 'Driver assigned: $driverName',
           'subtitle': 'Assigned by [Admin name] · Admin',
         },
     ];
@@ -4496,7 +4378,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    driverName,
+                                    "driverName",
                                     style: TextStyle(
                                       fontFamily: 'Public-Sans',
                                       fontSize: 13,
@@ -4759,7 +4641,7 @@ class OrderDetailsScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         const Text(
-                          deliverToName,
+                          "deliverToName",
                           style: TextStyle(
                             fontFamily: 'Public-Sans',
                             fontSize: 13,

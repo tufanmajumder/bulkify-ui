@@ -138,7 +138,12 @@ class SearchOrderModel {
       salesorderid: json['salesorderid']?.toString() ?? '',
       ordernumber: json['ordernumber']?.toString() ?? '',
       ordertype: json['ordertype']?.toString() ?? '',
-      orderstatus: json['orderstatus']?.toString() ?? '',
+      orderstatus: json['orderstatus']?.toString() ??
+          json['order_status']?.toString() ??
+          json['salesorder_status']?.toString() ??
+          json['salesorderstatus']?.toString() ??
+          json['status']?.toString() ??
+          '',
       orderdate: json['orderdate']?.toString() ?? '',
       ordersource: json['ordersource']?.toString() ?? '',
       createdtime: json['createdtime']?.toString() ?? '',
@@ -199,7 +204,9 @@ class SearchOrderModel {
       companyName: '',
       customerEmail: customeremail.isNotEmpty ? customeremail : '-',
       paymentStatus: formattedPaymentStatus,
-      orderStatus: orderstatus.isNotEmpty ? orderstatus : formattedOrderStatus,
+      orderStatus: (orderstatus.isNotEmpty && orderstatus != 'null')
+          ? orderstatus
+          : '-',
       shippingStatus: shippingstatus.isNotEmpty ? shippingstatus : 'Pending',
       amount: finalamount.toStringAsFixed(2),
     );

@@ -184,6 +184,11 @@ class OrderController extends GetxController {
     }
   }
 
+  void refreshOrders() {
+    if (isLoading.value) return;
+    fetchOrders(page: currentPage.value);
+  }
+
   void searchOrders() {
     if (isLoading.value) return;
     final query = searchController.text.trim();
@@ -272,11 +277,49 @@ class OrderController extends GetxController {
     );
   }
 
-  void viewOrderDetails(OrderModel order) {
-    Get.to(
+  void syncOrderUpdates({
+    required String orderKey,
+    required String orderId,
+    String? orderStatus,
+    String? shippingStatus,
+    String? paymentStatus,
+  }) {
+    final cleanKey = orderKey.trim();
+    final cleanId = orderId.trim();
+    final index = orders.indexWhere(
+      (o) =>
+          (cleanKey.isNotEmpty && (o.orderkey == cleanKey || o.id == cleanKey)) ||
+          (cleanId.isNotEmpty && (o.id == cleanId || o.orderkey == cleanId)),
+    );
+    if (index != -1) {
+      final existing = orders[index];
+      orders[index] = existing.copyWith(
+        orderStatus: (orderStatus != null &&
+                orderStatus.trim().isNotEmpty &&
+                orderStatus.trim() != 'null')
+            ? orderStatus.trim()
+            : existing.orderStatus,
+        shippingStatus: (shippingStatus != null &&
+                shippingStatus.trim().isNotEmpty &&
+                shippingStatus.trim() != 'null')
+            ? shippingStatus.trim()
+            : existing.shippingStatus,
+        paymentStatus: (paymentStatus != null &&
+                paymentStatus.trim().isNotEmpty &&
+                paymentStatus.trim() != 'null')
+            ? paymentStatus.trim()
+            : existing.paymentStatus,
+      );
+      orders.refresh();
+    }
+  }
+
+  Future<void> viewOrderDetails(OrderModel order) async {
+    await Get.to(
       () => const OrderDetailsScreen(),
       arguments: order,
       routeName: '/order-details',
     );
+    fetchOrders(page: currentPage.value);
   }
 }

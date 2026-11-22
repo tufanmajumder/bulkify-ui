@@ -421,10 +421,12 @@ class OrderDetailsController extends GetxController {
   final RxInt currentShippingStep = 0.obs;
   final RxString assignedDriverName = ''.obs;
   final RxString driverSearchQuery = ''.obs;
-  final RxString selectedDriverAvailability = 'Available now'.obs;
+  final RxString selectedDriverAvailability = 'Online'.obs;
   final RxString selectedDriverSort = 'Nearest first'.obs;
   final RxBool markAsPackedOnAssign = true.obs;
   final RxBool notifyCustomerOnAssign = true.obs;
+
+  List<String> get availableDriverStatuses => const ['Online', 'Busy'];
 
   final List<String> shippingSteps = const [
     'Accepted',
@@ -499,7 +501,7 @@ class OrderDetailsController extends GetxController {
         orderkey: targetOrderKey,
         search: query,
         sort: 'nearest',
-        includeoffline: true,
+        includeoffline: false,
         limit: 50,
       );
 
@@ -542,27 +544,21 @@ class OrderDetailsController extends GetxController {
 
   List<ShippingDriverModel> get filteredDrivers {
     final q = driverSearchQuery.value.trim().toLowerCase();
+    final statuses = availableDriverStatuses;
+    final selectedStatus = statuses.contains(selectedDriverAvailability.value)
+        ? selectedDriverAvailability.value.trim().toLowerCase()
+        : (statuses.isNotEmpty ? statuses.first.trim().toLowerCase() : '');
+
     return drivers.where((d) {
       if (q.isNotEmpty &&
           !d.name.toLowerCase().contains(q) &&
           !(d.phone ?? '').toLowerCase().contains(q)) {
         return false;
       }
-      if (selectedDriverAvailability.value == 'Online' &&
-          d.status.toLowerCase() != 'online') {
-        return false;
-      }
-      if (selectedDriverAvailability.value == 'Busy' &&
-          d.status.toLowerCase() != 'busy') {
-        return false;
-      }
-      final distVal =
-          double.tryParse(d.distance.split(' ').first.trim()) ?? 0.0;
-      if (selectedDriverSort.value == 'Within 2KM' && distVal > 2.0) {
-        return false;
-      }
-      if (selectedDriverSort.value == 'Within 3KM' && distVal > 3.0) {
-        return false;
+      if (selectedStatus.isNotEmpty) {
+        if (d.status.trim().toLowerCase() != selectedStatus) {
+          return false;
+        }
       }
       return true;
     }).toList();
@@ -887,6 +883,13 @@ class OrderDetailsController extends GetxController {
     if (index >= 0 && index < shippingSteps.length) {
       currentShippingStep.value = index;
       shipmentStatus.value = shippingSteps[index];
+      if (index >= 1 &&
+          assignedDriverName.value.isEmpty &&
+          drivers.isNotEmpty) {
+        final primary =
+            drivers.firstWhereOrNull((d) => d.isPrimary) ?? drivers.first;
+        assignedDriverName.value = primary.name;
+      }
     }
   }
 
@@ -1722,6 +1725,10 @@ class OrderDetailsController extends GetxController {
       invoiceNumber.value = (data['invoicenumber']).toString().trim();
     }
 
+    if (invoiceId.value.trim().isNotEmpty && invoiceId.value.trim() != 'null') {
+      isInvoiceDownloaded.value = true;
+    }
+
     // 5. Documents (if key missing -> empty list)
     final docsList = data['documents'] ?? data['document_list'] ?? data['docs'];
     final List<DocumentModel> parsedDocs = [];
@@ -1812,10 +1819,20 @@ class OrderDetailsController extends GetxController {
                   .toString(),
               paymentMethod: (tx['paymentmode'] ?? tx['payment_mode'] ?? "-")
                   .toString(),
-              rrnUtr:
-                  (tx['transactionref'] ?? tx['rrn_utr'] ?? tx['rrn'] ?? "-")
-                      .toString(),
-              status: (tx['paymentstatus'] ?? tx['status'] ?? "-").toString(),
+              rrnUtr: () {
+                final rrn = (tx['transactionref'] ??
+                        tx['rrn_utr'] ??
+                        tx['rrn'] ??
+                        tx['utr'] ??
+                        tx['reference_number'] ??
+                        "-")
+                    .toString()
+                    .trim();
+                return (rrn.isEmpty || rrn == 'null') ? '-' : rrn;
+              }(),
+              status: (tx['paymentstatus'] ?? tx['status'] ?? "-").toString().trim().toLowerCase() == 'paid'
+                  ? 'Paid'
+                  : (tx['paymentstatus'] ?? tx['status'] ?? "-").toString(),
               amount: _formatPriceVal(
                 tx['paymentamount'] ?? tx['amount'] ?? "-",
               ),
@@ -2091,9 +2108,14 @@ class OrderDetailsController extends GetxController {
   }
 
   Future<void> downloadInvoiceById(String invId) async {
-    final targetInvoiceId = invId.trim().isNotEmpty
+    final targetInvoiceId = invId.trim().isNotEmpty && invId.trim() != 'null'
         ? invId.trim()
-        : invoiceId.value.trim();
+        : (invoiceId.value.trim().isNotEmpty && invoiceId.value.trim() != 'null'
+            ? invoiceId.value.trim()
+            : (invoiceNumber.value.trim().isNotEmpty &&
+                    invoiceNumber.value.trim() != 'null'
+                ? invoiceNumber.value.trim()
+                : ''));
 
     if (targetInvoiceId.isEmpty || targetInvoiceId == 'null') {
       Get.snackbar(
@@ -2163,20 +2185,37 @@ class OrderDetailsController extends GetxController {
   }
 
   Future<void> generateInvoice() async {
+    isDownloadingInvoice.value = true;
+    try {
+      if (orderKey.value.trim().isNotEmpty) {
+        await fetchOrderDetails(orderKey.value.trim());
+      }
+    } catch (_) {
+    } finally {
+      isDownloadingInvoice.value = false;
+    }
+
     final targetInvoiceId = invoiceId.value.trim();
     final hasInvoice = targetInvoiceId.isNotEmpty && targetInvoiceId != 'null';
 
-    if (invoiceNumber.value.trim().isEmpty ||
-        invoiceNumber.value.trim() == 'null') {
-      if (hasInvoice) {
+    if (hasInvoice) {
+      isInvoiceDownloaded.value = true;
+      if (invoiceNumber.value.trim().isEmpty ||
+          invoiceNumber.value.trim() == 'null' ||
+          invoiceNumber.value.trim() == '-') {
         invoiceNumber.value = targetInvoiceId;
-      } else {
-        invoiceNumber.value = '-';
       }
-    }
-    isInvoiceDownloaded.value = true;
-
-    if (!hasInvoice) {
+      Get.snackbar(
+        'Invoice Ready',
+        'Invoice $targetInvoiceId is ready',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF10B981),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+    } else {
+      isInvoiceDownloaded.value = false;
       Get.snackbar(
         'Invoice',
         'There is no invoice',

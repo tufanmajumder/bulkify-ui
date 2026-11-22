@@ -114,10 +114,18 @@ class OrderModel {
     String paymentStr = paymentRaw != null ? paymentRaw.toString().trim() : '-';
 
     // Extract Order Status ("orderstatus", "order_status", "salesorder_status", "status")
-    final orderStatusRaw = json['orderstatus'] ?? 'Pending';
-    String orderStatusStr = orderStatusRaw != null
-        ? orderStatusRaw.toString().trim()
-        : 'Pending';
+    final orderStatusRaw =
+        json['orderstatus'] ??
+        json['order_status'] ??
+        json['salesorder_status'] ??
+        json['salesorderstatus'] ??
+        json['status'];
+    String orderStatusStr = '-';
+    if (orderStatusRaw != null &&
+        orderStatusRaw.toString().trim().isNotEmpty &&
+        orderStatusRaw.toString().trim() != 'null') {
+      orderStatusStr = orderStatusRaw.toString().trim();
+    }
 
     // Extract Shipping Status ("shippingstatus", "shipping_status", "shipped_status")
     final shippingStatusRaw = json['shippingstatus'] ?? 'Pending';
