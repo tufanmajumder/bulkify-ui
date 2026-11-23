@@ -92,6 +92,8 @@ class ShippingDriverModel {
   final String? driverKey;
   final String? driverUserKey;
   final String? phone;
+  final String? fcmtoken;
+  final Map<String, dynamic> rawJson;
 
   ShippingDriverModel({
     required this.initials,
@@ -104,6 +106,8 @@ class ShippingDriverModel {
     this.driverKey,
     this.driverUserKey,
     this.phone,
+    this.fcmtoken,
+    this.rawJson = const {},
   });
 
   factory ShippingDriverModel.fromJson(Map<String, dynamic> json) {
@@ -272,6 +276,28 @@ class ShippingDriverModel {
                 json['phonenumber'])
             ?.toString();
 
+    final String? fcmToken =
+        (json['fcmtoken'] ??
+                json['fcmToken'] ??
+                json['fcm_token'] ??
+                json['devicetoken'] ??
+                json['device_token'] ??
+                json['push_token'] ??
+                json['pushtoken'] ??
+                json['token'] ??
+                (json['driver'] is Map
+                    ? (json['driver']['fcmtoken'] ??
+                          json['driver']['fcmToken'] ??
+                          json['driver']['devicetoken'])
+                    : null) ??
+                (json['user'] is Map
+                    ? (json['user']['fcmtoken'] ??
+                          json['user']['fcmToken'] ??
+                          json['user']['devicetoken'])
+                    : null))
+            ?.toString()
+            .trim();
+
     return ShippingDriverModel(
       initials: initials,
       name: rawName,
@@ -283,6 +309,8 @@ class ShippingDriverModel {
       driverKey: resolvedDriverUserKey,
       driverUserKey: resolvedDriverUserKey,
       phone: phone,
+      fcmtoken: fcmToken,
+      rawJson: json,
     );
   }
 }
@@ -842,6 +870,78 @@ class OrderDetailsController extends GetxController {
           driverAssignmentKeys[driverId] = extractedKey;
         }
 
+        // Call driverOrderPush API as requested upon successful driver assign
+        try {
+          String resolvedFcmToken =
+              'fzS--ip3SqeI4KSEB4yjfn:APA91bEjVnX7a8MUAGQXK3z1fPBcF_iJpkS7dL1hOF_E0joVVKCCU8iKXwkxNrIjpI-xtMlQFKp_JRVeu-VwX-QFYg17VZOzLRY9i4b09IZom6AA_udtrrQ';
+          if (resolvedFcmToken.isEmpty && dataMap is Map) {
+            resolvedFcmToken =
+                (dataMap['fcmtoken'] ??
+                        dataMap['fcmToken'] ??
+                        dataMap['fcm_token'] ??
+                        dataMap['devicetoken'] ??
+                        '')
+                    .toString()
+                    .trim();
+          }
+          if (resolvedFcmToken.isEmpty && res['fcmtoken'] != null) {
+            resolvedFcmToken = res['fcmtoken'].toString().trim();
+          }
+
+          final String resolvedOrderKey = currentOrderKey.trim();
+          String resolvedOrderNumber = orderNo.value.trim().replaceAll('#', '');
+          if (resolvedOrderNumber.isEmpty ||
+              resolvedOrderNumber == '-' ||
+              resolvedOrderNumber == 'null') {
+            resolvedOrderNumber = (selectedOrder.value?.id ?? '')
+                .trim()
+                .replaceAll('#', '');
+          }
+          if (resolvedOrderNumber.isEmpty ||
+              resolvedOrderNumber == '-' ||
+              resolvedOrderNumber == 'null') {
+            resolvedOrderNumber = salesOrderId.value.trim().replaceAll('#', '');
+          }
+          if ((resolvedOrderNumber.isEmpty ||
+                  resolvedOrderNumber == '-' ||
+                  resolvedOrderNumber == 'null') &&
+              dataMap is Map) {
+            resolvedOrderNumber =
+                (dataMap['ordernumber'] ??
+                        dataMap['order_number'] ??
+                        dataMap['salesorder_number'] ??
+                        dataMap['salesorder'] ??
+                        dataMap['salesorderid'] ??
+                        '')
+                    .toString()
+                    .trim()
+                    .replaceAll('#', '');
+          }
+
+          print(
+            '[OrderDetailsController.assignDriver] Triggering driverOrderPush with fcmtoken: $resolvedFcmToken, orderkey: $resolvedOrderKey, ordernumber: $resolvedOrderNumber',
+          );
+
+          if (resolvedFcmToken.isNotEmpty && resolvedOrderKey.isNotEmpty) {
+            final pushRes = await _orderService.sendDriverOrderPush(
+              fcmtoken: resolvedFcmToken,
+              orderkey: resolvedOrderKey,
+              ordernumber: resolvedOrderNumber,
+            );
+            print(
+              '[OrderDetailsController.assignDriver] driverOrderPush result: $pushRes',
+            );
+          } else {
+            print(
+              '[OrderDetailsController.assignDriver] Warning: Skipping driverOrderPush because fcmtoken ($resolvedFcmToken) or orderkey ($resolvedOrderKey) is empty',
+            );
+          }
+        } catch (pushError) {
+          print(
+            '[OrderDetailsController.assignDriver] Error invoking driverOrderPush: $pushError',
+          );
+        }
+
         // Increment the attempt count and start the 10-second wait timer ONLY on success
         final int updatedClicks = (driverAssignClickCount[driverId] ?? 0) + 1;
         driverAssignClickCount[driverId] = updatedClicks;
@@ -1242,11 +1342,11 @@ class OrderDetailsController extends GetxController {
 
     customer.value = formatTitleCase(
       (data['customername'] ??
-              data['customer_name'] ??
-              data['customerName'] ??
-              data['customer'] ??
-              data['name'])
-          ?.toString() ??
+                  data['customer_name'] ??
+                  data['customerName'] ??
+                  data['customer'] ??
+                  data['name'])
+              ?.toString() ??
           '',
     );
 
@@ -1334,12 +1434,12 @@ class OrderDetailsController extends GetxController {
     if (shipMap is Map) {
       shippingName.value = formatTitleCase(
         (shipMap['attention'] ??
-                shipMap['name'] ??
-                shipMap['customer_name'] ??
-                shipMap['recipient_name'] ??
-                data['customername'] ??
-                data['customer_name'])
-            ?.toString() ??
+                    shipMap['name'] ??
+                    shipMap['customer_name'] ??
+                    shipMap['recipient_name'] ??
+                    data['customername'] ??
+                    data['customer_name'])
+                ?.toString() ??
             '',
       );
       shippingPhone.value =
@@ -1382,11 +1482,11 @@ class OrderDetailsController extends GetxController {
     if (billMap is Map) {
       billingName.value = formatTitleCase(
         (billMap['attention'] ??
-                billMap['name'] ??
-                billMap['customer_name'] ??
-                data['customername'] ??
-                data['customer_name'])
-            ?.toString() ??
+                    billMap['name'] ??
+                    billMap['customer_name'] ??
+                    data['customername'] ??
+                    data['customer_name'])
+                ?.toString() ??
             '',
       );
       billingPhone.value =
@@ -1828,17 +1928,23 @@ class OrderDetailsController extends GetxController {
               paymentMethod: (tx['paymentmode'] ?? tx['payment_mode'] ?? "-")
                   .toString(),
               rrnUtr: () {
-                final rrn = (tx['transactionref'] ??
-                        tx['rrn_utr'] ??
-                        tx['rrn'] ??
-                        tx['utr'] ??
-                        tx['reference_number'] ??
-                        "-")
-                    .toString()
-                    .trim();
+                final rrn =
+                    (tx['transactionref'] ??
+                            tx['rrn_utr'] ??
+                            tx['rrn'] ??
+                            tx['utr'] ??
+                            tx['reference_number'] ??
+                            "-")
+                        .toString()
+                        .trim();
                 return (rrn.isEmpty || rrn == 'null') ? '-' : rrn;
               }(),
-              status: (tx['paymentstatus'] ?? tx['status'] ?? "-").toString().trim().toLowerCase() == 'paid'
+              status:
+                  (tx['paymentstatus'] ?? tx['status'] ?? "-")
+                          .toString()
+                          .trim()
+                          .toLowerCase() ==
+                      'paid'
                   ? 'Paid'
                   : (tx['paymentstatus'] ?? tx['status'] ?? "-").toString(),
               amount: _formatPriceVal(
@@ -2130,11 +2236,11 @@ class OrderDetailsController extends GetxController {
     final targetInvoiceId = invId.trim().isNotEmpty && invId.trim() != 'null'
         ? invId.trim()
         : (invoiceId.value.trim().isNotEmpty && invoiceId.value.trim() != 'null'
-            ? invoiceId.value.trim()
-            : (invoiceNumber.value.trim().isNotEmpty &&
-                    invoiceNumber.value.trim() != 'null'
-                ? invoiceNumber.value.trim()
-                : ''));
+              ? invoiceId.value.trim()
+              : (invoiceNumber.value.trim().isNotEmpty &&
+                        invoiceNumber.value.trim() != 'null'
+                    ? invoiceNumber.value.trim()
+                    : ''));
 
     if (targetInvoiceId.isEmpty || targetInvoiceId == 'null') {
       Get.snackbar(
@@ -2568,7 +2674,8 @@ class OrderDetailsController extends GetxController {
   }
 
   int get totalRejectedItems {
-    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+    final isVoid =
+        orderStatus.value.trim().toLowerCase() == 'void' ||
         orderStatus.value.trim().toLowerCase() == 'rejected' ||
         orderStatus.value.trim().toLowerCase() == 'cancelled';
     if (isVoid) return orderItems.length;
@@ -2576,7 +2683,8 @@ class OrderDetailsController extends GetxController {
   }
 
   String get totalDeclinedAmount {
-    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+    final isVoid =
+        orderStatus.value.trim().toLowerCase() == 'void' ||
         orderStatus.value.trim().toLowerCase() == 'rejected' ||
         orderStatus.value.trim().toLowerCase() == 'cancelled';
     double sum = 0.0;
@@ -2589,7 +2697,8 @@ class OrderDetailsController extends GetxController {
   }
 
   int get totalAcceptedItems {
-    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+    final isVoid =
+        orderStatus.value.trim().toLowerCase() == 'void' ||
         orderStatus.value.trim().toLowerCase() == 'rejected' ||
         orderStatus.value.trim().toLowerCase() == 'cancelled';
     if (isVoid) return 0;
@@ -2597,7 +2706,8 @@ class OrderDetailsController extends GetxController {
   }
 
   String get acceptedOrderAmount {
-    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+    final isVoid =
+        orderStatus.value.trim().toLowerCase() == 'void' ||
         orderStatus.value.trim().toLowerCase() == 'rejected' ||
         orderStatus.value.trim().toLowerCase() == 'cancelled';
     if (isVoid) return '₹0.00';
@@ -2786,7 +2896,8 @@ class OrderDetailsController extends GetxController {
   Future<void> rejectAllItems() async {
     if (isRejectingOrder.value || isAcceptingOrder.value) return;
 
-    final targetSalesOrderId = (salesOrderId.value.trim().isNotEmpty &&
+    final targetSalesOrderId =
+        (salesOrderId.value.trim().isNotEmpty &&
             salesOrderId.value.trim() != 'null'
         ? salesOrderId.value.trim()
         : orderId.value.trim());
@@ -2907,11 +3018,13 @@ class OrderDetailsController extends GetxController {
     if (clean.isEmpty || clean == 'null' || clean == '-') return clean;
     return clean
         .split(RegExp(r'\s+'))
-        .map((w) => w.isEmpty
-            ? ''
-            : (w.length == 1
-                ? w.toUpperCase()
-                : w[0].toUpperCase() + w.substring(1).toLowerCase()))
+        .map(
+          (w) => w.isEmpty
+              ? ''
+              : (w.length == 1
+                    ? w.toUpperCase()
+                    : w[0].toUpperCase() + w.substring(1).toLowerCase()),
+        )
         .join(' ');
   }
 }

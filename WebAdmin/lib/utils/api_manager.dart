@@ -32,4 +32,5 @@ class ApiManager {
   static const String driverList = "dispatch/v1/drivers";
   static const String driverAssign = "dispatch/v1/assign";
   static const String driverOrderAccept = "dispatch/v1/assignment";
+  static const String driverOrderPush = "notification/v1/orderpush";
 }

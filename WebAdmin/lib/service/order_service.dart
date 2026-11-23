@@ -1619,6 +1619,98 @@ class OrderService extends GetxService {
     return null;
   }
 
+  /// Calls notification/v1/orderpush API endpoint (ApiManager.driverOrderPush).
+  Future<Map<String, dynamic>?> sendDriverOrderPush({
+    required String fcmtoken,
+    required String orderkey,
+    required String ordernumber,
+    String? token,
+  }) async {
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String base = ApiManager.baseUrl.trim();
+    final String endpoint = ApiManager.driverOrderPush.trim();
+    final String targetUrl =
+        base.endsWith('/') ? '$base$endpoint' : '$base/$endpoint';
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {
+      "fcmtoken": fcmtoken.trim(),
+      "orderkey": orderkey.trim(),
+      "ordernumber": ordernumber.trim(),
+    };
+
+    print(
+      '[OrderService.sendDriverOrderPush] Calling $targetUrl with payload: ${jsonEncode(payload)}',
+    );
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        print(
+          '[OrderService.sendDriverOrderPush] http.post statusCode: ${httpResponse.statusCode}, body: ${httpResponse.body}',
+        );
+
+        if (httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        print('[OrderService.sendDriverOrderPush] http.post error: $e');
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          endpoint,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } on DioException catch (e) {
+        if (e.response?.data != null) {
+          if (e.response!.data is Map<String, dynamic>) {
+            responseData = e.response!.data;
+          } else if (e.response!.data is String) {
+            try {
+              responseData = jsonDecode(e.response!.data);
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+
+    print('[OrderService.sendDriverOrderPush] Response received: $responseData');
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    } else if (responseData is Map) {
+      return Map<String, dynamic>.from(responseData);
+    }
+    return null;
+  }
+
   Future<List<int>?> _fetchPdfFromUrl(String url) async {
     try {
       final res = await http.get(Uri.parse(url));
