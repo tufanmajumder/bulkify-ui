@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:bulkify/app/data/models/home/summary_model.dart';
+import 'package:bulkify/app/data/models/home/pending_offer_model.dart';
 import 'package:bulkify/app/data/service/auth_service.dart';
 import 'package:bulkify/app/data/utils/widget_manager.dart';
 import 'package:bulkify/app/routes/app_pages.dart';
@@ -42,6 +43,14 @@ class HomeController extends GetxController {
     checkDeviceLocationStatus();
     fetchSummaryData();
     fetchUserProfileData();
+    fetchPendingOffers();
+
+    // Whenever driver becomes online, refresh pending offers
+    ever(isOnline, (bool online) {
+      if (online) {
+        fetchPendingOffers();
+      }
+    });
   }
 
   /// Checks if real-time location is already enabled on device init
@@ -89,25 +98,14 @@ class HomeController extends GetxController {
   final RxString onlineTime = '0'.obs;
   final RxString totalDistance = '0'.obs;
 
+  // Pending Offers State & Model
+  final RxBool isLoadingOffers = false.obs;
+  final RxString acceptingOrderKey = ''.obs;
+  final Rxn<PendingOfferModel> pendingOfferModel = Rxn<PendingOfferModel>();
+
   // Available Food Orders Data List
-  final RxList<Map<String, dynamic>> availableOrders = <Map<String, dynamic>>[
-    {
-      'id': '#FOOD-4892',
-      'restaurantName': 'Burger Bistro',
-      'distance': '3.2 km',
-      'payout': '₹ 165.00',
-      'dropoff': 'Flat 402, Oakwood Heights, Main Street, Bengaluru 560038',
-      'eta': '3.2 km · 11',
-    },
-    {
-      'id': '#FOOD-4898',
-      'restaurantName': 'Fresh Mart',
-      'distance': '3.3 km',
-      'payout': '₹ 145.00',
-      'dropoff': 'Lakeview Residency, B-12, Bengaluru 560038',
-      'eta': '3.3 km · 8',
-    },
-  ].obs;
+  final RxList<Map<String, dynamic>> availableOrders =
+      <Map<String, dynamic>>[].obs;
 
   // Online / Offline Status
   final RxBool isOnline = false.obs;
@@ -120,6 +118,9 @@ class HomeController extends GetxController {
             response['code'] == 200 ||
             response['code'] == "200")) {
       isOnline.value = value;
+      if (value) {
+        fetchPendingOffers();
+      }
       final String msg =
           response['message']?.toString() ??
           (value ? 'You are now online' : 'You are now offline');
@@ -147,23 +148,72 @@ class HomeController extends GetxController {
   }
 
   /// Handle Order Accept Action
-  /// Checks real-time location service & permission using 'location' package.
-  /// If location service is off or permission denied, navigate to Device Location screen.
-  /// If location is on, navigate to Order Details.
+  /// Calls ApiManager.acceptOrder and refreshes available orders
   Future<void> handleOrderAccept(Map<String, dynamic> order) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var sid = prefs.getString('sessionId');
-    //print("Sid...$sid");
-    final Location location = Location();
-    bool serviceEnabled = await location.serviceEnabled();
-    PermissionStatus permission = await location.hasPermission();
+    final String orderKey = (order['orderkey'] ??
+            order['orderKey'] ??
+            order['raw']?['orderkey'] ??
+            order['orderNumber'] ??
+            order['id'] ??
+            '')
+        .toString()
+        .replaceAll('#', '')
+        .trim();
 
-    if (!serviceEnabled || permission != PermissionStatus.granted) {
-      isLocationEnabled.value = false;
-      Get.toNamed(Routes.DEVICE_LOCATION, arguments: order);
-    } else {
-      isLocationEnabled.value = true;
-      Get.toNamed(Routes.ORDER_DETAILS, arguments: order);
+    acceptingOrderKey.value = orderKey;
+
+    try {
+      final response = await _authService.acceptOrder(orderKey: orderKey);
+      if (response != null &&
+          (response['success'] == true ||
+              response['code'] == 200 ||
+              response['code'] == "200" ||
+              response['status'] == 'success')) {
+        final String msg =
+            response['message']?.toString() ?? 'Order accepted successfully';
+        WidgetManager.showSnackBar(
+          message: msg,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color(0xFF2E7D32),
+          duration: const Duration(seconds: 2),
+        );
+
+        // Update list after accept
+        availableOrders.removeWhere(
+          (o) =>
+              (o['orderkey'] != null &&
+                  orderKey.isNotEmpty &&
+                  o['orderkey'].toString().replaceAll('#', '') == orderKey) ||
+              (o['id'] != null && o['id'] == order['id']),
+        );
+        fetchPendingOffers();
+        fetchSummaryData();
+
+        final Location location = Location();
+        bool serviceEnabled = await location.serviceEnabled();
+        PermissionStatus permission = await location.hasPermission();
+
+        if (!serviceEnabled || permission != PermissionStatus.granted) {
+          isLocationEnabled.value = false;
+          Get.toNamed(Routes.DEVICE_LOCATION, arguments: order);
+        } else {
+          isLocationEnabled.value = true;
+          Get.toNamed(Routes.ORDER_DETAILS, arguments: order);
+        }
+      } else {
+        final String errorMsg =
+            response?['message']?.toString() ?? 'Failed to accept order';
+        WidgetManager.showSnackBar(
+          message: errorMsg,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      print("Error in handleOrderAccept: $e");
+    } finally {
+      acceptingOrderKey.value = '';
     }
   }
 
@@ -188,6 +238,40 @@ class HomeController extends GetxController {
     } finally {
       isLoadingSummary.value = false;
     }
+  }
+
+  /// Fetch pending offers from API (ApiManager.pendingOffer)
+  Future<void> fetchPendingOffers() async {
+    isLoadingOffers.value = true;
+    try {
+      final PendingOfferModel? model = await _authService.getPendingOffers();
+      print("fetchPendingOffers items count: ${model?.items.length ?? 0}");
+      if (model != null) {
+        pendingOfferModel.value = model;
+        if (model.items.isNotEmpty) {
+          final mapped = model.items
+              .map((e) => e.toAvailableOrderMap())
+              .toList();
+          availableOrders.assignAll(mapped);
+          print("availableOrders count updated: ${availableOrders.length}");
+        } else {
+          availableOrders.clear();
+        }
+      }
+    } catch (e) {
+      print("Error fetching pending offers in HomeController: $e");
+    } finally {
+      isLoadingOffers.value = false;
+    }
+  }
+
+  /// Pull-to-refresh home data (summary, user profile, pending offers)
+  Future<void> refreshHome() async {
+    await Future.wait([
+      fetchSummaryData(),
+      fetchUserProfileData(),
+      fetchPendingOffers(),
+    ]);
   }
 
   /// Fetch user profile data to populate userName on Home view

@@ -6,4 +6,6 @@ class ApiManager {
   static const String getOrderList = "orders/v1/orderlist";
   static const String summary = "contact/v1/summary";
   static const String onlinestatus = "contact/v1/onlinestatus";
+  static const String pendingOffer = "driver/v1/offers/pending";
+  static const String acceptOrder = "driver/v1/accept";
 }

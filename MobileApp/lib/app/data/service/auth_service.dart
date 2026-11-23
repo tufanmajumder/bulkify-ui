@@ -5,6 +5,7 @@ import 'package:bulkify/app/data/models/auth_models/login_model.dart';
 import 'package:bulkify/app/data/models/auth_models/profile/profileModel.dart';
 import 'package:bulkify/app/data/models/auth_models/verify_otp_model.dart';
 import 'package:bulkify/app/data/models/home/summary_model.dart';
+import 'package:bulkify/app/data/models/home/pending_offer_model.dart';
 import 'package:bulkify/app/data/models/order/reject_model.dart';
 import 'package:bulkify/app/data/utils/string_manager.dart';
 import 'package:bulkify/app/data/utils/widget_manager.dart';
@@ -32,7 +33,7 @@ class AuthService extends GetConnect implements GetxService {
   // loginService
   Future<LoginModel?> login1(String name, String pass) async {
     final String url = ApiManager.loginUrl;
-    //print("url in login...${ApiManager.baseUrl}$url");
+    print("url in login...${ApiManager.baseUrl}$url");
     //print("name & pass...$name...$pass");
     final dynamic channelValue =
         int.tryParse(name) ?? (name.toLowerCase() == '1' ? 1 : name);
@@ -41,10 +42,12 @@ class AuthService extends GetConnect implements GetxService {
       "channel": channelValue,
       "identifier": formattedPhone,
     };
+    print("response data...$data1");
+
     try {
       final response = await dio.post(url, data: data1);
-      //print("response status...${response.statusCode}");
-      //print("response data...${response.data}");
+      print("response status...${response.statusCode}");
+      print("response data...${response.data}");
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
           return LoginModel.fromJson(response.data);
@@ -84,7 +87,7 @@ class AuthService extends GetConnect implements GetxService {
 
   // verifyOtpService
   Future<VerifyOtpModel?> verifyOtp({
-    dynamic channel = 1,
+    dynamic channel = 2,
     String deviceinfo = "",
     required String identifier,
     required String otp,
@@ -126,9 +129,9 @@ class AuthService extends GetConnect implements GetxService {
 
     try {
       final response = await dio.post(url, data: dataMap);
-      //print("verifyOtp status...${response.statusCode}");
-      //print("verifyOtp data...${response.data}");
-      //print("verifyOtp data...$dataMap");
+      print("verifyOtp status...${response.statusCode}");
+      print("verifyOtp data...${response.data}");
+      print("verifyOtp data...$dataMap");
       if (response.data != null) {
         if (response.data is Map<String, dynamic>) {
           return VerifyOtpModel.fromJson(response.data);
@@ -433,6 +436,167 @@ class AuthService extends GetConnect implements GetxService {
     } catch (e) {
       //print("General exception in updateOnlineStatus: $e");
       //print("StackTrace: $stackTrace");
+      WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      return null;
+    }
+  }
+
+  // getPendingOffersService
+  Future<PendingOfferModel?> getPendingOffers({String? sessionId}) async {
+    final String url = ApiManager.pendingOffer;
+    String? token = sessionId;
+    if (token == null || token.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('sessionId');
+    }
+
+    final headers = <String, dynamic>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      final cleanToken = token.replaceAll('Bearer ', '').trim();
+      headers['Authorization'] = 'Bearer $cleanToken';
+    }
+
+    print("url in pendingOffer...${ApiManager.baseUrl}$url");
+    print("Authorization token...${headers['Authorization']}");
+
+    try {
+      // 1. Try POST without body as specified in curl
+      Response response;
+      try {
+        response = await dio.post(
+          url,
+          options: Options(headers: headers),
+        );
+      } catch (e) {
+        response = await dio.post(
+          url,
+          data: {},
+          options: Options(headers: headers),
+        );
+      }
+
+      print("pendingOffer status...${response.statusCode}");
+      print("pendingOffer data...${response.data}");
+
+      PendingOfferModel? model;
+      if (response.data != null) {
+        model = PendingOfferModel.fromAny(response.data);
+      }
+
+      // If no items extracted, try with `{}` in case server expects empty json body
+      if (model == null || model.items.isEmpty) {
+        try {
+          final res2 = await dio.post(
+            url,
+            data: {},
+            options: Options(headers: headers),
+          );
+          if (res2.data != null) {
+            final model2 = PendingOfferModel.fromAny(res2.data);
+            if (model2.items.isNotEmpty) {
+              model = model2;
+            }
+          }
+        } catch (_) {}
+      }
+
+      return model;
+    } on DioException catch (e) {
+      print("DioException pendingOffer status: ${e.response?.statusCode}");
+      print("DioException pendingOffer data: ${e.response?.data}");
+
+      if (e.response?.data != null) {
+        return PendingOfferModel.fromAny(e.response!.data);
+      }
+
+      if (e.type == DioExceptionType.connectionError ||
+          e.error is SocketException) {
+        WidgetManager.showAlertSnackBar(StringManager.unableToReachInternet, 3);
+      } else {
+        WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      }
+      return null;
+    } catch (e) {
+      print("General exception in pendingOffer: $e");
+      WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      return null;
+    }
+  }
+
+  // acceptOrderService
+  Future<Map<String, dynamic>?> acceptOrder({
+    required String orderKey,
+    String reasonCode = "",
+    String remarks = "",
+    String? sessionId,
+  }) async {
+    final String url = ApiManager.acceptOrder;
+    String? token = sessionId;
+    if (token == null || token.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('sessionId');
+    }
+
+    final headers = <String, dynamic>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      final cleanToken = token.replaceAll('Bearer ', '').trim();
+      headers['Authorization'] = 'Bearer $cleanToken';
+    }
+
+    final Map<String, dynamic> body = {
+      "orderkey": orderKey,
+      "reasoncode": reasonCode,
+      "remarks": remarks,
+    };
+
+    print("url in acceptOrder...${ApiManager.baseUrl}$url");
+    print("Authorization token...${headers['Authorization']}");
+    print("body in acceptOrder...$body");
+
+    try {
+      final response = await dio.post(
+        url,
+        data: body,
+        options: Options(headers: headers),
+      );
+      print("acceptOrder status...${response.statusCode}");
+      print("acceptOrder data...${response.data}");
+
+      if (response.data != null) {
+        if (response.data is Map<String, dynamic>) {
+          return response.data as Map<String, dynamic>;
+        } else if (response.data is String) {
+          try {
+            return json.decode(response.data) as Map<String, dynamic>;
+          } catch (_) {}
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      print("DioException acceptOrder status: ${e.response?.statusCode}");
+      print("DioException acceptOrder data: ${e.response?.data}");
+
+      if (e.response?.data != null && e.response!.data is Map<String, dynamic>) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+
+      if (e.type == DioExceptionType.connectionError ||
+          e.error is SocketException) {
+        WidgetManager.showAlertSnackBar(StringManager.unableToReachInternet, 3);
+      } else {
+        WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      }
+      return null;
+    } catch (e) {
+      print("General exception in acceptOrder: $e");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }

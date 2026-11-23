@@ -149,7 +149,7 @@ class LoginController extends GetxController {
     isLoading.value = true;
     try {
       final LoginModel? response = await _authService.login1(
-        "1",
+        "2",
         normalizedPhone,
       );
       if (response != null &&

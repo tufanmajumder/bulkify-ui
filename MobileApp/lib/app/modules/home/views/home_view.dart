@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -91,34 +91,38 @@ class HomeView extends GetView<HomeController> {
 
   /// Main Home Screen View
   Widget _buildHomeTab(BuildContext context) {
-    return SingleChildScrollView(
-      physics: ClampingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 550),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Header Section (Greeting & Profile Avatar)
-              _buildHeaderSection(),
+    return RefreshIndicator(
+      onRefresh: () => controller.refreshHome(),
+      color: const Color(0xFFC5392B),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 550),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Header Section (Greeting & Profile Avatar)
+                _buildHeaderSection(),
 
-              SizedBox(height: 20.h),
+                SizedBox(height: 20.h),
 
-              // 2. Today's Overview Section (Dynamic Responsive Cards Grid)
-              _buildTodaysOverviewSection(),
+                // 2. Today's Overview Section (Dynamic Responsive Cards Grid)
+                _buildTodaysOverviewSection(),
 
-              SizedBox(height: 20.h),
+                SizedBox(height: 20.h),
 
-              // 3. Go Online Duty Banner
-              _buildGoOnlineCard(),
+                // 3. Go Online Duty Banner
+                _buildGoOnlineCard(),
 
-              SizedBox(height: 20.h),
+                SizedBox(height: 20.h),
 
-              // 4. Available Food Deliveries Section
-              _buildAvailableOrdersSection(),
-            ],
+                // 4. Available Food Deliveries Section
+                _buildAvailableOrdersSection(),
+              ],
+            ),
           ),
         ),
       ),
@@ -453,6 +457,7 @@ class HomeView extends GetView<HomeController> {
   /// Available Food Deliveries Section matching reference design
   Widget _buildAvailableOrdersSection() {
     const Color textPrimary = Color(0xFF1E1B2E);
+    const Color redColor = Color(0xFFC5392B);
     const Color redText = Color(0xFFC5392B);
     const Color pillBg = Color(0xFFFDEAE8);
 
@@ -550,7 +555,22 @@ class HomeView extends GetView<HomeController> {
               SizedBox(height: 16.h),
 
               // ListView of Available Order Cards
-              if (controller.availableOrders.isEmpty)
+              if (controller.isLoadingOffers.value &&
+                  controller.availableOrders.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24.h),
+                    child: SizedBox(
+                      width: 24.r,
+                      height: 24.r,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: redColor,
+                      ),
+                    ),
+                  ),
+                )
+              else if (controller.availableOrders.isEmpty)
                 Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 24.h),
@@ -578,11 +598,16 @@ class HomeView extends GetView<HomeController> {
                     final order = controller.availableOrders[index];
                     return _buildFoodOrderItemCard(
                       order: order,
-                      restaurantName: order['restaurantName'] ?? '',
-                      distance: order['distance'] ?? '',
-                      payout: order['payout'] ?? '',
-                      dropoff: order['dropoff'] ?? '',
-                      eta: order['eta'] ?? '3.2 km · 11',
+                      restaurantName: (order['restaurantName'] ?? order['storeName'] ?? 'Store').toString(),
+                      distance: (order['distance'] ?? '-').toString(),
+                      payout: (order['payout'] ?? '').toString(),
+                      dropoff:
+                          (order['dropoff'] ??
+                                  order['dropOffAddress'] ??
+                                  order['address'] ??
+                                  '')
+                              .toString(),
+                      eta: (order['eta'] ?? '-').toString(),
                     );
                   },
                 ),
@@ -702,7 +727,7 @@ class HomeView extends GetView<HomeController> {
 
                   SizedBox(height: 6.h),
 
-                  // Distance Row (matching image)
+                  // Distance Row (clock icon)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -713,11 +738,7 @@ class HomeView extends GetView<HomeController> {
                       ),
                       SizedBox(width: 6.w),
                       WidgetManager.customText(
-                        text: (distance.isNotEmpty && distance != '0')
-                            ? distance
-                            : (eta.contains('km')
-                                  ? eta.split('·').first.trim()
-                                  : '3.2 km'),
+                        text: distance.isNotEmpty ? distance : '-',
                         fontSize: 12.5.sp,
                         fontWeight: FontWeight.w500,
                         color: textSecondary,
@@ -742,7 +763,11 @@ class HomeView extends GetView<HomeController> {
                 child: ElevatedButton(
                   onPressed: () {
                     controller.availableOrders.removeWhere(
-                      (o) => o['restaurantName'] == restaurantName,
+                      (o) =>
+                          (o['id'] != null &&
+                              order['id'] != null &&
+                              o['id'] == order['id']) ||
+                          o['restaurantName'] == restaurantName,
                     );
                     WidgetManager.showSnackBar(
                       message: 'Order From $restaurantName Has Been Rejected.',
@@ -786,24 +811,52 @@ class HomeView extends GetView<HomeController> {
                     ),
                   ],
                 ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.handleOrderAccept(order);
+                child: Obx(
+                  () {
+                    final String orderKey = (order['orderkey'] ??
+                            order['orderKey'] ??
+                            order['raw']?['orderkey'] ??
+                            order['orderNumber'] ??
+                            order['id'] ??
+                            '')
+                        .toString()
+                        .replaceAll('#', '')
+                        .trim();
+                    final bool isCurrentAccepting =
+                        controller.acceptingOrderKey.value.isNotEmpty &&
+                        controller.acceptingOrderKey.value == orderKey;
+
+                    return ElevatedButton(
+                      onPressed: isCurrentAccepting
+                          ? null
+                          : () {
+                              controller.handleOrderAccept(order);
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: redColor,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22.r),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: isCurrentAccepting
+                          ? SizedBox(
+                              width: 18.r,
+                              height: 18.r,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : WidgetManager.customText(
+                              text: 'Accept',
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                    );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: redColor,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22.r),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: WidgetManager.customText(
-                    text: 'Accept',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
                 ),
               ),
             ),

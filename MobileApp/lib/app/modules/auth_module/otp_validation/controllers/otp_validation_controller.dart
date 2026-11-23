@@ -86,7 +86,7 @@ class OtpValidationController extends GetxController {
       }
 
       final VerifyOtpModel? response = await _authService.verifyOtp(
-        channel: 1,
+        channel: 2,
         deviceinfo: deviceAllInfo,
         identifier: phoneNumber.value,
         otp: otp,
