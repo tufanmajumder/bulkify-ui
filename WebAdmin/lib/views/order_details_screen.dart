@@ -13,6 +13,19 @@ import 'widgets/sidebar.dart';
 class OrderDetailsScreen extends StatelessWidget {
   const OrderDetailsScreen({super.key});
 
+  static String _formatTitleCase(String input) {
+    final clean = input.trim();
+    if (clean.isEmpty || clean == 'null' || clean == '-') return clean;
+    return clean
+        .split(RegExp(r'\s+'))
+        .map((w) => w.isEmpty
+            ? ''
+            : (w.length == 1
+                ? w.toUpperCase()
+                : w[0].toUpperCase() + w.substring(1).toLowerCase()))
+        .join(' ');
+  }
+
   void _handleBack(OrderDetailsController controller) {
     if (Get.isRegistered<OrderController>()) {
       final orderCtrl = Get.find<OrderController>();
@@ -23,7 +36,6 @@ class OrderDetailsScreen extends StatelessWidget {
         shippingStatus: controller.shipmentStatus.value,
         paymentStatus: controller.paymentMethod.value,
       );
-      orderCtrl.fetchOrders(page: orderCtrl.currentPage.value);
     }
     Get.back();
   }
@@ -49,7 +61,6 @@ class OrderDetailsScreen extends StatelessWidget {
             shippingStatus: controller.shipmentStatus.value,
             paymentStatus: controller.paymentMethod.value,
           );
-          orderCtrl.fetchOrders(page: orderCtrl.currentPage.value);
         }
       },
       child: Scaffold(
@@ -287,6 +298,10 @@ class OrderDetailsScreen extends StatelessWidget {
 
     final paymentText = controller.paymentDueDisplay;
     final isDue = paymentText.contains('₹');
+    final paymentStatus = controller.paymentMethod.value.trim().toLowerCase();
+    final isPaymentPaid = paymentStatus == 'paid' ||
+        paymentText.trim().toLowerCase() == 'paid' ||
+        controller.orderStatus.value.trim().toLowerCase() == 'paid';
 
     final rawOrderStatus = controller.orderStatus.value.trim();
     final orderStatusText =
@@ -309,7 +324,7 @@ class OrderDetailsScreen extends StatelessWidget {
         controller.date.value.trim(),
       if (controller.customer.value.trim().isNotEmpty &&
           controller.customer.value.trim() != '-')
-        controller.customer.value.trim(),
+        _formatTitleCase(controller.customer.value.trim()),
       if (controller.company.value.trim().isNotEmpty &&
           controller.company.value.trim() != '-')
         controller.company.value.trim(),
@@ -535,8 +550,7 @@ class OrderDetailsScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(width: 16),
-              // Generate Invoice / Invoice Download Button
+              // Generate Invoice / Invoice Download Button + Collect Button
               Obx(() {
                 final isLoading = controller.isDownloadingInvoice.value;
                 final hasInvoiceId =
@@ -554,84 +568,94 @@ class OrderDetailsScreen extends StatelessWidget {
                     controller.orderStatus.value.trim().toLowerCase() ==
                         'invoiced';
 
-                // When invoice is not generated/available, hide button completely
-                if (!hasValidInvoice) {
+                final isVoidStatus =
+                    rawOrderStatus.toLowerCase() == 'void' ||
+                    rawOrderStatus.toLowerCase() == 'rejected' ||
+                    rawOrderStatus.toLowerCase() == 'cancelled';
+
+                final bool showCollect =
+                    !isVoidStatus && !isPaymentPaid && dueVal > 0;
+
+                if (!hasValidInvoice && !showCollect) {
                   return const SizedBox.shrink();
                 }
 
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    InkWell(
-                      onTap: isLoading
-                          ? null
-                          : () => controller.downloadInvoiceById(
-                              controller.invoiceId.value,
-                            ),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
+                    const SizedBox(width: 16),
+                    if (hasValidInvoice)
+                      InkWell(
+                        onTap: isLoading
+                            ? null
+                            : () => controller.downloadInvoiceById(
+                                controller.invoiceId.value,
+                              ),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          height: 36,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              isLoading
+                                  ? const SizedBox(
+                                      width: 15,
+                                      height: 15,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFF475569),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.file_download_outlined,
+                                      size: 16,
+                                      color: Color(0xFF475569),
+                                    ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Download Invoice',
+                                style: TextStyle(
+                                  fontFamily: 'Public Sans',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF475569),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (hasValidInvoice && showCollect)
+                      const SizedBox(width: 10),
+                    if (showCollect)
+                      Container(
                         height: 36,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
+                          color: const Color(0xFFCF4340),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            isLoading
-                                ? const SizedBox(
-                                    width: 15,
-                                    height: 15,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Color(0xFF475569),
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.file_download_outlined,
-                                    size: 16,
-                                    color: Color(0xFF475569),
-                                  ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Download Invoice',
-                              style: TextStyle(
-                                fontFamily: 'Public Sans',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF475569),
-                              ),
+                        child: Center(
+                          widthFactor: 1.0,
+                          child: _buildRupeeText(
+                            'Collect ₹${dueVal.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontFamily: 'Public Sans',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
                   ],
                 );
               }),
-              // Collect Button
-              Container(
-                height: 36,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCF4340),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Center(
-                  widthFactor: 1.0,
-                  child: _buildRupeeText(
-                    'Collect ₹${dueVal.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontFamily: 'Public Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ],
@@ -641,12 +665,7 @@ class OrderDetailsScreen extends StatelessWidget {
 
   Widget _buildGoBackButton(BuildContext context) {
     return InkWell(
-      onTap: () {
-        if (Get.isRegistered<OrderController>()) {
-          Get.find<OrderController>().fetchOrders();
-        }
-        Get.back();
-      },
+      onTap: () => Get.back(),
       borderRadius: BorderRadius.circular(6),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
@@ -678,35 +697,41 @@ class OrderDetailsScreen extends StatelessWidget {
     BuildContext context,
     OrderDetailsController controller,
   ) {
-    return InkWell(
-      onTap: () => _showAddPaymentDrawer(context, controller),
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFCF4340),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Icon(Icons.add_rounded, color: Colors.white, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              'Add Payment',
-              style: TextStyle(
-                fontFamily: 'Public Sans',
-                fontSize: Responsive.sp(context, 11),
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
+    return Obx(() {
+      final status = controller.orderStatus.value.trim().toLowerCase();
+      if (status == 'void' || status == 'rejected' || status == 'cancelled') {
+        return const SizedBox.shrink();
+      }
+      return InkWell(
+        onTap: () => _showAddPaymentDrawer(context, controller),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFCF4340),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Icon(Icons.add_rounded, color: Colors.white, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                'Add Payment',
+                style: TextStyle(
+                  fontFamily: 'Public Sans',
+                  fontSize: Responsive.sp(context, 11),
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildAcceptAllButton(
@@ -714,12 +739,17 @@ class OrderDetailsScreen extends StatelessWidget {
     OrderDetailsController controller,
   ) {
     return Obx(() {
-      if (controller.isOrderAccepted.value || !controller.isDraftOrPending) {
+      if (controller.isOrderAccepted.value ||
+          controller.isRejectingOrder.value ||
+          !controller.isDraftOrPending) {
         return const SizedBox.shrink();
       }
       final allRejected =
           controller.orderItems.isNotEmpty &&
           controller.orderItems.every((item) => item.isRejected.value);
+      if (allRejected) {
+        return const SizedBox.shrink();
+      }
       final isSelected = !allRejected;
       final isAccepting = controller.isAcceptingOrder.value;
 
@@ -794,9 +824,10 @@ class OrderDetailsScreen extends StatelessWidget {
       final isSelected =
           controller.orderItems.isNotEmpty &&
           controller.orderItems.every((item) => item.isRejected.value);
+      final isRejecting = controller.isRejectingOrder.value;
 
       return InkWell(
-        onTap: () => controller.rejectAllItems(),
+        onTap: isRejecting ? null : () => controller.rejectAllItems(),
         borderRadius: BorderRadius.circular(6),
         child: Container(
           height: 36,
@@ -810,21 +841,42 @@ class OrderDetailsScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(
-                Icons.close,
-                color: isSelected ? Colors.white : const Color(0xFFCF4340),
-                size: 15,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Reject',
-                style: TextStyle(
-                  fontFamily: 'Public Sans',
-                  fontSize: Responsive.sp(context, 11),
-                  fontWeight: FontWeight.w500,
-                  color: isSelected ? Colors.white : const Color(0xFFCF4340),
+              if (isRejecting) ...[
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFCF4340)),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Text(
+                  'Rejecting...',
+                  style: TextStyle(
+                    fontFamily: 'Public Sans',
+                    fontSize: Responsive.sp(context, 11),
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFFCF4340),
+                  ),
+                ),
+              ] else ...[
+                Icon(
+                  Icons.close,
+                  color: isSelected ? Colors.white : const Color(0xFFCF4340),
+                  size: 15,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Reject',
+                  style: TextStyle(
+                    fontFamily: 'Public Sans',
+                    fontSize: Responsive.sp(context, 11),
+                    fontWeight: FontWeight.w500,
+                    color: isSelected ? Colors.white : const Color(0xFFCF4340),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -977,7 +1029,7 @@ class OrderDetailsScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _buildKeyValueRow(
                 'Customer',
-                controller.customer.value,
+                _formatTitleCase(controller.customer.value),
                 isBoldValue: false,
               ),
               const SizedBox(height: 10),
@@ -1112,7 +1164,7 @@ class OrderDetailsScreen extends StatelessWidget {
               (controller.shippingName.value.trim().isEmpty ||
                       controller.shippingName.value.trim() == 'null')
                   ? '-'
-                  : controller.shippingName.value,
+                  : _formatTitleCase(controller.shippingName.value),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
@@ -1197,7 +1249,7 @@ class OrderDetailsScreen extends StatelessWidget {
               (controller.billingName.value.trim().isEmpty ||
                       controller.billingName.value.trim() == 'null')
                   ? '-'
-                  : controller.billingName.value,
+                  : _formatTitleCase(controller.billingName.value),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
@@ -1605,6 +1657,13 @@ class OrderDetailsScreen extends StatelessWidget {
               Widget actionWidget;
               if (isInvoiceRow) {
                 final isLoading = controller.isDownloadingInvoice.value;
+                final isVoidStatus =
+                    controller.orderStatus.value.trim().toLowerCase() ==
+                        'void' ||
+                    controller.orderStatus.value.trim().toLowerCase() ==
+                        'rejected' ||
+                    controller.orderStatus.value.trim().toLowerCase() ==
+                        'cancelled';
                 final hasValidInvoice =
                     (hasInvoiceId &&
                         displayCode.isNotEmpty &&
@@ -1615,10 +1674,11 @@ class OrderDetailsScreen extends StatelessWidget {
                 if (!hasValidInvoice) {
                   // Step 1: "Refresh Invoice" button (always visible when no valid invoice is found)
                   actionWidget = InkWell(
-                    onTap: () {
-                      if (isLoading) return;
-                      controller.generateInvoice();
-                    },
+                    onTap: (isLoading || isVoidStatus)
+                        ? null
+                        : () {
+                            controller.generateInvoice();
+                          },
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -1626,8 +1686,14 @@ class OrderDetailsScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        color: isVoidStatus
+                            ? const Color(0xFFF1F5F9)
+                            : const Color(0xFFF8FAFC),
+                        border: Border.all(
+                          color: isVoidStatus
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFFE2E8F0),
+                        ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -1642,18 +1708,22 @@ class OrderDetailsScreen extends StatelessWidget {
                                     color: Color(0xFF1E293B),
                                   ),
                                 )
-                              : const Icon(
+                              : Icon(
                                   Icons.sync_rounded,
                                   size: 14,
-                                  color: Color(0xFF1E293B),
+                                  color: isVoidStatus
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF1E293B),
                                 ),
                           const SizedBox(width: 4),
-                          const Text(
+                          Text(
                             'Refresh Invoice',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF1E293B),
+                              color: isVoidStatus
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF1E293B),
                             ),
                           ),
                         ],
@@ -1947,6 +2017,17 @@ class OrderDetailsScreen extends StatelessWidget {
                 : 0.0;
             final progress = total > 0 ? (paid / total).clamp(0.0, 1.0) : 0.0;
 
+            final paymentStatus =
+                controller.paymentMethod.value.trim().toLowerCase();
+            final orderStatus =
+                controller.orderStatus.value.trim().toLowerCase();
+            final paymentText =
+                controller.paymentDueDisplay.trim().toLowerCase();
+            final isPaid = paymentStatus == 'paid' ||
+                orderStatus == 'paid' ||
+                paymentText == 'paid' ||
+                (due <= 0 && (total > 0 || paid > 0));
+
             return Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
               child: Column(
@@ -1964,15 +2045,26 @@ class OrderDetailsScreen extends StatelessWidget {
                           color: Color(0xFF64748B),
                         ),
                       ),
-                      _buildRupeeText(
-                        'Due ₹${due.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontFamily: 'Public Sans',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFFEA580C),
+                      if (isPaid)
+                        const Text(
+                          'Paid',
+                          style: TextStyle(
+                            fontFamily: 'Public Sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF16A34A),
+                          ),
+                        )
+                      else
+                        _buildRupeeText(
+                          'Due ₹${due.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontFamily: 'Public Sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFEA580C),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -2813,13 +2905,29 @@ class OrderDetailsScreen extends StatelessWidget {
                                               Expanded(
                                                 flex: 2,
                                                 child: Obx(() {
-                                                  final isAccepted =
-                                                      item.isAccepted.value ||
-                                                      controller
-                                                          .isOrderAccepted
-                                                          .value;
+                                                  final currentStatus = controller
+                                                      .orderStatus.value
+                                                      .trim()
+                                                      .toLowerCase();
+                                                  final isVoidOrRejected =
+                                                      currentStatus == 'void' ||
+                                                      currentStatus == 'rejected' ||
+                                                      currentStatus == 'cancelled';
+
+                                                  final isAccepted = !isVoidOrRejected &&
+                                                      (item.isAccepted.value ||
+                                                          controller
+                                                              .isOrderAccepted
+                                                              .value ||
+                                                          controller
+                                                              .isAcceptingOrder
+                                                              .value);
                                                   final isRejected =
-                                                      item.isRejected.value;
+                                                      isVoidOrRejected ||
+                                                      item.isRejected.value ||
+                                                      controller
+                                                          .isRejectingOrder
+                                                          .value;
 
                                                   if (isAccepted) {
                                                     return Align(
@@ -2850,6 +2958,43 @@ class OrderDetailsScreen extends StatelessWidget {
                                                               size: 14,
                                                               color: Color(
                                                                 0xFF16A34A,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+
+                                                  if (isRejected) {
+                                                    return Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Tooltip(
+                                                        message: 'Rejected',
+                                                        child: Container(
+                                                          width: 22,
+                                                          height: 22,
+                                                          decoration: BoxDecoration(
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            color: Colors
+                                                                .transparent,
+                                                            border: Border.all(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFFEF4444,
+                                                                  ),
+                                                              width: 1.3,
+                                                            ),
+                                                          ),
+                                                          child: const Center(
+                                                            child: Icon(
+                                                              Icons
+                                                                  .close_rounded,
+                                                              size: 14,
+                                                              color: Color(
+                                                                0xFFEF4444,
                                                               ),
                                                             ),
                                                           ),
@@ -2897,9 +3042,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                                       const SizedBox(width: 12),
                                                       // Reject Action Button
                                                       Tooltip(
-                                                        message: isRejected
-                                                            ? 'Rejected'
-                                                            : 'Reject Item',
+                                                        message: 'Reject Item',
                                                         child: InkWell(
                                                           onTap: () {
                                                             // controller
@@ -2921,13 +3064,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                                                   .transparent,
                                                               border: Border.all(
                                                                 color:
-                                                                    isRejected
-                                                                    ? const Color(
-                                                                        0xFFEF4444,
-                                                                      )
-                                                                    : const Color(
-                                                                        0xFF94A3B8,
-                                                                      ),
+                                                                    const Color(
+                                                                      0xFF94A3B8,
+                                                                    ),
                                                                 width: 1.3,
                                                               ),
                                                             ),
@@ -2937,13 +3076,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                                                     .close_rounded,
                                                                 size: 14,
                                                                 color:
-                                                                    isRejected
-                                                                    ? const Color(
-                                                                        0xFFEF4444,
-                                                                      )
-                                                                    : const Color(
-                                                                        0xFF94A3B8,
-                                                                      ),
+                                                                    const Color(
+                                                                      0xFF94A3B8,
+                                                                    ),
                                                               ),
                                                             ),
                                                           ),

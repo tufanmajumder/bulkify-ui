@@ -914,6 +914,80 @@ class OrderService extends GetxService {
     return null;
   }
 
+  /// Calls orderRejectAll API endpoint (zoho/v1/salesorder/reject) with {"salesorderid": salesOrderId}
+  Future<Map<String, dynamic>?> rejectAllOrder({
+    required String salesOrderId,
+    String? token,
+  }) async {
+    final cleanSalesOrderId = salesOrderId.trim();
+    if (cleanSalesOrderId.isEmpty || cleanSalesOrderId == 'null') return null;
+
+    final String activeToken = (token != null && token.trim().isNotEmpty)
+        ? token.trim()
+        : await AuthService.getAuthToken();
+    final String targetUrl =
+        "${ApiManager.baseUrl}${ApiManager.orderRejectAll}";
+
+    final Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $activeToken',
+    };
+
+    final Map<String, dynamic> payload = {"salesorderid": cleanSalesOrderId};
+
+    dynamic responseData;
+
+    if (kIsWeb) {
+      try {
+        final httpResponse = await http.post(
+          Uri.parse(targetUrl),
+          headers: requestHeaders,
+          body: jsonEncode(payload),
+        );
+
+        if (httpResponse.statusCode >= 200 &&
+            httpResponse.statusCode < 500 &&
+            httpResponse.body.isNotEmpty) {
+          responseData = jsonDecode(httpResponse.body);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Web rejectAllOrder failed: $e');
+        }
+      }
+    }
+
+    if (responseData == null) {
+      try {
+        final response = await dio.post(
+          ApiManager.orderRejectAll,
+          data: jsonEncode(payload),
+          options: Options(
+            contentType: Headers.jsonContentType,
+            headers: requestHeaders,
+          ),
+        );
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            responseData = response.data;
+          } else if (response.data is String) {
+            responseData = jsonDecode(response.data);
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[OrderService] Dio rejectAllOrder failed: $e');
+        }
+      }
+    }
+
+    if (responseData is Map<String, dynamic>) {
+      return responseData;
+    }
+    return null;
+  }
+
   /// Downloads invoice PDF bytes by calling zoho/v1/invoice/download with {"invoice_id": invoiceId}.
   Future<List<int>?> downloadInvoice({
     required String invoiceId,

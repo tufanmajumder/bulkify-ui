@@ -74,7 +74,7 @@ class OrderModel {
     if (customerRaw != null &&
         customerRaw.toString().trim().isNotEmpty &&
         customerRaw.toString().trim() != 'null') {
-      customerStr = customerRaw.toString().trim();
+      customerStr = _formatTitleCase(customerRaw.toString().trim());
     }
 
     // Extract Company / Restaurant Name ("companyname", "company_name", "restaurantname", "resturentname", "company")
@@ -200,5 +200,18 @@ class OrderModel {
       }
       return inputString;
     }
+  }
+
+  static String _formatTitleCase(String input) {
+    final clean = input.trim();
+    if (clean.isEmpty || clean == 'null' || clean == '-') return clean;
+    return clean
+        .split(RegExp(r'\s+'))
+        .map((w) => w.isEmpty
+            ? ''
+            : (w.length == 1
+                ? w.toUpperCase()
+                : w[0].toUpperCase() + w.substring(1).toLowerCase()))
+        .join(' ');
   }
 }

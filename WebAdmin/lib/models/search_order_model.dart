@@ -200,7 +200,7 @@ class SearchOrderModel {
       id: ordernumber.isNotEmpty ? ordernumber : '-',
       orderkey: orderkey.isNotEmpty ? orderkey : salesorderid,
       date: formattedDate,
-      customerName: customername.isNotEmpty ? customername : '-',
+      customerName: customername.isNotEmpty ? _formatTitleCase(customername) : '-',
       companyName: '',
       customerEmail: customeremail.isNotEmpty ? customeremail : '-',
       paymentStatus: formattedPaymentStatus,
@@ -210,5 +210,18 @@ class SearchOrderModel {
       shippingStatus: shippingstatus.isNotEmpty ? shippingstatus : 'Pending',
       amount: finalamount.toStringAsFixed(2),
     );
+  }
+
+  static String _formatTitleCase(String input) {
+    final clean = input.trim();
+    if (clean.isEmpty || clean == 'null' || clean == '-') return clean;
+    return clean
+        .split(RegExp(r'\s+'))
+        .map((w) => w.isEmpty
+            ? ''
+            : (w.length == 1
+                ? w.toUpperCase()
+                : w[0].toUpperCase() + w.substring(1).toLowerCase()))
+        .join(' ');
   }
 }

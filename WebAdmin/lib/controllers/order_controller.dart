@@ -13,6 +13,7 @@ class OrderController extends GetxController {
   // Reactive list of all orders
   final RxList<OrderModel> orders = <OrderModel>[].obs;
   final RxBool isLoading = false.obs;
+  final RxBool isRefreshing = false.obs;
   final RxBool hasMorePage = false.obs;
 
   // Stat summary counters matching the exact image
@@ -184,9 +185,14 @@ class OrderController extends GetxController {
     }
   }
 
-  void refreshOrders() {
-    if (isLoading.value) return;
-    fetchOrders(page: currentPage.value);
+  Future<void> refreshOrders() async {
+    if (isLoading.value || isRefreshing.value) return;
+    isRefreshing.value = true;
+    try {
+      await fetchOrders(page: currentPage.value);
+    } finally {
+      isRefreshing.value = false;
+    }
   }
 
   void searchOrders() {
@@ -320,6 +326,5 @@ class OrderController extends GetxController {
       arguments: order,
       routeName: '/order-details',
     );
-    fetchOrders(page: currentPage.value);
   }
 }

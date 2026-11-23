@@ -28,6 +28,7 @@ class ApiManager {
   static const String searchPayment = "payments/v1/search-by-transactionref";
   static const String paymentAdd = "payments/v1/add";
   static const String orderAcceptAll = "zoho/v1/salesorder/accept";
+  static const String orderRejectAll = "zoho/v1/salesorder/reject";
   static const String driverList = "dispatch/v1/drivers";
   static const String driverAssign = "dispatch/v1/assign";
   static const String driverOrderAccept = "dispatch/v1/assignment";

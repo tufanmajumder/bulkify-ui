@@ -315,6 +315,7 @@ class OrderDetailsController extends GetxController {
   final RxString orderId = ''.obs;
   final RxString salesOrderId = ''.obs;
   final RxBool isAcceptingOrder = false.obs;
+  final RxBool isRejectingOrder = false.obs;
   final RxBool isOrderAccepted = false.obs;
   final RxString customerId = ''.obs;
 
@@ -930,7 +931,7 @@ class OrderDetailsController extends GetxController {
         orderNo.value = args.id;
       }
       if (args.customerName.isNotEmpty && args.customerName != '-') {
-        customer.value = args.customerName;
+        customer.value = formatTitleCase(args.customerName);
       }
       if (args.companyName.isNotEmpty) {
         company.value = args.companyName;
@@ -1239,14 +1240,15 @@ class OrderDetailsController extends GetxController {
     final timeVal = data['createdtime'];
     time.value = timeVal != null ? formatDateOnly(timeVal.toString()) : '';
 
-    customer.value =
-        (data['customername'] ??
-                data['customer_name'] ??
-                data['customerName'] ??
-                data['customer'] ??
-                data['name'])
-            ?.toString() ??
-        '';
+    customer.value = formatTitleCase(
+      (data['customername'] ??
+              data['customer_name'] ??
+              data['customerName'] ??
+              data['customer'] ??
+              data['name'])
+          ?.toString() ??
+          '',
+    );
 
     // 2. Shipping Address (if key missing -> blank "")
     final shipMap =
@@ -1330,15 +1332,16 @@ class OrderDetailsController extends GetxController {
     }
 
     if (shipMap is Map) {
-      shippingName.value =
-          (shipMap['attention'] ??
-                  shipMap['name'] ??
-                  shipMap['customer_name'] ??
-                  shipMap['recipient_name'] ??
-                  data['customername'] ??
-                  data['customer_name'])
-              ?.toString() ??
-          '';
+      shippingName.value = formatTitleCase(
+        (shipMap['attention'] ??
+                shipMap['name'] ??
+                shipMap['customer_name'] ??
+                shipMap['recipient_name'] ??
+                data['customername'] ??
+                data['customer_name'])
+            ?.toString() ??
+            '',
+      );
       shippingPhone.value =
           (shipMap['phone'] ??
                   shipMap['mobile'] ??
@@ -1362,7 +1365,9 @@ class OrderDetailsController extends GetxController {
       shippingPhone.value = '';
       shippingPincode.value = '';
     } else {
-      shippingName.value = data['customername']?.toString() ?? '';
+      shippingName.value = data['customername'] != null
+          ? formatTitleCase(data['customername'].toString())
+          : '';
       shippingPhone.value = data['mobilenumber']?.toString() ?? '';
       shippingAddress.value = '';
       shippingPincode.value = data['pincode']?.toString() ?? '';
@@ -1375,14 +1380,15 @@ class OrderDetailsController extends GetxController {
         data['billingAddress'] ??
         data['billing'];
     if (billMap is Map) {
-      billingName.value =
-          (billMap['attention'] ??
-                  billMap['name'] ??
-                  billMap['customer_name'] ??
-                  data['customername'] ??
-                  data['customer_name'])
-              ?.toString() ??
-          '';
+      billingName.value = formatTitleCase(
+        (billMap['attention'] ??
+                billMap['name'] ??
+                billMap['customer_name'] ??
+                data['customername'] ??
+                data['customer_name'])
+            ?.toString() ??
+            '',
+      );
       billingPhone.value =
           (billMap['phone'] ??
                   billMap['mobile'] ??
@@ -1406,7 +1412,9 @@ class OrderDetailsController extends GetxController {
       billingPhone.value = '';
       billingPincode.value = '';
     } else {
-      billingName.value = data['customername']?.toString() ?? '';
+      billingName.value = data['customername'] != null
+          ? formatTitleCase(data['customername'].toString())
+          : '';
       billingPhone.value = data['mobilenumber']?.toString() ?? '';
       billingAddress.value = '';
       billingPincode.value = data['pincode']?.toString() ?? '';
@@ -1990,7 +1998,18 @@ class OrderDetailsController extends GetxController {
             data['isAccepted'] == true ||
             data['accepted'] == true);
 
-    if (isStatusAccepted || hasAcceptedItems || isExplicitlyAccepted) {
+    final isStatusVoidOrRejected =
+        rawOrderStatus == 'void' ||
+        rawOrderStatus == 'rejected' ||
+        rawOrderStatus == 'cancelled';
+
+    if (isStatusVoidOrRejected) {
+      isOrderAccepted.value = false;
+      for (final item in orderItems) {
+        item.isRejected.value = true;
+        item.isAccepted.value = false;
+      }
+    } else if (isStatusAccepted || hasAcceptedItems || isExplicitlyAccepted) {
       isOrderAccepted.value = true;
       for (final item in orderItems) {
         item.isAccepted.value = true;
@@ -2185,6 +2204,10 @@ class OrderDetailsController extends GetxController {
   }
 
   Future<void> generateInvoice() async {
+    final status = orderStatus.value.trim().toLowerCase();
+    if (status == 'void' || status == 'rejected' || status == 'cancelled') {
+      return;
+    }
     isDownloadingInvoice.value = true;
     try {
       if (orderKey.value.trim().isNotEmpty) {
@@ -2544,23 +2567,40 @@ class OrderDetailsController extends GetxController {
     return 'Due ₹ ${dueAmountValue.toStringAsFixed(2)}';
   }
 
-  int get totalRejectedItems =>
-      orderItems.where((item) => item.isRejected.value).length;
+  int get totalRejectedItems {
+    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+        orderStatus.value.trim().toLowerCase() == 'rejected' ||
+        orderStatus.value.trim().toLowerCase() == 'cancelled';
+    if (isVoid) return orderItems.length;
+    return orderItems.where((item) => item.isRejected.value).length;
+  }
 
   String get totalDeclinedAmount {
+    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+        orderStatus.value.trim().toLowerCase() == 'rejected' ||
+        orderStatus.value.trim().toLowerCase() == 'cancelled';
     double sum = 0.0;
     for (final item in orderItems) {
-      if (item.isRejected.value) {
+      if (item.isRejected.value || isVoid) {
         sum += _parseItemAmount(item.total.value);
       }
     }
     return '₹${sum.toStringAsFixed(2)}';
   }
 
-  int get totalAcceptedItems =>
-      orderItems.where((item) => item.isAccepted.value).length;
+  int get totalAcceptedItems {
+    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+        orderStatus.value.trim().toLowerCase() == 'rejected' ||
+        orderStatus.value.trim().toLowerCase() == 'cancelled';
+    if (isVoid) return 0;
+    return orderItems.where((item) => item.isAccepted.value).length;
+  }
 
   String get acceptedOrderAmount {
+    final isVoid = orderStatus.value.trim().toLowerCase() == 'void' ||
+        orderStatus.value.trim().toLowerCase() == 'rejected' ||
+        orderStatus.value.trim().toLowerCase() == 'cancelled';
+    if (isVoid) return '₹0.00';
     double sum = 0.0;
     for (final item in orderItems) {
       if (item.isAccepted.value) {
@@ -2743,22 +2783,135 @@ class OrderDetailsController extends GetxController {
     }
   }
 
-  void rejectAllItems() {
-    for (final item in orderItems) {
-      item.isRejected.value = true;
-      item.isAccepted.value = false;
+  Future<void> rejectAllItems() async {
+    if (isRejectingOrder.value || isAcceptingOrder.value) return;
+
+    final targetSalesOrderId = (salesOrderId.value.trim().isNotEmpty &&
+            salesOrderId.value.trim() != 'null'
+        ? salesOrderId.value.trim()
+        : orderId.value.trim());
+
+    if (targetSalesOrderId.isEmpty || targetSalesOrderId == 'null') {
+      Get.snackbar(
+        'Error',
+        'Sales order ID not found',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFCF4340),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+      );
+      return;
     }
-    isOrderAccepted.value = false;
-    orderStatus.value = 'Rejected';
-    Get.snackbar(
-      'Rejected',
-      'All order items have been rejected.',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFFCF4340),
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 8,
-      duration: const Duration(seconds: 2),
-    );
+
+    try {
+      isRejectingOrder.value = true;
+      final response = await _orderService.rejectAllOrder(
+        salesOrderId: targetSalesOrderId,
+      );
+
+      final isFailure =
+          response == null ||
+          response['success'] == false ||
+          response['status'] == false ||
+          (response.containsKey('code') &&
+              response['code'] != 0 &&
+              response['code'] != 200 &&
+              response['code'] != '0' &&
+              response['code'] != '200') ||
+          (response['error'] != null &&
+              response['error'].toString().trim().isNotEmpty);
+
+      if (!isFailure) {
+        isRejectingOrder.value = false;
+        isOrderAccepted.value = false;
+
+        final data = response['data'];
+        if (data is Map && data['orderstatus'] != null) {
+          orderStatus.value = data['orderstatus'].toString();
+        } else if (data is Map && data['status'] != null) {
+          orderStatus.value = data['status'].toString();
+        } else {
+          orderStatus.value = 'Void';
+        }
+
+        for (final item in orderItems) {
+          item.isRejected.value = true;
+          item.isAccepted.value = false;
+        }
+
+        final successMsg =
+            (response['message'] ??
+                    response['msg'] ??
+                    'All order items have been rejected.')
+                .toString();
+
+        Get.snackbar(
+          'Success',
+          successMsg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF10B981),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 2),
+        );
+
+        // Also update order in order controller if registered
+        try {
+          if (Get.isRegistered<OrderController>()) {
+            Get.find<OrderController>().syncOrderUpdates(
+              orderKey: orderKey.value,
+              orderId: orderId.value,
+              orderStatus: orderStatus.value,
+            );
+          }
+        } catch (_) {}
+      } else {
+        final errorMsg =
+            (response?['message'] ??
+                    response?['error'] ??
+                    response?['msg'] ??
+                    'Failed to reject order')
+                .toString();
+        Get.snackbar(
+          'Error',
+          errorMsg,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFCF4340),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred while rejecting order: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFCF4340),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      isRejectingOrder.value = false;
+    }
+  }
+
+  String formatTitleCase(String input) {
+    final clean = input.trim();
+    if (clean.isEmpty || clean == 'null' || clean == '-') return clean;
+    return clean
+        .split(RegExp(r'\s+'))
+        .map((w) => w.isEmpty
+            ? ''
+            : (w.length == 1
+                ? w.toUpperCase()
+                : w[0].toUpperCase() + w.substring(1).toLowerCase()))
+        .join(' ');
   }
 }

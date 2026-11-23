@@ -470,7 +470,7 @@ class OrderListScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Obx(
-                              () => controller.isLoading.value
+                              () => controller.isRefreshing.value
                                   ? const SizedBox(
                                       width: 14,
                                       height: 14,
@@ -643,7 +643,7 @@ class OrderListScreen extends StatelessWidget {
                                 (order.customerName.isEmpty ||
                                     order.customerName == 'null')
                                 ? '-'
-                                : order.customerName;
+                                : _formatTitleCase(order.customerName);
                             final displayCompany =
                                 (order.companyName.isEmpty ||
                                     order.companyName == 'null' ||
@@ -1022,6 +1022,19 @@ class OrderListScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _formatTitleCase(String input) {
+    final clean = input.trim();
+    if (clean.isEmpty || clean == 'null' || clean == '-') return clean;
+    return clean
+        .split(RegExp(r'\s+'))
+        .map((w) => w.isEmpty
+            ? ''
+            : (w.length == 1
+                ? w.toUpperCase()
+                : w[0].toUpperCase() + w.substring(1).toLowerCase()))
+        .join(' ');
   }
 
   // Order Status Cell
