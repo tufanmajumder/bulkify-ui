@@ -7,6 +7,7 @@ class DeliveryNotificationCard extends StatelessWidget {
   final String description;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
+  final bool isAccepting;
 
   const DeliveryNotificationCard({
     super.key,
@@ -16,6 +17,7 @@ class DeliveryNotificationCard extends StatelessWidget {
         'Collect the order from the merchant and deliver it to the customer.',
     this.onAccept,
     this.onReject,
+    this.isAccepting = false,
   });
 
   @override
@@ -123,47 +125,62 @@ class DeliveryNotificationCard extends StatelessWidget {
                 // Accept Button
                 Expanded(
                   child: InkWell(
-                    onTap: () {
-                      if (onAccept != null) {
-                        onAccept!();
-                      } else {
-                        Get.back();
-                        Get.snackbar(
-                          'Order Accepted',
-                          'You have accepted Order $orderId',
-                          backgroundColor: const Color(0xFF16A34A),
-                          colorText: Colors.white,
-                          snackPosition: SnackPosition.TOP,
-                        );
-                      }
-                    },
+                    onTap: isAccepting
+                        ? null
+                        : () {
+                            if (onAccept != null) {
+                              onAccept!();
+                            } else {
+                              Get.back();
+                              Get.snackbar(
+                                'Order Accepted',
+                                'You have accepted Order $orderId',
+                                backgroundColor: const Color(0xFF16A34A),
+                                colorText: Colors.white,
+                                snackPosition: SnackPosition.TOP,
+                              );
+                            }
+                          },
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF16A34A),
+                        color: isAccepting
+                            ? const Color(0xFF16A34A).withOpacity(0.7)
+                            : const Color(0xFF16A34A),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline,
-                            color: Colors.white,
-                            size: 19,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Accept',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                      child: isAccepting
+                          ? const Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.check_circle_outline,
+                                  color: Colors.white,
+                                  size: 19,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Accept',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ),
@@ -172,20 +189,22 @@ class DeliveryNotificationCard extends StatelessWidget {
                 // Reject Button
                 Expanded(
                   child: InkWell(
-                    onTap: () {
-                      if (onReject != null) {
-                        onReject!();
-                      } else {
-                        Get.back();
-                        Get.snackbar(
-                          'Order Rejected',
-                          'You rejected Order $orderId',
-                          backgroundColor: const Color(0xFFDC2626),
-                          colorText: Colors.white,
-                          snackPosition: SnackPosition.TOP,
-                        );
-                      }
-                    },
+                    onTap: isAccepting
+                        ? null
+                        : () {
+                            if (onReject != null) {
+                              onReject!();
+                            } else {
+                              Get.back();
+                              Get.snackbar(
+                                'Order Rejected',
+                                'You rejected Order $orderId',
+                                backgroundColor: const Color(0xFFDC2626),
+                                colorText: Colors.white,
+                                snackPosition: SnackPosition.TOP,
+                              );
+                            }
+                          },
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
                       height: 48,

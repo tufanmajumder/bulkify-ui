@@ -124,7 +124,7 @@ class AuthService extends GetConnect implements GetxService {
       "deviceinfo": deviceinfo,
       "identifier": formattedPhone,
       "otp": otp,
-      //"fcmtoken": resolvedFcmToken,
+      if (resolvedFcmToken.isNotEmpty) "fcmtoken": resolvedFcmToken,
     };
 
     try {

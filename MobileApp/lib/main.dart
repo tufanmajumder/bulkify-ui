@@ -82,9 +82,18 @@ void main() async {
     NotificationService.showDeliveryNotification(message: message);
   });
 
-  // Handle when notification opened the app
+  // Handle when notification opened the app from background
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    NotificationService.showDeliveryDialog();
+    NotificationService.showDeliveryDialog(message: message);
+  });
+
+  // Handle initial message when app is opened from terminated state via notification
+  FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    if (message != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NotificationService.showDeliveryDialog(message: message);
+      });
+    }
   });
 
   SystemChrome.setPreferredOrientations([
