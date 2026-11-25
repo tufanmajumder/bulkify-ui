@@ -123,14 +123,21 @@ class ShippingDriverModel {
             .toString()
             .trim();
 
+    final String formattedName = rawName.isNotEmpty
+        ? rawName.split(RegExp(r'\s+')).map((word) {
+            if (word.isEmpty) return word;
+            return word[0].toUpperCase() + word.substring(1).toLowerCase();
+          }).join(' ')
+        : 'Driver';
+
     String initials = (json['initials'] ?? '').toString().trim();
     if (initials.isEmpty) {
-      final parts = rawName.split(' ').where((p) => p.isNotEmpty).toList();
+      final parts = formattedName.split(' ').where((p) => p.isNotEmpty).toList();
       if (parts.length >= 2) {
         initials = '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-      } else if (rawName.isNotEmpty) {
-        initials = rawName
-            .substring(0, rawName.length >= 2 ? 2 : 1)
+      } else if (formattedName.isNotEmpty) {
+        initials = formattedName
+            .substring(0, formattedName.length >= 2 ? 2 : 1)
             .toUpperCase();
       } else {
         initials = 'DR';
@@ -300,7 +307,7 @@ class ShippingDriverModel {
 
     return ShippingDriverModel(
       initials: initials,
-      name: rawName,
+      name: formattedName,
       vehicle: vehicle,
       distance: distance,
       activeOrders: activeOrders,
@@ -449,6 +456,8 @@ class OrderDetailsController extends GetxController {
       <ShippingActivityModel>[].obs;
   final RxInt currentShippingStep = 0.obs;
   final RxString assignedDriverName = ''.obs;
+  final RxString assignedDriverPhone = ''.obs;
+  final RxString assignedDriverVehicle = ''.obs;
   final RxString driverSearchQuery = ''.obs;
   final RxString selectedDriverAvailability = 'Online'.obs;
   final RxString selectedDriverSort = 'Nearest first'.obs;
@@ -467,6 +476,7 @@ class OrderDetailsController extends GetxController {
   ];
 
   final RxBool isLoadingDrivers = false.obs;
+  final RxBool isRefreshingPage = false.obs;
 
   final RxList<ShippingDriverModel> drivers = <ShippingDriverModel>[
     ShippingDriverModel(
@@ -639,7 +649,7 @@ class OrderDetailsController extends GetxController {
           driverAssignCooldown[driverId] = 0;
           timer.cancel();
           _driverCooldownTimers.remove(driverId);
-          // After 10s wait, check if driver accepted the order
+          // After 30s wait, check if driver accepted the order
           await _checkDriverAcceptance(driverId, driver);
         } else {
           driverAssignCooldown[driverId] = current - 1;
@@ -648,13 +658,207 @@ class OrderDetailsController extends GetxController {
     );
   }
 
+  void _applyAssignmentData(dynamic res) {
+    if (res == null) return;
+    final dynamic data =
+        (res is Map && res['data'] != null && res['data'] is Map)
+        ? res['data']
+        : res;
+
+    final dynamic currentMap = (data is Map && data['current'] is Map)
+        ? data['current']
+        : ((res is Map && res['current'] is Map) ? res['current'] : null);
+
+    if (currentMap is Map) {
+      final String acceptedDriverName =
+          (currentMap['drivername'] ??
+                  currentMap['driver_name'] ??
+                  currentMap['name'] ??
+                  '')
+              .toString()
+              .trim();
+      if (acceptedDriverName.isNotEmpty) {
+        assignedDriverName.value = acceptedDriverName;
+      }
+
+      final String dPhone =
+          (currentMap['phone'] ??
+                  currentMap['mobilenumber'] ??
+                  currentMap['mobile'] ??
+                  '')
+              .toString()
+              .trim();
+      if (dPhone.isNotEmpty) {
+        assignedDriverPhone.value = dPhone;
+      }
+
+      if (currentMap['vehicle'] is Map) {
+        final v = currentMap['vehicle'];
+        final vName =
+            (v['name'] ?? v['model'] ?? v['vehiclename'])?.toString().trim() ??
+            '';
+        final vReg =
+            (v['registrationnumber'] ??
+                    v['reg_number'] ??
+                    v['registration_number'] ??
+                    v['number'])
+                ?.toString()
+                .trim() ??
+            '';
+        final vType = v['type']?.toString().trim() ?? '';
+        assignedDriverVehicle.value = [
+          if (vName.isNotEmpty) vName else if (vType.isNotEmpty) vType,
+          if (vReg.isNotEmpty) vReg,
+        ].join(' · ');
+      }
+
+      final String dUserKey =
+          (currentMap['driveruserkey'] ?? currentMap['driver_user_key'] ?? '')
+              .toString()
+              .trim();
+      if (dUserKey.isNotEmpty) {
+        driverHasAccepted[dUserKey] = true;
+      }
+
+      // Build shipping activities list
+      final List<ShippingActivityModel> activities = [];
+
+      String formatIso(dynamic raw) {
+        if (raw == null) return '';
+        try {
+          final dt = DateTime.parse(raw.toString()).toLocal();
+          final now = DateTime.now();
+          final isToday =
+              dt.year == now.year && dt.month == now.month && dt.day == now.day;
+          final hour = dt.hour.toString().padLeft(2, '0');
+          final min = dt.minute.toString().padLeft(2, '0');
+          if (isToday) {
+            return 'Today $hour:$min';
+          } else {
+            final day = dt.day.toString().padLeft(2, '0');
+            final mon = dt.month.toString().padLeft(2, '0');
+            return '$day-$mon-${dt.year} $hour:$min';
+          }
+        } catch (_) {
+          return raw.toString();
+        }
+      }
+
+      final dName = assignedDriverName.value.isNotEmpty
+          ? assignedDriverName.value
+          : 'Driver';
+      final respondedOn =
+          currentMap['respondedon'] ?? currentMap['responded_on'];
+      final assignedOn = currentMap['assignedon'] ?? currentMap['assigned_on'];
+      final assignedBy =
+          (currentMap['assignedby'] ?? currentMap['assigned_by'] ?? 'Admin')
+              .toString()
+              .trim();
+      final state = (currentMap['state'] ?? currentMap['status'] ?? '')
+          .toString()
+          .toLowerCase();
+
+      // Most recent on top: Accepted by driver
+      if (state == 'accepted' && respondedOn != null) {
+        activities.add(
+          ShippingActivityModel(
+            title: 'Accepted by driver: $dName',
+            timestamp: formatIso(respondedOn),
+            description: 'Driver App · Accepted',
+          ),
+        );
+      }
+
+      // Driver assigned by admin
+      if (assignedOn != null) {
+        activities.add(
+          ShippingActivityModel(
+            title: 'Driver assigned: $dName',
+            timestamp: formatIso(assignedOn),
+            description: 'Assigned by $assignedBy · Admin',
+          ),
+        );
+      }
+
+      final historyList = data is Map ? data['history'] : null;
+      if (historyList is List && historyList.isNotEmpty) {
+        for (final h in historyList) {
+          if (h is Map) {
+            final hResp = h['respondedon'] ?? h['responded_on'];
+            final hAssigned = h['assignedon'] ?? h['assigned_on'];
+            final hBy = (h['assignedby'] ?? h['assigned_by'] ?? 'Admin')
+                .toString()
+                .trim();
+            final hDriver = (h['drivername'] ?? h['name'] ?? dName)
+                .toString()
+                .trim();
+            final hState = (h['state'] ?? h['status'] ?? '')
+                .toString()
+                .toLowerCase();
+
+            if (hState == 'accepted' && hResp != null && respondedOn == null) {
+              activities.add(
+                ShippingActivityModel(
+                  title: 'Accepted by driver: $hDriver',
+                  timestamp: formatIso(hResp),
+                  description: 'Driver App · Accepted',
+                ),
+              );
+            }
+            if (hAssigned != null && assignedOn == null) {
+              activities.add(
+                ShippingActivityModel(
+                  title: 'Driver assigned: $hDriver',
+                  timestamp: formatIso(hAssigned),
+                  description: 'Assigned by $hBy · Admin',
+                ),
+              );
+            }
+          }
+        }
+      }
+
+      if (activities.isEmpty) {
+        activities.add(
+          ShippingActivityModel(
+            title: 'Driver assigned: $dName',
+            timestamp: assignedOn != null ? formatIso(assignedOn) : 'Today',
+            description: 'Assigned by $assignedBy · Admin',
+          ),
+        );
+      }
+
+      shippingActivities.assignAll(activities);
+    }
+  }
+
+  Future<void> fetchAssignmentDetails({String? orderKeyParam}) async {
+    final String keyToUse =
+        (orderKeyParam != null && orderKeyParam.trim().isNotEmpty)
+        ? orderKeyParam.trim()
+        : orderKey.value.trim();
+    if (keyToUse.isEmpty) return;
+
+    try {
+      final res = await _orderService.checkAssignmentStatus(orderKey: keyToUse);
+      if (res != null) {
+        _applyAssignmentData(res);
+      }
+    } catch (e) {
+      print('[OrderDetailsController.fetchAssignmentDetails] error: $e');
+    }
+  }
+
   Future<void> _checkDriverAcceptance(
     String driverId,
     ShippingDriverModel driver,
   ) async {
-    final String assignmentKey = driverAssignmentKeys[driverId] ?? '';
-    if (assignmentKey.isEmpty) {
-      print('[CheckDriverAcceptance] No assignmentKey found for $driverId');
+    String orderKeyToCheck = (driverAssignmentKeys[driverId] ?? '').trim();
+    if (orderKeyToCheck.isEmpty) {
+      orderKeyToCheck = orderKey.value.trim();
+    }
+    if (orderKeyToCheck.isEmpty) {
+      print('[CheckDriverAcceptance] No orderkey found for $driverId');
       return;
     }
 
@@ -662,7 +866,7 @@ class OrderDetailsController extends GetxController {
 
     try {
       final res = await _orderService.checkAssignmentStatus(
-        assignmentKey: assignmentKey,
+        orderKey: orderKeyToCheck,
       );
 
       print('=== CHECK ASSIGNMENT STATUS RESPONSE ===');
@@ -673,11 +877,20 @@ class OrderDetailsController extends GetxController {
           ? res['data']
           : res;
 
+      final dynamic currentMap = (data is Map && data['current'] is Map)
+          ? data['current']
+          : ((res is Map && res!['current'] is Map) ? res['current'] : null);
+
       final String state =
-          (data?['state'] ??
+          (currentMap?['state'] ??
+                  currentMap?['status'] ??
+                  data?['state'] ??
                   data?['status'] ??
+                  data?['orderstatus'] ??
+                  data?['assignmentstatus'] ??
                   res?['state'] ??
                   res?['status'] ??
+                  res?['orderstatus'] ??
                   '')
               .toString()
               .toLowerCase()
@@ -686,6 +899,9 @@ class OrderDetailsController extends GetxController {
       final bool isAccepted =
           state == 'accepted' ||
           state == 'order_accepted' ||
+          state == 'driver_accepted' ||
+          currentMap?['is_accepted'] == true ||
+          currentMap?['accepted'] == true ||
           data?['is_accepted'] == true ||
           data?['accepted'] == true ||
           res?['is_accepted'] == true ||
@@ -693,13 +909,58 @@ class OrderDetailsController extends GetxController {
 
       if (isAccepted) {
         driverHasAccepted[driverId] = true;
-        assignedDriverName.value = driver.name;
+        final acceptedDriverName =
+            (currentMap is Map &&
+                currentMap['drivername'] != null &&
+                currentMap['drivername'].toString().trim().isNotEmpty)
+            ? currentMap['drivername'].toString().trim()
+            : driver.name;
+        assignedDriverName.value = acceptedDriverName;
+
+        if (currentMap is Map) {
+          if (currentMap['phone'] != null) {
+            assignedDriverPhone.value = currentMap['phone'].toString().trim();
+          } else if (driver.phone != null) {
+            assignedDriverPhone.value = driver.phone!;
+          }
+
+          if (currentMap['vehicle'] is Map) {
+            final v = currentMap['vehicle'];
+            final vName = v['name']?.toString().trim() ?? '';
+            final vReg =
+                v['registrationnumber']?.toString().trim() ??
+                v['reg_number']?.toString().trim() ??
+                '';
+            final vType = v['type']?.toString().trim() ?? '';
+            assignedDriverVehicle.value = [
+              if (vName.isNotEmpty) vName else if (vType.isNotEmpty) vType,
+              if (vReg.isNotEmpty) vReg,
+            ].join(' · ');
+          } else if (driver.vehicle != null) {
+            assignedDriverVehicle.value = driver.vehicle!;
+          }
+        } else {
+          if (driver.phone != null) assignedDriverPhone.value = driver.phone!;
+          if (driver.vehicle != null)
+            assignedDriverVehicle.value = driver.vehicle!;
+        }
+
         currentShippingStep.value = 1; // Switch to 'Driver assigned'
         shipmentStatus.value = shippingSteps[1];
 
+        if (Get.isRegistered<OrderController>()) {
+          Get.find<OrderController>().syncOrderUpdates(
+            orderKey: orderKey.value,
+            orderId: orderId.value,
+            orderStatus: orderStatus.value,
+            shippingStatus: shipmentStatus.value,
+            paymentStatus: paymentMethod.value,
+          );
+        }
+
         Get.snackbar(
           'Driver Accepted',
-          '${driver.name} has accepted the order!',
+          '$acceptedDriverName has accepted the order!',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: const Color(0xFF10B981),
           colorText: Colors.white,
@@ -741,6 +1002,20 @@ class OrderDetailsController extends GetxController {
   }
 
   Future<void> assignDriver(ShippingDriverModel driver) async {
+    // If an assignment is already in progress, prevent any new driver assignment
+    if (isAssigningDriver.value) {
+      Get.snackbar(
+        'Please Wait',
+        'Another driver assignment is in progress. Please wait a moment.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFF59E0B),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
     final String driverId = getDriverIdentifier(driver);
     final int currentClicks = driverAssignClickCount[driverId] ?? 0;
 
@@ -785,7 +1060,7 @@ class OrderDetailsController extends GetxController {
       return;
     }
 
-    // Cooldown check: admin must wait 10 seconds between clicks
+    // Cooldown check: admin must wait 30 seconds between clicks
     final int cooldown = driverAssignCooldown[driverId] ?? 0;
     if (cooldown > 0) {
       Get.snackbar(
@@ -851,23 +1126,26 @@ class OrderDetailsController extends GetxController {
               res['status'] == true);
 
       if (isSuccess) {
-        // Extract assignment key from response
+        // Extract orderkey from assign driver response (as required for dispatch/v1/assignment API)
         final dynamic dataMap = res['data'];
-        String extractedKey = '';
+        String extractedOrderKey = '';
         if (dataMap is Map) {
-          extractedKey =
-              (dataMap['assignmentkey'] ??
-                      dataMap['assignment_key'] ??
-                      dataMap['key'] ??
-                      dataMap['id'] ??
+          extractedOrderKey =
+              (dataMap['orderkey'] ??
+                      dataMap['order_key'] ??
+                      dataMap['orderKey'] ??
                       '')
                   .toString()
                   .trim();
-        } else if (res['assignmentkey'] != null) {
-          extractedKey = res['assignmentkey'].toString().trim();
         }
-        if (extractedKey.isNotEmpty) {
-          driverAssignmentKeys[driverId] = extractedKey;
+        if (extractedOrderKey.isEmpty && res['orderkey'] != null) {
+          extractedOrderKey = res['orderkey'].toString().trim();
+        }
+        if (extractedOrderKey.isEmpty) {
+          extractedOrderKey = currentOrderKey.trim();
+        }
+        if (extractedOrderKey.isNotEmpty) {
+          driverAssignmentKeys[driverId] = extractedOrderKey;
         }
 
         // Call driverOrderPush API as requested upon successful driver assign
@@ -888,7 +1166,9 @@ class OrderDetailsController extends GetxController {
             resolvedFcmToken = res['fcmtoken'].toString().trim();
           }
 
-          final String resolvedOrderKey = currentOrderKey.trim();
+          final String resolvedOrderKey = extractedOrderKey.isNotEmpty
+              ? extractedOrderKey
+              : currentOrderKey.trim();
           String resolvedOrderNumber = orderNo.value.trim().replaceAll('#', '');
           if (resolvedOrderNumber.isEmpty ||
               resolvedOrderNumber == '-' ||
@@ -931,6 +1211,18 @@ class OrderDetailsController extends GetxController {
             print(
               '[OrderDetailsController.assignDriver] driverOrderPush result: $pushRes',
             );
+            if (pushRes != null && pushRes['data'] is Map) {
+              final pushOrderKey =
+                  (pushRes['data']['orderkey'] ??
+                          pushRes['data']['order_key'] ??
+                          pushRes['data']['orderKey'] ??
+                          '')
+                      .toString()
+                      .trim();
+              if (pushOrderKey.isNotEmpty) {
+                driverAssignmentKeys[driverId] = pushOrderKey;
+              }
+            }
           } else {
             print(
               '[OrderDetailsController.assignDriver] Warning: Skipping driverOrderPush because fcmtoken ($resolvedFcmToken) or orderkey ($resolvedOrderKey) is empty',
@@ -942,10 +1234,10 @@ class OrderDetailsController extends GetxController {
           );
         }
 
-        // Increment the attempt count and start the 10-second wait timer ONLY on success
+        // Increment the attempt count and start the 30-second wait timer ONLY on success
         final int updatedClicks = (driverAssignClickCount[driverId] ?? 0) + 1;
         driverAssignClickCount[driverId] = updatedClicks;
-        _startDriverCooldown(driverId, 10, driver);
+        _startDriverCooldown(driverId, 30, driver);
       } else {
         final errMsg =
             res?['message']?.toString() ??
@@ -1058,11 +1350,23 @@ class OrderDetailsController extends GetxController {
           currentShippingStep.value = 3;
         } else if (lowerShippingStatus.contains('pick')) {
           currentShippingStep.value = 2;
-        } else if (lowerShippingStatus.contains('assign') ||
-            lowerShippingStatus.contains('driver')) {
+        } else if (lowerShippingStatus == 'accepted' ||
+            (lowerShippingStatus.contains('accept') &&
+                !lowerShippingStatus.contains('assign'))) {
           currentShippingStep.value = 1;
         } else {
           currentShippingStep.value = 0;
+        }
+
+        final isAcceptedShipping = lowerShippingStatus == 'accepted' ||
+            (lowerShippingStatus.contains('accept') &&
+                !lowerShippingStatus.contains('assign'));
+        final k = args.orderkey.isNotEmpty
+            ? args.orderkey
+            : (args.id.isNotEmpty ? args.id : salesorderId);
+        if (k.isNotEmpty &&
+            (currentShippingStep.value >= 1 || isAcceptedShipping)) {
+          fetchAssignmentDetails(orderKeyParam: k);
         }
       } else {
         currentShippingStep.value = 0;
@@ -1138,6 +1442,62 @@ class OrderDetailsController extends GetxController {
     });
   }
 
+  Future<void> refreshOrderDetails() async {
+    if (isRefreshingPage.value) return;
+
+    final String k = orderKey.value.trim().isNotEmpty
+        ? orderKey.value.trim()
+        : (salesOrderId.value.trim().isNotEmpty
+            ? salesOrderId.value.trim()
+            : (orderNo.value.trim().isNotEmpty ? orderNo.value.trim() : ''));
+
+    if (k.isEmpty) {
+      Get.snackbar(
+        'Refresh',
+        'Order key not found to refresh',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFF59E0B),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    isRefreshingPage.value = true;
+    try {
+      await fetchOrderDetails(k);
+      await fetchDrivers(orderKeyParam: k);
+      await fetchAssignmentDetails(orderKeyParam: k);
+
+      if (Get.isRegistered<OrderController>()) {
+        Get.find<OrderController>().fetchOrders();
+      }
+
+      Get.snackbar(
+        'Refreshed',
+        'Order details refreshed successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF10B981),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Refresh Error',
+        'Failed to refresh: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      );
+    } finally {
+      isRefreshingPage.value = false;
+    }
+  }
+
   Future<void> fetchOrderDetails(String salesorderId) async {
     //print("salesorderId...$salesorderId");
     final cleanId = salesorderId.trim();
@@ -1180,6 +1540,13 @@ class OrderDetailsController extends GetxController {
 
         _populateFromApiResponse(responseMap);
         fetchDrivers(orderKeyParam: orderKey.value);
+
+        final lowerShip = shipmentStatus.value.toLowerCase().trim();
+        final isAcceptedShip = lowerShip == 'accepted' ||
+            (lowerShip.contains('accept') && !lowerShip.contains('assign'));
+        if (isAcceptedShip || currentShippingStep.value >= 1) {
+          fetchAssignmentDetails(orderKeyParam: orderKey.value);
+        }
 
         if (orderNo.value.isEmpty && orderItems.isEmpty) {
           isError.value = true;
@@ -1424,11 +1791,21 @@ class OrderDetailsController extends GetxController {
       currentShippingStep.value = 3;
     } else if (lowerShipStatus.contains('pick')) {
       currentShippingStep.value = 2;
-    } else if (lowerShipStatus.contains('assign') ||
-        lowerShipStatus.contains('driver')) {
+    } else if (lowerShipStatus == 'accepted' ||
+        (lowerShipStatus.contains('accept') &&
+            !lowerShipStatus.contains('assign'))) {
       currentShippingStep.value = 1;
     } else {
+      // When shipment status is 'assigned', 'pending', etc., green dot stays on 'Accepted' (step 0)
       currentShippingStep.value = 0;
+    }
+
+    final isAcceptedShip = lowerShipStatus == 'accepted' ||
+        (lowerShipStatus.contains('accept') &&
+            !lowerShipStatus.contains('assign'));
+    final k = orderKey.value.trim();
+    if (k.isNotEmpty && (isAcceptedShip || currentShippingStep.value >= 1)) {
+      fetchAssignmentDetails(orderKeyParam: k);
     }
 
     if (shipMap is Map) {
@@ -1518,6 +1895,63 @@ class OrderDetailsController extends GetxController {
       billingPhone.value = data['mobilenumber']?.toString() ?? '';
       billingAddress.value = '';
       billingPincode.value = data['pincode']?.toString() ?? '';
+    }
+
+    if (currentShippingStep.value >= 1 || isAcceptedShip) {
+      final assignedDriver =
+          data['driver'] ?? data['assigned_driver'] ?? data['driver_details'];
+      if (assignedDriver is Map) {
+        final name =
+            (assignedDriver['name'] ??
+                    assignedDriver['drivername'] ??
+                    assignedDriver['driver_name'])
+                ?.toString();
+        if (name != null && name.trim().isNotEmpty) {
+          assignedDriverName.value = name.trim();
+        }
+        final phone =
+            (assignedDriver['phone'] ??
+                    assignedDriver['mobile'] ??
+                    assignedDriver['mobilenumber'])
+                ?.toString();
+        if (phone != null && phone.trim().isNotEmpty) {
+          assignedDriverPhone.value = phone.trim();
+        }
+        final vehicle = assignedDriver['vehicle'];
+        if (vehicle is Map) {
+          final vName =
+              (vehicle['name'] ?? vehicle['model'] ?? vehicle['vehiclename'])
+                  ?.toString()
+                  .trim() ??
+              '';
+          final vReg =
+              (vehicle['registrationnumber'] ??
+                      vehicle['registration_number'] ??
+                      vehicle['number'])
+                  ?.toString()
+                  .trim() ??
+              '';
+          final vType = vehicle['type']?.toString().trim() ?? '';
+          assignedDriverVehicle.value = [
+            if (vName.isNotEmpty) vName else if (vType.isNotEmpty) vType,
+            if (vReg.isNotEmpty) vReg,
+          ].join(' · ');
+        }
+      } else if (data['drivername'] != null || data['driver_name'] != null) {
+        final name = (data['drivername'] ?? data['driver_name'])?.toString();
+        if (name != null && name.trim().isNotEmpty) {
+          assignedDriverName.value = formatTitleCase(name.trim());
+        }
+        final phone = (data['driverphone'] ?? data['driver_phone'])?.toString();
+        if (phone != null && phone.trim().isNotEmpty) {
+          assignedDriverPhone.value = phone.trim();
+        }
+      }
+    } else {
+      assignedDriverName.value = '';
+      assignedDriverPhone.value = '';
+      assignedDriverVehicle.value = '';
+      shippingActivities.clear();
     }
 
     // 4. Price Breakdown (if key missing -> blank "")

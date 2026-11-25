@@ -1451,7 +1451,9 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
     final String base = ApiManager.baseUrl.trim();
     final String endpoint = ApiManager.driverAssign.trim();
-    final String targetUrl = base.endsWith('/') ? '$base$endpoint' : '$base/$endpoint';
+    final String targetUrl = base.endsWith('/')
+        ? '$base$endpoint'
+        : '$base/$endpoint';
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -1465,7 +1467,9 @@ class OrderService extends GetxService {
       "remarks": remarks,
     };
 
-    print('[OrderService.assignDriver] Calling $targetUrl with payload: ${jsonEncode(payload)}');
+    print(
+      '[OrderService.assignDriver] Calling $targetUrl with payload: ${jsonEncode(payload)}',
+    );
 
     dynamic responseData;
 
@@ -1477,7 +1481,9 @@ class OrderService extends GetxService {
           body: jsonEncode(payload),
         );
 
-        print('[OrderService.assignDriver] http.post statusCode: ${httpResponse.statusCode}, body: ${httpResponse.body}');
+        print(
+          '[OrderService.assignDriver] http.post statusCode: ${httpResponse.statusCode}, body: ${httpResponse.body}',
+        );
 
         if (httpResponse.body.isNotEmpty) {
           responseData = jsonDecode(httpResponse.body);
@@ -1529,12 +1535,13 @@ class OrderService extends GetxService {
   }
 
   /// Calls dispatch/v1/assignment API endpoint (ApiManager.driverOrderAccept)
-  /// with payload: {"key": assignmentKey}
+  /// with payload: {"key": orderKey}
   Future<Map<String, dynamic>?> checkAssignmentStatus({
-    required String assignmentKey,
+    String? orderKey,
+    String? assignmentKey,
     String? token,
   }) async {
-    final cleanKey = assignmentKey.trim();
+    final cleanKey = (orderKey ?? assignmentKey ?? '').trim();
     if (cleanKey.isEmpty) return null;
 
     final String activeToken = (token != null && token.trim().isNotEmpty)
@@ -1542,8 +1549,9 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
     final String base = ApiManager.baseUrl.trim();
     final String endpoint = ApiManager.driverOrderAccept.trim();
-    final String targetUrl =
-        base.endsWith('/') ? '$base$endpoint' : '$base/$endpoint';
+    final String targetUrl = base.endsWith('/')
+        ? '$base$endpoint'
+        : '$base/$endpoint';
 
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
@@ -1551,12 +1559,12 @@ class OrderService extends GetxService {
       'Authorization': 'Bearer $activeToken',
     };
 
-    final Map<String, dynamic> payload = {
-      "key": cleanKey,
-    };
+    final Map<String, dynamic> payload = {"key": cleanKey};
 
-    print('[OrderService.checkAssignmentStatus] Calling $targetUrl with payload: ${jsonEncode(payload)}');
-
+    print(
+      '[OrderService.checkAssignmentStatus] Calling $targetUrl with payload: ${jsonEncode(payload)}',
+    );
+    print("token...$activeToken");
     dynamic responseData;
 
     if (kIsWeb) {
@@ -1567,7 +1575,9 @@ class OrderService extends GetxService {
           body: jsonEncode(payload),
         );
 
-        print('[OrderService.checkAssignmentStatus] http.post statusCode: ${httpResponse.statusCode}, body: ${httpResponse.body}');
+        print(
+          '[OrderService.checkAssignmentStatus] http.post statusCode: ${httpResponse.statusCode}, body: ${httpResponse.body}',
+        );
 
         if (httpResponse.body.isNotEmpty) {
           responseData = jsonDecode(httpResponse.body);
@@ -1609,7 +1619,9 @@ class OrderService extends GetxService {
       }
     }
 
-    print('[OrderService.checkAssignmentStatus] Response received: $responseData');
+    print(
+      '[OrderService.checkAssignmentStatus] Response received: $responseData',
+    );
 
     if (responseData is Map<String, dynamic>) {
       return responseData;
@@ -1631,8 +1643,9 @@ class OrderService extends GetxService {
         : await AuthService.getAuthToken();
     final String base = ApiManager.baseUrl.trim();
     final String endpoint = ApiManager.driverOrderPush.trim();
-    final String targetUrl =
-        base.endsWith('/') ? '$base$endpoint' : '$base/$endpoint';
+    final String targetUrl = base.endsWith('/')
+        ? '$base$endpoint'
+        : '$base/$endpoint';
     final Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -1701,7 +1714,9 @@ class OrderService extends GetxService {
       } catch (_) {}
     }
 
-    print('[OrderService.sendDriverOrderPush] Response received: $responseData');
+    print(
+      '[OrderService.sendDriverOrderPush] Response received: $responseData',
+    );
 
     if (responseData is Map<String, dynamic>) {
       return responseData;

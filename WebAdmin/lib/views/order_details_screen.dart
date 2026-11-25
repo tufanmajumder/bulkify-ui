@@ -304,6 +304,9 @@ class OrderDetailsScreen extends StatelessWidget {
         controller.orderStatus.value.trim().toLowerCase() == 'paid';
 
     final rawOrderStatus = controller.orderStatus.value.trim();
+    final isVoidStatus = rawOrderStatus.toLowerCase() == 'void' ||
+        rawOrderStatus.toLowerCase() == 'rejected' ||
+        rawOrderStatus.toLowerCase() == 'cancelled';
     final orderStatusText =
         (rawOrderStatus.isEmpty ||
             rawOrderStatus == 'null' ||
@@ -484,16 +487,20 @@ class OrderDetailsScreen extends StatelessWidget {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFDBEAFE),
+                                color: isVoidStatus
+                                    ? const Color(0xFFFEE2E2)
+                                    : const Color(0xFFDBEAFE),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 orderStatusText,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'Public Sans',
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1D4ED8),
+                                  color: isVoidStatus
+                                      ? const Color(0xFFDC2626)
+                                      : const Color(0xFF1D4ED8),
                                 ),
                               ),
                             ),
@@ -567,11 +574,6 @@ class OrderDetailsScreen extends StatelessWidget {
                         displayCode != '-') ||
                     controller.orderStatus.value.trim().toLowerCase() ==
                         'invoiced';
-
-                final isVoidStatus =
-                    rawOrderStatus.toLowerCase() == 'void' ||
-                    rawOrderStatus.toLowerCase() == 'rejected' ||
-                    rawOrderStatus.toLowerCase() == 'cancelled';
 
                 final bool showCollect =
                     !isVoidStatus && !isPaymentPaid && dueVal > 0;
@@ -2023,6 +2025,9 @@ class OrderDetailsScreen extends StatelessWidget {
                 controller.orderStatus.value.trim().toLowerCase();
             final paymentText =
                 controller.paymentDueDisplay.trim().toLowerCase();
+            final isVoid = orderStatus == 'void' ||
+                orderStatus == 'rejected' ||
+                orderStatus == 'cancelled';
             final isPaid = paymentStatus == 'paid' ||
                 orderStatus == 'paid' ||
                 paymentText == 'paid' ||
@@ -2045,7 +2050,9 @@ class OrderDetailsScreen extends StatelessWidget {
                           color: Color(0xFF64748B),
                         ),
                       ),
-                      if (isPaid)
+                      if (isVoid)
+                        const SizedBox.shrink()
+                      else if (isPaid)
                         const Text(
                           'Paid',
                           style: TextStyle(
@@ -3289,17 +3296,13 @@ class OrderDetailsScreen extends StatelessWidget {
                                 ? const Color(0xFFE6F4EA)
                                 : (step > 0
                                       ? const Color(0xFFDBEAFE)
-                                      : (assigned
-                                            ? const Color(0xFFDCFCE7)
-                                            : const Color(0xFFEDF2F7))),
+                                      : const Color(0xFFEDF2F7)),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             step > 0
                                 ? controller.shippingSteps[step]
-                                : (assigned
-                                      ? 'Assigned · ${controller.assignedDriverName.value}'
-                                      : 'Not Assigned'),
+                                : 'Not Assigned',
                             style: TextStyle(
                               fontFamily: 'Public-Sans',
                               fontSize: 11.5,
@@ -3308,18 +3311,73 @@ class OrderDetailsScreen extends StatelessWidget {
                                   ? const Color(0xFF15803D)
                                   : (step > 0
                                         ? const Color(0xFF1D4ED8)
-                                        : (assigned
-                                              ? const Color(0xFF15803D)
-                                              : const Color(0xFF475569))),
+                                        : const Color(0xFF475569)),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    if (step == 5)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Refresh Button (on left side)
+                        Tooltip(
+                          message: 'Refresh Order Details',
+                          child: InkWell(
+                            onTap: controller.isRefreshingPage.value
+                                ? null
+                                : () => controller.refreshOrderDetails(),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              height: 34,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  controller.isRefreshingPage.value
+                                      ? const SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Color(0xFFCF4340),
+                                            ),
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.refresh_rounded,
+                                          size: 16,
+                                          color: Color(0xFF475569),
+                                        ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Refresh',
+                                    style: TextStyle(
+                                      fontFamily: 'Public-Sans',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF475569),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (step == 5) ...[
+                          const SizedBox(width: 8),
                           InkWell(
                             onTap: () {},
                             borderRadius: BorderRadius.circular(6),
@@ -3375,35 +3433,37 @@ class OrderDetailsScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                        ],
-                      )
-                    else if (step > 0 && step < 4)
-                      InkWell(
-                        onTap: () => controller.setShippingStep(step + 1),
-                        borderRadius: BorderRadius.circular(6),
-                        child: Container(
-                          height: 34,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFCF4340),
+                        ] else if (step > 0 && step < 4) ...[
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () => controller.setShippingStep(step + 1),
                             borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            step == 1
-                                ? 'Mark as Picked Up'
-                                : step == 2
-                                ? 'Mark as In Transit'
-                                : 'Mark as Out for Delivery',
-                            style: const TextStyle(
-                              fontFamily: 'Public-Sans',
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
+                            child: Container(
+                              height: 34,
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFCF4340),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                step == 1
+                                    ? 'Mark as Picked Up'
+                                    : step == 2
+                                    ? 'Mark as In Transit'
+                                    : 'Mark as Out for Delivery',
+                                style: const TextStyle(
+                                  fontFamily: 'Public-Sans',
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        ],
+                      ],
+                    ),
                   ],
                 );
               }),
@@ -3743,7 +3803,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    driver.name,
+                                                    _formatTitleCase(driver.name),
                                                     style: const TextStyle(
                                                       fontFamily: 'Public-Sans',
                                                       fontSize: 13.5,
@@ -3797,16 +3857,20 @@ class OrderDetailsScreen extends StatelessWidget {
                                             Obx(() {
                                               final driverId = controller
                                                   .getDriverIdentifier(driver);
+                                              final isAnyAssigning = controller
+                                                  .isAssigningDriver
+                                                  .value;
                                               final isAssigningThis =
-                                                  controller
-                                                      .isAssigningDriver
-                                                      .value &&
+                                                  isAnyAssigning &&
                                                   controller
                                                           .assigningDriverUserKey
                                                           .value ==
                                                       (driver.driverUserKey ??
                                                           driver.driverKey ??
                                                           driver.name);
+                                              final isOtherAssigning =
+                                                  isAnyAssigning &&
+                                                  !isAssigningThis;
                                               final isCheckingThis =
                                                   controller
                                                       .driverIsCheckingStatus[driverId] ==
@@ -3951,6 +4015,25 @@ class OrderDetailsScreen extends StatelessWidget {
                                                     ),
                                                   ],
                                                 );
+                                              } else if (isOtherAssigning) {
+                                                bgColor = const Color(
+                                                  0xFFF1F5F9,
+                                                );
+                                                borderColor = const Color(
+                                                  0xFFE2E8F0,
+                                                );
+                                                textColor = const Color(
+                                                  0xFF94A3B8,
+                                                );
+                                                content = Text(
+                                                  'Assign',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Public-Sans',
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: textColor,
+                                                  ),
+                                                );
                                               } else if (cooldown > 0) {
                                                 bgColor = const Color(
                                                   0xFFF8FAFC,
@@ -4024,22 +4107,40 @@ class OrderDetailsScreen extends StatelessWidget {
                                                 );
                                               }
 
+                                              final bool isActionDisabled =
+                                                  isOtherAssigning ||
+                                                  controller
+                                                      .isAssigningDriver
+                                                      .value ||
+                                                  isCheckingThis ||
+                                                  cooldown > 0 ||
+                                                  hasAcceptedThis;
+
+                                              final String tooltipMessage =
+                                                  isOtherAssigning
+                                                      ? 'Assignment in progress for another driver'
+                                                      : (isMaxReached
+                                                            ? 'Please choose another driver'
+                                                            : (hasAcceptedThis
+                                                                  ? 'Driver accepted order'
+                                                                  : (isCheckingThis
+                                                                        ? 'Checking driver acceptance...'
+                                                                        : (cooldown > 0
+                                                                              ? 'Please wait ${cooldown}s before assigning again'
+                                                                              : ''))));
+
                                               return Tooltip(
-                                                message: isMaxReached
-                                                    ? 'Please choose another driver'
-                                                    : (hasAcceptedThis
-                                                          ? 'Driver accepted order'
-                                                          : (isCheckingThis
-                                                                ? 'Checking driver acceptance...'
-                                                                : (cooldown > 0
-                                                                      ? 'Please wait ${cooldown}s before assigning again'
-                                                                      : ''))),
+                                                message: tooltipMessage,
                                                 child: InkWell(
-                                                  onTap:
-                                                      (controller
-                                                              .isAssigningDriver
-                                                              .value ||
-                                                          isCheckingThis)
+                                                  mouseCursor: isActionDisabled
+                                                      ? (isOtherAssigning
+                                                            ? SystemMouseCursors
+                                                                  .forbidden
+                                                            : SystemMouseCursors
+                                                                  .basic)
+                                                      : SystemMouseCursors
+                                                            .click,
+                                                  onTap: isActionDisabled
                                                       ? null
                                                       : () => controller
                                                             .assignDriver(
@@ -4420,38 +4521,62 @@ class OrderDetailsScreen extends StatelessWidget {
     BuildContext context,
     OrderDetailsController controller,
   ) {
-    final driverName = controller.assignedDriverName.value.isNotEmpty
-        ? controller.assignedDriverName.value
-        : 'Jhon Doe';
-    final deliverToName = controller.shippingName.value.isNotEmpty
-        ? controller.shippingName.value
-        : (controller.customer.value.isNotEmpty
-              ? controller.customer.value
-              : 'Christian Teigland');
-    final step = controller.currentShippingStep.value;
+    return Obx(() {
+      final driverName = controller.assignedDriverName.value.isNotEmpty
+          ? controller.assignedDriverName.value
+          : 'Driver';
+      final driverPhone = controller.assignedDriverPhone.value.isNotEmpty
+          ? controller.assignedDriverPhone.value
+          : '';
+      final driverVehicle = controller.assignedDriverVehicle.value.isNotEmpty
+          ? controller.assignedDriverVehicle.value
+          : '';
+      final initials = driverName.trim().isNotEmpty
+          ? driverName
+              .trim()
+              .split(' ')
+              .where((w) => w.isNotEmpty)
+              .map((w) => w[0].toUpperCase())
+              .take(2)
+              .join()
+          : 'D';
+      final deliverToName = controller.shippingName.value.isNotEmpty
+          ? controller.shippingName.value
+          : (controller.customer.value.isNotEmpty
+                ? controller.customer.value
+                : 'Customer');
+      final step = controller.currentShippingStep.value;
 
-    final activities = <Map<String, String>>[
-      if (step >= 3)
-        {
-          'time': 'Today 14:40',
-          'title': 'In Transit',
-          'subtitle': 'Left pickup hub · Driver App',
-        },
-      if (step >= 2)
-        {
-          'time': 'Today 14:12',
-          'title': 'Picked up by $driverName',
-          'subtitle': '12 items scanned and verified · Driver App',
-        },
-      if (step >= 1)
-        {
-          'time': 'Today 13:50',
-          'title': 'Driver assigned: $driverName',
-          'subtitle': 'Assigned by [Admin name] · Admin',
-        },
-    ];
+      final activities = <Map<String, String>>[
+        if (controller.shippingActivities.isNotEmpty)
+          ...controller.shippingActivities.map((act) => {
+                'time': act.timestamp,
+                'title': act.title,
+                'subtitle': act.description,
+              })
+        else ...[
+          if (step >= 3)
+            {
+              'time': 'Today 14:40',
+              'title': 'In Transit',
+              'subtitle': 'Left pickup hub · Driver App',
+            },
+          if (step >= 2)
+            {
+              'time': 'Today 14:12',
+              'title': 'Picked up by $driverName',
+              'subtitle': '12 items scanned and verified · Driver App',
+            },
+          if (step >= 1)
+            {
+              'time': 'Today 13:50',
+              'title': 'Driver assigned: $driverName',
+              'subtitle': 'Assigned by Admin · Admin',
+            },
+        ],
+      ];
 
-    return Padding(
+      return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4497,9 +4622,9 @@ class OrderDetailsScreen extends StatelessWidget {
                                 shape: BoxShape.circle,
                                 color: Color(0xFFEDF2F7),
                               ),
-                              child: const Text(
-                                'JD',
-                                style: TextStyle(
+                              child: Text(
+                                initials,
+                                style: const TextStyle(
                                   fontFamily: 'Public-Sans',
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -4508,28 +4633,30 @@ class OrderDetailsScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            const Expanded(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "driverName",
-                                    style: TextStyle(
+                                    driverName,
+                                    style: const TextStyle(
                                       fontFamily: 'Public-Sans',
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFF1E293B),
                                     ),
                                   ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    '+44 7700 900123',
-                                    style: TextStyle(
-                                      fontFamily: 'Public-Sans',
-                                      fontSize: 12,
-                                      color: Color(0xFF64748B),
+                                  if (driverPhone.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      driverPhone,
+                                      style: const TextStyle(
+                                        fontFamily: 'Public-Sans',
+                                        fontSize: 12,
+                                        color: Color(0xFF64748B),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -4555,15 +4682,17 @@ class OrderDetailsScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Van · WB24BK 12345',
-                          style: TextStyle(
-                            fontFamily: 'Public-Sans',
-                            fontSize: 12,
-                            color: Color(0xFF64748B),
+                        if (driverVehicle.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            driverVehicle,
+                            style: const TextStyle(
+                              fontFamily: 'Public-Sans',
+                              fontSize: 12,
+                              color: Color(0xFF64748B),
+                            ),
                           ),
-                        ),
+                        ],
                         const SizedBox(height: 10),
                         InkWell(
                           onTap: () {},
@@ -4640,9 +4769,15 @@ class OrderDetailsScreen extends StatelessWidget {
                                 color: Color(0xFF1E293B),
                               ),
                             ),
-                            const Text(
-                              '[TRK-ID]',
-                              style: TextStyle(
+                            Text(
+                              controller.salesOrderId.value.isNotEmpty
+                                  ? controller.salesOrderId.value
+                                  : (controller.orderNo.value.isNotEmpty
+                                      ? controller.orderNo.value
+                                      : (controller.orderKey.value.isNotEmpty
+                                          ? controller.orderKey.value
+                                          : '[TRK-ID]')),
+                              style: const TextStyle(
                                 fontFamily: 'Public-Sans',
                                 fontSize: 12.5,
                                 color: Color(0xFF64748B),
@@ -4775,9 +4910,9 @@ class OrderDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
-                          "deliverToName",
-                          style: TextStyle(
+                        Text(
+                          deliverToName,
+                          style: const TextStyle(
                             fontFamily: 'Public-Sans',
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -4785,9 +4920,16 @@ class OrderDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
-                          '45 Roker Terrace Latheronwheel,\nKW5 8NW, London · 743144',
-                          style: TextStyle(
+                        Text(
+                          controller.shippingAddress.value.isNotEmpty
+                              ? [
+                                  controller.shippingAddress.value,
+                                  if (controller.shippingPincode.value.isNotEmpty &&
+                                      !controller.shippingAddress.value.contains(controller.shippingPincode.value))
+                                    controller.shippingPincode.value,
+                                ].join(' · ')
+                              : 'Address not available',
+                          style: const TextStyle(
                             fontFamily: 'Public-Sans',
                             fontSize: 12,
                             height: 1.4,
@@ -5008,7 +5150,8 @@ class OrderDetailsScreen extends StatelessWidget {
         ],
       ),
     );
-  }
+  });
+}
 
   Widget _buildShippingActionBtn(String label, {required VoidCallback onTap}) {
     return InkWell(
