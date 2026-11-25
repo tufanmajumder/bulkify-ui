@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -120,7 +120,9 @@ class ProfileView extends GetView<ProfileController> {
                             children: [
                               Obx(
                                 () => WidgetManager.customText(
-                                  text: controller.driverName.value,
+                                  text: WidgetManager.capitalizeWords(
+                                    controller.driverName.value,
+                                  ),
                                   fontSize: 18.sp,
                                   fontWeight: FontWeight.w800,
                                   color: textPrimary,

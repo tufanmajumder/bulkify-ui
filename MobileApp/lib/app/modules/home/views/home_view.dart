@@ -176,7 +176,7 @@ class HomeView extends GetView<HomeController> {
               SizedBox(height: 3.h),
               Obx(
                 () => WidgetManager.customText(
-                  text: controller.userName.value,
+                  text: WidgetManager.capitalizeWords(controller.userName.value),
                   fontSize: 24.sp,
                   fontWeight: FontWeight.w500,
                   color: textPrimary,
@@ -760,37 +760,53 @@ class HomeView extends GetView<HomeController> {
             Expanded(
               child: SizedBox(
                 height: 42.h,
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.availableOrders.removeWhere(
-                      (o) =>
-                          (o['id'] != null &&
-                              order['id'] != null &&
-                              o['id'] == order['id']) ||
-                          o['restaurantName'] == restaurantName,
-                    );
-                    WidgetManager.showSnackBar(
-                      message: 'Order From $restaurantName Has Been Rejected.',
-                      snackPosition: SnackPosition.TOP,
-                      backgroundColor: Colors.grey.shade900,
-                      textColor: Colors.white,
-                      duration: const Duration(seconds: 2),
+                child: Obx(
+                  () {
+                    final String orderKey = (order['orderkey'] ??
+                            order['orderKey'] ??
+                            order['raw']?['orderkey'] ??
+                            order['orderNumber'] ??
+                            order['id'] ??
+                            '')
+                        .toString()
+                        .replaceAll('#', '')
+                        .trim();
+                    final bool isCurrentRejecting =
+                        controller.rejectingOrderKey.value.isNotEmpty &&
+                        controller.rejectingOrderKey.value == orderKey;
+
+                    return ElevatedButton(
+                      onPressed: isCurrentRejecting ||
+                              controller.acceptingOrderKey.value.isNotEmpty
+                          ? null
+                          : () {
+                              controller.handleOrderReject(order);
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF0F2F5),
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22.r),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: isCurrentRejecting
+                          ? SizedBox(
+                              width: 18.r,
+                              height: 18.r,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF4A4A6A),
+                              ),
+                            )
+                          : WidgetManager.customText(
+                              text: 'Reject',
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF4A4A6A),
+                            ),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF0F2F5),
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22.r),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: WidgetManager.customText(
-                    text: 'Reject',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF4A4A6A),
-                  ),
                 ),
               ),
             ),

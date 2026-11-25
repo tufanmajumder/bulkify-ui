@@ -602,6 +602,81 @@ class AuthService extends GetConnect implements GetxService {
     }
   }
 
+  // rejectOrderService
+  Future<Map<String, dynamic>?> rejectOrder({
+    required String orderKey,
+    String reasonCode = "",
+    String remarks = "",
+    String? sessionId,
+  }) async {
+    final String url = ApiManager.rejectOrder;
+    String? token = sessionId;
+    if (token == null || token.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('sessionId');
+    }
+
+    final headers = <String, dynamic>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      final cleanToken = token.replaceAll('Bearer ', '').trim();
+      headers['Authorization'] = 'Bearer $cleanToken';
+    }
+
+    final Map<String, dynamic> body = {
+      "orderkey": orderKey,
+      "reasoncode": reasonCode,
+      "remarks": remarks,
+    };
+
+    print("url in rejectOrder...${ApiManager.baseUrl}$url");
+    print("Authorization token...${headers['Authorization']}");
+    print("body in rejectOrder...$body");
+
+    try {
+      final response = await dio.post(
+        url,
+        data: body,
+        options: Options(headers: headers),
+      );
+      print("rejectOrder status...${response.statusCode}");
+      print("rejectOrder data...${response.data}");
+
+      if (response.data != null) {
+        if (response.data is Map<String, dynamic>) {
+          return response.data as Map<String, dynamic>;
+        } else if (response.data is String) {
+          try {
+            return json.decode(response.data) as Map<String, dynamic>;
+          } catch (_) {}
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      print("DioException rejectOrder status: ${e.response?.statusCode}");
+      print("DioException rejectOrder data: ${e.response?.data}");
+
+      if (e.response?.data != null && e.response!.data is Map<String, dynamic>) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+
+      if (e.type == DioExceptionType.connectionError ||
+          e.error is SocketException) {
+        WidgetManager.showAlertSnackBar(StringManager.unableToReachInternet, 3);
+      } else {
+        WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      }
+      return null;
+    } catch (e) {
+      print("General exception in rejectOrder: $e");
+      WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      return null;
+    }
+  }
+
   String convertData(
     String phone,
     String deviceId,

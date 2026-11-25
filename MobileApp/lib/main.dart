@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'app/data/service/notification_service.dart';
 import 'app/data/utils/app_theme.dart';
+import 'app/modules/home/controllers/home_controller.dart';
 import 'app/routes/app_pages.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,9 +14,24 @@ import 'firebase_options.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await NotificationService.initialize();
-  await NotificationService.showDeliveryNotification(message: message);
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (e) {
+    if (kDebugMode) {
+      print("Error initializing Firebase in background handler: $e");
+    }
+  }
+
+  try {
+    await NotificationService.initialize(isBackground: true);
+    await NotificationService.showDeliveryNotification(message: message);
+  } catch (e) {
+    if (kDebugMode) {
+      print("Error showing background delivery notification: $e");
+    }
+  }
+
   if (kDebugMode) {
     print("Handling a background message: ${message.messageId}");
   }
@@ -84,15 +100,35 @@ void main() async {
 
   // Handle when notification opened the app from background
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    NotificationService.showDeliveryDialog(message: message);
+    if (Get.isRegistered<HomeController>()) {
+      final details = NotificationService.extractOrderDetails(message: message);
+      final orderMap = NotificationService.buildOrderMapFromDetails(details);
+      Get.find<HomeController>().handleIncomingOrderNotification(
+        details['orderKey'] ?? '',
+        orderData: orderMap,
+      );
+    }
+    // NotificationService.showDeliveryDialog(message: message);
   });
 
   // Handle initial message when app is opened from terminated state via notification
   FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
     if (message != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        NotificationService.showDeliveryDialog(message: message);
+        if (Get.isRegistered<HomeController>()) {
+          final details =
+              NotificationService.extractOrderDetails(message: message);
+          final orderMap =
+              NotificationService.buildOrderMapFromDetails(details);
+          Get.find<HomeController>().handleIncomingOrderNotification(
+            details['orderKey'] ?? '',
+            orderData: orderMap,
+          );
+        }
       });
+      // WidgetsBinding.instance.addPostFrameCallback((_) {
+      //   NotificationService.showDeliveryDialog(message: message);
+      // });
     }
   });
 

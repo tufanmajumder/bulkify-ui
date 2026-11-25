@@ -8,4 +8,5 @@ class ApiManager {
   static const String onlinestatus = "contact/v1/onlinestatus";
   static const String pendingOffer = "driver/v1/offers/pending";
   static const String acceptOrder = "driver/v1/accept";
+  static const String rejectOrder = "driver/v1/reject";
 }

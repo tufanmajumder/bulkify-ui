@@ -99,7 +99,7 @@ class StringManager {
   static const String helpAndSupport = 'Help & support';
   static const String signOut = 'Sign out';
   static const String ratingText = 'Rating';
-  static const String defaultRole = 'Delivery partner';
+  static const String defaultRole = 'Delivery Partner';
 
   // Update Profile Picture View Strings
   static const String updateProfilePictureTitle = 'Update profile picture';

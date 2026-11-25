@@ -40,6 +40,20 @@ class WidgetManager {
     // Output: ewogICJkZXZpY2V0eXBlIjogIlBob25lIiwKICAiZGV2aWNlaWQiOiAiQlA0QS4yNTEyMDUuMDA2IiwKICAibW9kZWwiOiAiU00tTTA3NUYiLAogICJicmFuZCI6ICJzYW1zdW5nIgp9
   }
 
+  /// Capitalizes each word in a string (e.g., "atanu mondal" -> "Atanu Mondal")
+  static String capitalizeWords(String? input) {
+    if (input == null || input.trim().isEmpty) return '';
+    return input
+        .trim()
+        .split(RegExp(r'\s+'))
+        .map((word) {
+          if (word.isEmpty) return '';
+          if (word.length == 1) return word.toUpperCase();
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+  }
+
   static String formatSnackbarText(String input) {
     if (input.trim().isEmpty) return input;
 

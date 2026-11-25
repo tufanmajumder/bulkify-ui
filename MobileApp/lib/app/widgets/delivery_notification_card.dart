@@ -8,6 +8,7 @@ class DeliveryNotificationCard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final bool isAccepting;
+  final bool isRejecting;
 
   const DeliveryNotificationCard({
     super.key,
@@ -18,6 +19,7 @@ class DeliveryNotificationCard extends StatelessWidget {
     this.onAccept,
     this.onReject,
     this.isAccepting = false,
+    this.isRejecting = false,
   });
 
   @override
@@ -125,7 +127,7 @@ class DeliveryNotificationCard extends StatelessWidget {
                 // Accept Button
                 Expanded(
                   child: InkWell(
-                    onTap: isAccepting
+                    onTap: (isAccepting || isRejecting)
                         ? null
                         : () {
                             if (onAccept != null) {
@@ -189,7 +191,7 @@ class DeliveryNotificationCard extends StatelessWidget {
                 // Reject Button
                 Expanded(
                   child: InkWell(
-                    onTap: isAccepting
+                    onTap: (isAccepting || isRejecting)
                         ? null
                         : () {
                             if (onReject != null) {
@@ -209,29 +211,42 @@ class DeliveryNotificationCard extends StatelessWidget {
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626),
+                        color: isRejecting
+                            ? const Color(0xFFDC2626).withOpacity(0.7)
+                            : const Color(0xFFDC2626),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.cancel_outlined,
-                            color: Colors.white,
-                            size: 19,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Reject',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                      child: isRejecting
+                          ? const Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.cancel_outlined,
+                                  color: Colors.white,
+                                  size: 19,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Reject',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:bulkify/app/data/models/home/summary_model.dart';
@@ -14,9 +15,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bulkify/app/data/models/auth_models/profile/profileModel.dart'
     as profile_model;
+import 'package:bulkify/app/data/service/notification_service.dart';
 import 'package:bulkify/app/modules/profile/controllers/profile_controller.dart';
 
-class HomeController extends GetxController {
+class HomeController extends GetxController with WidgetsBindingObserver {
   final AuthService _authService = AuthService();
 
   // API State & Summary Model
@@ -39,6 +41,7 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     updateGreeting();
     checkDeviceLocationStatus();
     fetchSummaryData();
@@ -101,7 +104,12 @@ class HomeController extends GetxController {
   // Pending Offers State & Model
   final RxBool isLoadingOffers = false.obs;
   final RxString acceptingOrderKey = ''.obs;
+  final RxString rejectingOrderKey = ''.obs;
   final Rxn<PendingOfferModel> pendingOfferModel = Rxn<PendingOfferModel>();
+
+  // 30-Second Auto-Removal Timers & Expired Order Keys
+  final Map<String, Timer> _orderExpiryTimers = {};
+  final Set<String> expiredOrderKeys = <String>{};
 
   // Available Food Orders Data List
   final RxList<Map<String, dynamic>> availableOrders =
@@ -179,13 +187,37 @@ class HomeController extends GetxController {
         );
 
         // Update list after accept
+        _orderExpiryTimers[orderKey]?.cancel();
+        _orderExpiryTimers.remove(orderKey);
         availableOrders.removeWhere(
           (o) =>
               (o['orderkey'] != null &&
                   orderKey.isNotEmpty &&
                   o['orderkey'].toString().replaceAll('#', '') == orderKey) ||
-              (o['id'] != null && o['id'] == order['id']),
+              (o['orderKey'] != null &&
+                  orderKey.isNotEmpty &&
+                  o['orderKey'].toString().replaceAll('#', '') == orderKey) ||
+              (o['orderNumber'] != null &&
+                  orderKey.isNotEmpty &&
+                  o['orderNumber'].toString().replaceAll('#', '') == orderKey) ||
+              (o['id'] != null &&
+                  o['id'].toString().replaceAll('#', '') == orderKey),
         );
+        availableOrders.refresh();
+
+        // Dismiss status bar notification
+        NotificationService.cancelOrderNotification(orderKey);
+        final String orderNum = (order['orderNumber'] ?? order['id'] ?? '')
+            .toString()
+            .replaceAll('#', '')
+            .trim();
+        if (orderNum.isNotEmpty) {
+          NotificationService.cancelOrderNotification(orderNum);
+        }
+        if (availableOrders.isEmpty) {
+          NotificationService.cancelAllNotifications();
+        }
+
         fetchPendingOffers();
         fetchSummaryData();
 
@@ -217,6 +249,97 @@ class HomeController extends GetxController {
     }
   }
 
+  /// Handle Order Reject Action
+  /// Calls ApiManager.rejectOrder and removes order from available orders
+  Future<void> handleOrderReject(
+    Map<String, dynamic> order, {
+    String reasonCode = "",
+    String remarks = "",
+  }) async {
+    final String orderKey = (order['orderkey'] ??
+            order['orderKey'] ??
+            order['raw']?['orderkey'] ??
+            order['orderNumber'] ??
+            order['id'] ??
+            '')
+        .toString()
+        .replaceAll('#', '')
+        .trim();
+
+    rejectingOrderKey.value = orderKey;
+
+    try {
+      final response = await _authService.rejectOrder(
+        orderKey: orderKey,
+        reasonCode: reasonCode,
+        remarks: remarks,
+      );
+      if (response != null &&
+          (response['success'] == true ||
+              response['code'] == 200 ||
+              response['code'] == "200" ||
+              response['status'] == 'success')) {
+        final String msg =
+            response['message']?.toString() ?? 'Order rejected successfully';
+        WidgetManager.showSnackBar(
+          message: msg,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.grey.shade900,
+          textColor: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+
+        // Update list after reject
+        _orderExpiryTimers[orderKey]?.cancel();
+        _orderExpiryTimers.remove(orderKey);
+        availableOrders.removeWhere(
+          (o) =>
+              (o['orderkey'] != null &&
+                  orderKey.isNotEmpty &&
+                  o['orderkey'].toString().replaceAll('#', '') == orderKey) ||
+              (o['orderKey'] != null &&
+                  orderKey.isNotEmpty &&
+                  o['orderKey'].toString().replaceAll('#', '') == orderKey) ||
+              (o['orderNumber'] != null &&
+                  orderKey.isNotEmpty &&
+                  o['orderNumber'].toString().replaceAll('#', '') == orderKey) ||
+              (o['id'] != null &&
+                  o['id'].toString().replaceAll('#', '') == orderKey),
+        );
+        availableOrders.refresh();
+
+        // Dismiss status bar notification
+        NotificationService.cancelOrderNotification(orderKey);
+        final String orderNum = (order['orderNumber'] ?? order['id'] ?? '')
+            .toString()
+            .replaceAll('#', '')
+            .trim();
+        if (orderNum.isNotEmpty) {
+          NotificationService.cancelOrderNotification(orderNum);
+        }
+        if (availableOrders.isEmpty) {
+          NotificationService.cancelAllNotifications();
+        }
+
+        fetchPendingOffers();
+        fetchSummaryData();
+      } else {
+        final String errorMsg =
+            response?['message']?.toString() ?? 'Failed to reject order';
+        WidgetManager.showSnackBar(
+          message: errorMsg,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      print("Error in handleOrderReject: $e");
+    } finally {
+      rejectingOrderKey.value = '';
+    }
+  }
+
   /// Logout user and clear session ID
   void logout() async {
     final prefs = await SharedPreferences.getInstance();
@@ -240,6 +363,110 @@ class HomeController extends GetxController {
     }
   }
 
+  /// Called when a new delivery notification arrives
+  Future<void> handleIncomingOrderNotification(
+    String orderKey, {
+    Map<String, dynamic>? orderData,
+  }) async {
+    final cleanKey = orderKey.replaceAll('#', '').trim();
+    final String orderNum =
+        (orderData?['orderNumber'] ?? orderData?['id'] ?? cleanKey)
+            .toString()
+            .replaceAll('#', '')
+            .trim();
+
+    // 1. Ensure driver is marked online so Available Orders section is visible
+    if (!isOnline.value) {
+      isOnline.value = true;
+    }
+
+    // 2. Clear any prior expiry for this incoming offer
+    if (cleanKey.isNotEmpty) {
+      expiredOrderKeys.remove(cleanKey);
+    }
+    if (orderNum.isNotEmpty) {
+      expiredOrderKeys.remove(orderNum);
+    }
+
+    // 3. Immediately display the incoming order in available orders
+    if (orderData != null && orderData.isNotEmpty) {
+      final existingIndex = availableOrders.indexWhere((o) {
+        final String oKey = (o['orderkey'] ?? o['orderKey'] ?? o['id'] ?? '')
+            .toString()
+            .replaceAll('#', '')
+            .trim();
+        final String oNum = (o['orderNumber'] ?? '')
+            .toString()
+            .replaceAll('#', '')
+            .trim();
+        return (cleanKey.isNotEmpty &&
+                (oKey == cleanKey || oNum == cleanKey)) ||
+            (orderNum.isNotEmpty &&
+                (oKey == orderNum || oNum == orderNum));
+      });
+
+      if (existingIndex >= 0) {
+        availableOrders[existingIndex] = orderData;
+      } else {
+        availableOrders.insert(0, orderData);
+      }
+      availableOrders.refresh();
+      print(
+        "handleIncomingOrderNotification: inserted order $orderNum / $cleanKey into availableOrders (total: ${availableOrders.length})",
+      );
+    }
+
+    // 4. Schedule 30-sec auto-removal timer
+    if (cleanKey.isNotEmpty) {
+      scheduleOrderAutoRemoval(cleanKey);
+    } else if (orderNum.isNotEmpty) {
+      scheduleOrderAutoRemoval(orderNum);
+    }
+
+    // 5. Fetch server offers and update summary in background without removing active timer orders
+    await fetchPendingOffers();
+    await fetchSummaryData();
+  }
+
+  /// Automatically deletes an order from availableOrders after 30 seconds if not accepted
+  void scheduleOrderAutoRemoval(String orderKey) {
+    final cleanKey = orderKey.replaceAll('#', '').trim();
+    if (cleanKey.isEmpty) return;
+
+    // Reset timer if already running to guarantee 30 full seconds for new notification
+    _orderExpiryTimers[cleanKey]?.cancel();
+
+    _orderExpiryTimers[cleanKey] = Timer(const Duration(seconds: 30), () {
+      expiredOrderKeys.add(cleanKey);
+      final int initialCount = availableOrders.length;
+      availableOrders.removeWhere((o) {
+        final String oKey = (o['orderkey'] ?? o['orderKey'] ?? o['id'] ?? '')
+            .toString()
+            .replaceAll('#', '')
+            .trim();
+        final String oNum = (o['orderNumber'] ?? '')
+            .toString()
+            .replaceAll('#', '')
+            .trim();
+        return oKey == cleanKey || oNum == cleanKey;
+      });
+
+      availableOrders.refresh();
+      if (availableOrders.length < initialCount) {
+        print(
+          "Order $cleanKey was automatically deleted from available orders after 30 seconds (left: ${availableOrders.length}).",
+        );
+      }
+      _orderExpiryTimers.remove(cleanKey);
+
+      // Dismiss status bar notification upon 30s auto-expiry
+      NotificationService.cancelOrderNotification(cleanKey);
+      if (availableOrders.isEmpty) {
+        NotificationService.cancelAllNotifications();
+      }
+    });
+  }
+
   /// Fetch pending offers from API (ApiManager.pendingOffer)
   Future<void> fetchPendingOffers() async {
     isLoadingOffers.value = true;
@@ -251,11 +478,95 @@ class HomeController extends GetxController {
         if (model.items.isNotEmpty) {
           final mapped = model.items
               .map((e) => e.toAvailableOrderMap())
+              .where((order) {
+                final key = (order['orderkey'] ??
+                        order['orderKey'] ??
+                        order['id'] ??
+                        '')
+                    .toString()
+                    .replaceAll('#', '')
+                    .trim();
+                final num = (order['orderNumber'] ?? '')
+                    .toString()
+                    .replaceAll('#', '')
+                    .trim();
+                return !expiredOrderKeys.contains(key) &&
+                    !expiredOrderKeys.contains(num);
+              })
               .toList();
+
+          // Preserve any orders currently in availableOrders that have active timers running!
+          for (final existing in availableOrders) {
+            final eKey = (existing['orderkey'] ??
+                    existing['orderKey'] ??
+                    existing['id'] ??
+                    '')
+                .toString()
+                .replaceAll('#', '')
+                .trim();
+            final eNum = (existing['orderNumber'] ?? '')
+                .toString()
+                .replaceAll('#', '')
+                .trim();
+            final bool hasActiveTimer =
+                _orderExpiryTimers.containsKey(eKey) ||
+                _orderExpiryTimers.containsKey(eNum);
+            final bool alreadyInMapped = mapped.any((m) {
+              final mKey = (m['orderkey'] ??
+                      m['orderKey'] ??
+                      m['id'] ??
+                      '')
+                  .toString()
+                  .replaceAll('#', '')
+                  .trim();
+              final mNum = (m['orderNumber'] ?? '')
+                  .toString()
+                  .replaceAll('#', '')
+                  .trim();
+              return (mKey.isNotEmpty && mKey == eKey) ||
+                  (mNum.isNotEmpty && mNum == eNum);
+            });
+            if (hasActiveTimer && !alreadyInMapped) {
+              mapped.insert(0, existing);
+            }
+          }
+
           availableOrders.assignAll(mapped);
           print("availableOrders count updated: ${availableOrders.length}");
+
+          // Schedule 30-sec auto-removal for each incoming order if not already scheduled
+          for (final order in mapped) {
+            final String key = (order['orderkey'] ??
+                    order['orderKey'] ??
+                    order['id'] ??
+                    '')
+                .toString()
+                .replaceAll('#', '')
+                .trim();
+            if (key.isNotEmpty && !_orderExpiryTimers.containsKey(key)) {
+              scheduleOrderAutoRemoval(key);
+            }
+          }
         } else {
-          availableOrders.clear();
+          // If server returned 0 items, DO NOT clear orders that have active running timers!
+          availableOrders.removeWhere((o) {
+            final key = (o['orderkey'] ??
+                    o['orderKey'] ??
+                    o['id'] ??
+                    '')
+                .toString()
+                .replaceAll('#', '')
+                .trim();
+            final num = (o['orderNumber'] ?? '')
+                .toString()
+                .replaceAll('#', '')
+                .trim();
+            final bool hasActiveTimer =
+                _orderExpiryTimers.containsKey(key) ||
+                _orderExpiryTimers.containsKey(num);
+            return !hasActiveTimer;
+          });
+          availableOrders.refresh();
         }
       }
     } catch (e) {
@@ -267,6 +578,7 @@ class HomeController extends GetxController {
 
   /// Pull-to-refresh home data (summary, user profile, pending offers)
   Future<void> refreshHome() async {
+    expiredOrderKeys.clear();
     await Future.wait([
       fetchSummaryData(),
       fetchUserProfileData(),
@@ -274,17 +586,39 @@ class HomeController extends GetxController {
     ]);
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (isOnline.value) {
+        fetchPendingOffers();
+        fetchSummaryData();
+      }
+    }
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    for (final timer in _orderExpiryTimers.values) {
+      timer.cancel();
+    }
+    _orderExpiryTimers.clear();
+    super.onClose();
+  }
+
   /// Fetch user profile data to populate userName on Home view
   Future<void> fetchUserProfileData() async {
     try {
       if (Get.isRegistered<ProfileController>()) {
         final profileCtrl = Get.find<ProfileController>();
-        if (profileCtrl.driverName.value.isNotEmpty) {
-          userName.value = profileCtrl.driverName.value;
+        if (profileCtrl.driverName.value.isNotEmpty &&
+            profileCtrl.driverName.value != '...') {
+          userName.value =
+              WidgetManager.capitalizeWords(profileCtrl.driverName.value);
         }
         ever(profileCtrl.driverName, (String name) {
-          if (name.isNotEmpty) {
-            userName.value = name;
+          if (name.isNotEmpty && name != '...') {
+            userName.value = WidgetManager.capitalizeWords(name);
           }
         });
       }
@@ -302,8 +636,10 @@ class HomeController extends GetxController {
 
           if (dataObj != null && dataObj.profile != null) {
             final p = dataObj.profile!;
-            final String first = p.contactname?.toString().trim() ?? '';
-            final String last = p.surname?.toString().trim() ?? '';
+            final String first =
+                WidgetManager.capitalizeWords(p.contactname?.toString());
+            final String last =
+                WidgetManager.capitalizeWords(p.surname?.toString());
             if (first.isNotEmpty && last.isNotEmpty) {
               userName.value = "$first $last";
             } else if (first.isNotEmpty) {

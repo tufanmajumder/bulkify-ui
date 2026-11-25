@@ -88,8 +88,10 @@ class ProfileController extends GetxController {
     // 1. Profile (Name)
     final Profile? p = dataObj.profile;
     if (p != null) {
-      final String first = p.contactname?.toString().trim() ?? '';
-      final String last = p.surname?.toString().trim() ?? '';
+      final String first =
+          WidgetManager.capitalizeWords(p.contactname?.toString());
+      final String last =
+          WidgetManager.capitalizeWords(p.surname?.toString());
       if (first.isNotEmpty && last.isNotEmpty) {
         driverName.value = "$first $last";
       } else if (first.isNotEmpty) {
