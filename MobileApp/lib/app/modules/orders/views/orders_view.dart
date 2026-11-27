@@ -1,10 +1,11 @@
-﻿import 'package:bulkify/app/data/utils/color_manager.dart';
+import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/data/utils/string_manager.dart';
 import 'package:bulkify/app/routes/app_pages.dart';
 import 'package:bulkify/app/modules/orders/controllers/orders_controller.dart';
 
@@ -279,16 +280,51 @@ class OrdersView extends GetView<OrdersController> {
       avatarIcon = Icon(
         // iconType == 'bike'
         //     ? Icons.two_wheeler_rounded
-        order['orderstatus'].toString() == "Picked up"
-            ? Icons.local_shipping_outlined
-            : Icons.check,
+        // order['orderstatus'].toString().toLowerCase().contains('pick')
+        //     ? Icons.local_shipping_outlined
+        //     :
+        Icons.check,
         size: 20.r,
         color: const Color(0xFFD97706),
       );
     }
 
     return GestureDetector(
-      onTap: () => Get.toNamed(Routes.ORDER_DETAILS, arguments: order),
+      onTap: () async {
+        final rawStatus =
+            (order['orderstatus'] ??
+                    order['status'] ??
+                    order['statusText'] ??
+                    '')
+                .toString()
+                .trim()
+                .toLowerCase();
+        final bool isPickedUpOrInTransit = rawStatus.contains('pick') ||
+            rawStatus.contains('transit') ||
+            rawStatus.contains('out_for_delivery') ||
+            (rawStatus.contains('out') && rawStatus.contains('deliver'));
+
+        if (isPickedUpOrInTransit && !rawStatus.contains('delivered')) {
+          await Get.toNamed(
+            Routes.NAVIGATE_TO_DELIVER,
+            arguments: {
+              ...order,
+              'orderId': order['orderNumber'] ?? order['id'] ?? '',
+              'orderNumber': order['orderNumber'] ?? order['id'] ?? '',
+              'customerName': order['customerName'] ?? '',
+              'dropOffAddress':
+                  order['dropOffAddress'] ?? order['address'] ?? '',
+              'orderTotal': order['amount'] ?? 0.0,
+              'amount': order['amount'] ?? 0.0,
+              'customerPhone': order['customerPhone'] ?? '',
+              'orderKey': order['orderKey'] ?? order['orderkey'] ?? '',
+            },
+          );
+        } else {
+          await Get.toNamed(Routes.ORDER_DETAILS, arguments: order);
+        }
+        controller.refreshOrders();
+      },
       child: Container(
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
@@ -353,17 +389,41 @@ class OrdersView extends GetView<OrdersController> {
                           ),
                           decoration: BoxDecoration(
                             color:
-                                order['orderstatus'].toString() == "Picked up"
+                                (order['orderstatus']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('pick') ||
+                                        order['orderstatus']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('transit') ||
+                                        order['orderstatus']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('out'))
                                 ? const Color(0xFF3B82F6).withValues(alpha: 0.1)
                                 : const Color(0xFFFEF4E8),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: WidgetManager.customText(
-                            text: order['orderstatus'].toString(),
+                            text: StringManager.formatOrderStatus(
+                              order['orderstatus'].toString(),
+                            ),
                             fontSize: 11.sp,
                             fontWeight: FontWeight.w700,
                             color:
-                                order['orderstatus'].toString() == "Picked up"
+                                (order['orderstatus']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('pick') ||
+                                        order['orderstatus']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('transit') ||
+                                        order['orderstatus']
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('out'))
                                 ? const Color(0xFF3B82F6)
                                 : const Color(0xFFD97706),
                           ),
@@ -381,14 +441,15 @@ class OrdersView extends GetView<OrdersController> {
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: WidgetManager.customText(
-                            text:
-                                (order['statusText'] != null &&
-                                    order['statusText']
-                                        .toString()
-                                        .trim()
-                                        .isNotEmpty)
-                                ? order['statusText'].toString()
-                                : "Delivered",
+                            text: StringManager.formatOrderStatus(
+                              (order['statusText'] != null &&
+                                      order['statusText']
+                                          .toString()
+                                          .trim()
+                                          .isNotEmpty)
+                                  ? order['statusText'].toString()
+                                  : "Delivered",
+                            ),
                             fontSize: 11.sp,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF109B5B),
@@ -406,14 +467,15 @@ class OrdersView extends GetView<OrdersController> {
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: WidgetManager.customText(
-                            text:
-                                (order['statusText'] != null &&
-                                    order['statusText']
-                                        .toString()
-                                        .trim()
-                                        .isNotEmpty)
-                                ? order['statusText'].toString()
-                                : "Rejected",
+                            text: StringManager.formatOrderStatus(
+                              (order['statusText'] != null &&
+                                      order['statusText']
+                                          .toString()
+                                          .trim()
+                                          .isNotEmpty)
+                                  ? order['statusText'].toString()
+                                  : "Rejected",
+                            ),
                             fontSize: 11.sp,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF71717A),

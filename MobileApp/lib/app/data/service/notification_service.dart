@@ -584,6 +584,11 @@ class NotificationService {
           duration: const Duration(seconds: 2),
         );
 
+        fallbackOrder['orderstatus'] = 'accepted';
+        fallbackOrder['status'] = 'accepted';
+        fallbackOrder['statusText'] = 'Accepted';
+        fallbackOrder['statusType'] = 'active';
+
         final Location location = Location();
         bool serviceEnabled = await location.serviceEnabled();
         PermissionStatus permission = await location.hasPermission();

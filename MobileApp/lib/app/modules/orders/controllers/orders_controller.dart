@@ -17,7 +17,7 @@ class OrdersController extends GetxController {
       <Map<String, dynamic>>[].obs;
   final RxInt activePage = 1.obs;
   final RxInt activeTotalPages = 1.obs;
-  final int activePageSize = 6;
+  final int activePageSize = 10;
   final RxBool hasNoMoreActiveData = false.obs;
 
   // API & State for Completed Orders
@@ -28,7 +28,7 @@ class OrdersController extends GetxController {
       <Map<String, dynamic>>[].obs;
   final RxInt completedPage = 1.obs;
   final RxInt completedTotalPages = 1.obs;
-  final int completedPageSize = 6;
+  final int completedPageSize = 10;
 
   // API & State for Rejected Orders
   final RxBool isRejectedLoading = false.obs;
@@ -38,7 +38,7 @@ class OrdersController extends GetxController {
       <Map<String, dynamic>>[].obs;
   final RxInt rejectedPage = 1.obs;
   final RxInt rejectedTotalPages = 1.obs;
-  final int rejectedPageSize = 6;
+  final int rejectedPageSize = 10;
   final RxBool hasNoMoreRejectedData = false.obs;
 
   // Selected Filter Index (0: Active, 1: Completed, 2: Rejected)
@@ -92,7 +92,7 @@ class OrdersController extends GetxController {
       final RejectedModel? response = await _authService.getOrderList(
         page: page,
         pagesize: activePageSize,
-        status: "Active",
+        scope: "active",
         sessionId: sessionId,
       );
       if (response != null) {
@@ -113,14 +113,24 @@ class OrdersController extends GetxController {
             final String iconType = (method == 'bike') ? 'bike' : 'van';
             return <String, dynamic>{
               'id': item.orderNumber?.toString() ?? '',
+              'orderNumber': item.orderNumber?.toString() ?? '',
+              'orderKey': item.orderKey?.toString() ?? '',
+              'orderkey': item.orderKey?.toString() ?? '',
               'storeName': item.restaurantName?.toString() ?? '',
               'address': item.deliveryAddress?.toString() ?? '',
+              'dropOffAddress': item.deliveryAddress?.toString() ?? '',
               'amount': double.tryParse(item.amount?.toString() ?? '0') ?? 0.0,
               'orderstatus': item.orderstatus?.toString(),
               'statusText': item.status?.toString() ?? 'Active',
               'statusType': 'active',
               'deliveryMethod': item.deliveryMethod?.toString() ?? '',
               'iconType': iconType,
+              'customerName': item.customerName?.toString() ?? '',
+              'customerPhone': item.customerPhone?.toString() ?? '',
+              'totalTax': item.totalTax ?? 0.0,
+              'taxes': item.taxes,
+              'items': item.items,
+              'raw': item.raw,
             };
           }).toList();
 
@@ -180,7 +190,7 @@ class OrdersController extends GetxController {
       final RejectedModel? response = await _authService.getOrderList(
         page: page,
         pagesize: completedPageSize,
-        status: "Completed",
+        scope: "completed",
         sessionId: sessionId,
       );
       if (response != null) {
@@ -201,13 +211,24 @@ class OrdersController extends GetxController {
             final String iconType = (method == 'bike') ? 'bike' : 'van';
             return <String, dynamic>{
               'id': item.orderNumber?.toString() ?? '',
+              'orderNumber': item.orderNumber?.toString() ?? '',
+              'orderKey': item.orderKey?.toString() ?? '',
+              'orderkey': item.orderKey?.toString() ?? '',
               'storeName': item.restaurantName?.toString() ?? '',
               'address': item.deliveryAddress?.toString() ?? '',
+              'dropOffAddress': item.deliveryAddress?.toString() ?? '',
               'amount': double.tryParse(item.amount?.toString() ?? '0') ?? 0.0,
+              'orderstatus': item.orderstatus?.toString(),
               'statusText': item.status?.toString() ?? 'Completed',
               'statusType': 'completed',
               'deliveryMethod': item.deliveryMethod?.toString() ?? '',
               'iconType': iconType,
+              'customerName': item.customerName?.toString() ?? '',
+              'customerPhone': item.customerPhone?.toString() ?? '',
+              'totalTax': item.totalTax ?? 0.0,
+              'taxes': item.taxes,
+              'items': item.items,
+              'raw': item.raw,
             };
           }).toList();
 
@@ -263,7 +284,7 @@ class OrdersController extends GetxController {
       final RejectedModel? response = await _authService.getOrderList(
         page: page,
         pagesize: rejectedPageSize,
-        status: "Rejected",
+        scope: "rejected",
         sessionId: sessionId,
       );
       if (response != null) {
@@ -284,13 +305,24 @@ class OrdersController extends GetxController {
             final String iconType = (method == 'bike') ? 'bike' : 'van';
             return <String, dynamic>{
               'id': item.orderNumber?.toString() ?? '',
+              'orderNumber': item.orderNumber?.toString() ?? '',
+              'orderKey': item.orderKey?.toString() ?? '',
+              'orderkey': item.orderKey?.toString() ?? '',
               'storeName': item.restaurantName?.toString() ?? '',
               'address': item.deliveryAddress?.toString() ?? '',
+              'dropOffAddress': item.deliveryAddress?.toString() ?? '',
               'amount': double.tryParse(item.amount?.toString() ?? '0') ?? 0.0,
+              'orderstatus': item.orderstatus?.toString(),
               'statusText': item.status?.toString() ?? 'Rejected',
               'statusType': 'rejected',
               'deliveryMethod': item.deliveryMethod?.toString() ?? '',
               'iconType': iconType,
+              'customerName': item.customerName?.toString() ?? '',
+              'customerPhone': item.customerPhone?.toString() ?? '',
+              'totalTax': item.totalTax ?? 0.0,
+              'taxes': item.taxes,
+              'items': item.items,
+              'raw': item.raw,
             };
           }).toList();
 

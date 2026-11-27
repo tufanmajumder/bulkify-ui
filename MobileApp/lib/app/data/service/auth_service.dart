@@ -233,7 +233,8 @@ class AuthService extends GetConnect implements GetxService {
   Future<RejectedModel?> getOrderList({
     int page = 1,
     int pagesize = 10,
-    String status = "Rejected",
+    String scope = "active",
+    String? status,
     String? sessionId,
   }) async {
     final String url = ApiManager.getOrderList;
@@ -253,16 +254,21 @@ class AuthService extends GetConnect implements GetxService {
       headers['Authorization'] = 'Bearer $cleanToken';
     }
 
+    final String resolvedScope = (scope.isNotEmpty && scope != "active"
+            ? scope
+            : (status ?? scope))
+        .toLowerCase();
+
     final Map<String, dynamic> bodyData = {
       "page": page,
       "pagesize": pagesize,
-      "status": status,
+      "scope": resolvedScope,
     };
 
-    // print("url in getOrderList (GET with body)...${ApiManager.baseUrl}$url");
-    // print("token in getOrderList...$token");
-    // print("headers in getOrderList...$headers");
-    // print("body in getOrderList...$bodyData");
+    print("url in getOrderList...${ApiManager.baseUrl}$url");
+    print("token in getOrderList...$token");
+    print("headers in getOrderList...$headers");
+    print("body in getOrderList...$bodyData");
 
     try {
       final response = await dio.post(
@@ -467,10 +473,7 @@ class AuthService extends GetConnect implements GetxService {
       // 1. Try POST without body as specified in curl
       Response response;
       try {
-        response = await dio.post(
-          url,
-          options: Options(headers: headers),
-        );
+        response = await dio.post(url, options: Options(headers: headers));
       } catch (e) {
         response = await dio.post(
           url,
@@ -584,7 +587,8 @@ class AuthService extends GetConnect implements GetxService {
       print("DioException acceptOrder status: ${e.response?.statusCode}");
       print("DioException acceptOrder data: ${e.response?.data}");
 
-      if (e.response?.data != null && e.response!.data is Map<String, dynamic>) {
+      if (e.response?.data != null &&
+          e.response!.data is Map<String, dynamic>) {
         return e.response!.data as Map<String, dynamic>;
       }
 
@@ -659,7 +663,8 @@ class AuthService extends GetConnect implements GetxService {
       print("DioException rejectOrder status: ${e.response?.statusCode}");
       print("DioException rejectOrder data: ${e.response?.data}");
 
-      if (e.response?.data != null && e.response!.data is Map<String, dynamic>) {
+      if (e.response?.data != null &&
+          e.response!.data is Map<String, dynamic>) {
         return e.response!.data as Map<String, dynamic>;
       }
 
@@ -672,6 +677,88 @@ class AuthService extends GetConnect implements GetxService {
       return null;
     } catch (e) {
       print("General exception in rejectOrder: $e");
+      WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      return null;
+    }
+  }
+
+  // updateOrderStatusService (driver/v1/status)
+  Future<Map<String, dynamic>?> updateOrderStatus({
+    required String orderKey,
+    String state = "picked_up",
+    double? latitude,
+    double? longitude,
+    String reasonCode = "",
+    String remarks = "",
+    String? sessionId,
+  }) async {
+    final String url = ApiManager.driverStatus;
+    String? token = sessionId;
+    if (token == null || token.isEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('sessionId');
+    }
+
+    final headers = <String, dynamic>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      final cleanToken = token.replaceAll('Bearer ', '').trim();
+      headers['Authorization'] = 'Bearer $cleanToken';
+    }
+
+    final Map<String, dynamic> body = {
+      "latitude": latitude,
+      "longitude": longitude,
+      "orderkey": orderKey,
+      "reasoncode": reasonCode,
+      "remarks": remarks,
+      "state": state,
+    };
+
+    print("url in updateOrderStatus...${ApiManager.baseUrl}$url");
+    print("Authorization token...${headers['Authorization']}");
+    print("body in updateOrderStatus...$body");
+
+    try {
+      final response = await dio.post(
+        url,
+        data: body,
+        options: Options(headers: headers),
+      );
+      print("updateOrderStatus status...${response.statusCode}");
+      print("updateOrderStatus data...${response.data}");
+
+      if (response.data != null) {
+        if (response.data is Map<String, dynamic>) {
+          return response.data as Map<String, dynamic>;
+        } else if (response.data is String) {
+          try {
+            return json.decode(response.data) as Map<String, dynamic>;
+          } catch (_) {}
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      print("DioException updateOrderStatus status: ${e.response?.statusCode}");
+      print("DioException updateOrderStatus data: ${e.response?.data}");
+
+      if (e.response?.data != null &&
+          e.response!.data is Map<String, dynamic>) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+
+      if (e.type == DioExceptionType.connectionError ||
+          e.error is SocketException) {
+        WidgetManager.showAlertSnackBar(StringManager.unableToReachInternet, 3);
+      } else {
+        WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
+      }
+      return null;
+    } catch (e) {
+      print("General exception in updateOrderStatus: $e");
       WidgetManager.showAlertSnackBar(StringManager.somethingWentWrong, 3);
       return null;
     }

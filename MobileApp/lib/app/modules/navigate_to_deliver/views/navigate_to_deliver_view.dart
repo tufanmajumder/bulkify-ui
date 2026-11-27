@@ -1,4 +1,4 @@
-﻿import 'package:bulkify/app/data/utils/color_manager.dart';
+import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,7 +28,7 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
           child: Row(
             children: [
               GestureDetector(
-                onTap: () => Get.back(),
+                onTap: controller.onBackPressed,
                 child: Container(
                   width: 42.r,
                   height: 42.r,
@@ -243,18 +243,26 @@ class NavigateToDeliverView extends GetView<NavigateToDeliverController> {
       ],
     );
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: kIsWeb
-            ? Center(
-                child: SizedBox(
-                  width: 550,
-                  height: double.infinity,
-                  child: mainContent,
-                ),
-              )
-            : mainContent,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          controller.onBackPressed(skipPop: true);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        body: SafeArea(
+          child: kIsWeb
+              ? Center(
+                  child: SizedBox(
+                    width: 550,
+                    height: double.infinity,
+                    child: mainContent,
+                  ),
+                )
+              : mainContent,
+        ),
       ),
     );
   }

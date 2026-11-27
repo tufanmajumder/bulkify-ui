@@ -90,7 +90,16 @@ class DeviceLocationController extends GetxController {
 
       // 6. Navigate to Order Details or previous screen
       if (orderArgument != null) {
-        Get.offNamed(Routes.ORDER_DETAILS, arguments: orderArgument);
+        if (orderArgument is Map) {
+          final map = Map<String, dynamic>.from(orderArgument as Map);
+          map['orderstatus'] = 'accepted';
+          map['status'] = 'accepted';
+          map['statusText'] = 'Accepted';
+          map['statusType'] = 'active';
+          Get.offNamed(Routes.ORDER_DETAILS, arguments: map);
+        } else {
+          Get.offNamed(Routes.ORDER_DETAILS, arguments: orderArgument);
+        }
       } else {
         Get.back();
       }

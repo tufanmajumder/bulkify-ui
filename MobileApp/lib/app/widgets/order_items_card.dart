@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:bulkify/app/data/utils/widget_manager.dart';
 
@@ -31,7 +31,7 @@ class OrderItemsCard extends StatelessWidget {
               color: textPrimary,
             ),
             WidgetManager.customText(
-              text: "$totalCount Items",
+              text: "$totalCount ${totalCount == 1 ? 'Item' : 'Items'}",
               fontSize: 15.sp,
               fontWeight: FontWeight.w700,
               color: textSecondary,
@@ -55,7 +55,19 @@ class OrderItemsCard extends StatelessWidget {
             ],
           ),
           padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
-          child: ListView.separated(
+          child: items.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20.h),
+                    child: WidgetManager.customText(
+                      text: "No items available",
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: textSecondary,
+                    ),
+                  ),
+                )
+              : ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: items.length,

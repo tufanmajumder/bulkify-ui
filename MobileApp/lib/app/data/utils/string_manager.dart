@@ -109,4 +109,32 @@ class StringManager {
   static const String camera = 'Camera';
   static const String gallery = 'Gallery';
   static const String failedToPickImage = 'Failed to pick image:';
+
+  static String formatOrderStatus(String? rawStatus) {
+    if (rawStatus == null || rawStatus.trim().isEmpty) return '';
+    final s = rawStatus.trim().toLowerCase().replaceAll('-', '_');
+    if (s == 'picked_up' || s == 'pickedup') {
+      return 'Picked Up';
+    } else if (s == 'in_transit' || s == 'intransit') {
+      return 'In Transit';
+    } else if (s == 'out_for_delivery' || s == 'outfordelivery') {
+      return 'Out For Delivery';
+    } else if (s == 'accepted') {
+      return 'Accepted';
+    } else if (s == 'rejected') {
+      return 'Rejected';
+    } else if (s == 'completed') {
+      return 'Completed';
+    } else if (s == 'delivered') {
+      return 'Delivered';
+    } else if (s == 'assigned') {
+      return 'Assigned';
+    } else if (s == 'pending') {
+      return 'Pending';
+    }
+    return rawStatus.split(RegExp(r'[\s_]+')).map((w) {
+      if (w.isEmpty) return '';
+      return w[0].toUpperCase() + w.substring(1).toLowerCase();
+    }).join(' ');
+  }
 }

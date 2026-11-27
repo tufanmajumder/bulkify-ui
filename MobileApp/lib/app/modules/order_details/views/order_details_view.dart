@@ -1,4 +1,4 @@
-﻿import 'package:bulkify/app/data/utils/color_manager.dart';
+import 'package:bulkify/app/data/utils/color_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -30,7 +30,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
           child: Row(
             children: [
               GestureDetector(
-                onTap: () => Get.back(),
+                onTap: controller.onBackPressed,
                 child: Container(
                   width: 42.r,
                   height: 42.r,
@@ -55,9 +55,9 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                 ),
               ),
               SizedBox(width: 14.w),
-              Obx(
-                () => Expanded(
-                  child: WidgetManager.customText(
+              Expanded(
+                child: Obx(
+                  () => WidgetManager.customText(
                     text: "Order #${controller.orderId.value}",
                     fontSize: 19.sp,
                     fontWeight: FontWeight.w800,
@@ -110,6 +110,29 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Total Tax Row
+                Obx(
+                  () => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      WidgetManager.customText(
+                        text: "Total Tax",
+                        fontSize: 14.5.sp,
+                        fontWeight: FontWeight.w500,
+                        color: textSecondary,
+                      ),
+                      WidgetManager.customText(
+                        text:
+                            "₹ ${controller.totalTax.value.toStringAsFixed(2)}",
+                        fontSize: 16.5.sp,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8.h),
+
                 // Total Row
                 Obx(
                   () => Row(
@@ -133,7 +156,7 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                   ),
                 ),
 
-                // Order Picked / Confirm Pickup Button (Hidden for Completed / Rejected tabs or when orderstatus is not 'Accepted')
+                // Order Picked / Confirm Pickup Button (Hidden for Completed / Rejected tabs or when orderstatus is already picked up / in transit / delivered)
                 Obx(() {
                   final String st = controller.statusType.value.toLowerCase();
                   final bool isFromCompletedOrRejected =
@@ -141,11 +164,16 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                       st == 'rejected' ||
                       st == 'delivered';
 
-                  final bool isAccepted =
-                      controller.orderstatus.value.trim().toLowerCase() ==
-                      'accepted';
+                  final String os =
+                      controller.orderstatus.value.trim().toLowerCase();
+                  final bool isAlreadyPickedUp = os.contains('pick') ||
+                      os.contains('transit') ||
+                      os.contains('out') ||
+                      os.contains('delivered') ||
+                      os.contains('complete') ||
+                      os.contains('reject');
 
-                  if (isFromCompletedOrRejected || !isAccepted) {
+                  if (isFromCompletedOrRejected || isAlreadyPickedUp) {
                     return const SizedBox.shrink();
                   }
 
@@ -170,15 +198,24 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: controller.onStartOrder,
+                            onTap: controller.onConfirmPickup,
                             borderRadius: BorderRadius.circular(26.r),
                             child: Center(
-                              child: WidgetManager.customText(
-                                text: StringManager.orderPicked,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
+                              child: controller.isConfirmingPickup.value
+                                  ? SizedBox(
+                                      width: 22.r,
+                                      height: 22.r,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : WidgetManager.customText(
+                                      text: StringManager.orderPicked,
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
                             ),
                           ),
                         ),
@@ -193,18 +230,26 @@ class OrderDetailsView extends GetView<OrderDetailsController> {
       ],
     );
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: kIsWeb
-            ? Center(
-                child: SizedBox(
-                  width: 550,
-                  height: double.infinity,
-                  child: mainContent,
-                ),
-              )
-            : mainContent,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          controller.onBackPressed(skipPop: true);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        body: SafeArea(
+          child: kIsWeb
+              ? Center(
+                  child: SizedBox(
+                    width: 550,
+                    height: double.infinity,
+                    child: mainContent,
+                  ),
+                )
+              : mainContent,
+        ),
       ),
     );
   }

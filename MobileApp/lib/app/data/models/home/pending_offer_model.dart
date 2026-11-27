@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:bulkify/app/data/models/order/reject_model.dart';
 
 PendingOfferModel pendingOfferModelFromJson(dynamic str) =>
     PendingOfferModel.fromAny(str is String ? json.decode(str) : str);
@@ -347,6 +348,14 @@ class PendingOrderItem {
           : '',
       'orderstatus': shipmentstatus ?? state ?? 'Pending',
       'status': state ?? shipmentstatus ?? 'Pending',
+      'totalTax': Item.calculateTotalTax(raw["taxes"] ?? raw["tax"]),
+      'taxes': raw["taxes"] ?? raw["tax"],
+      'items': Item.parseOrderItems(raw["items"] ??
+          raw["orderitems"] ??
+          raw["order_items"] ??
+          raw["products"] ??
+          raw["orderlines"] ??
+          raw["lines"]),
       'raw': raw,
     };
   }

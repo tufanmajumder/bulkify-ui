@@ -225,12 +225,18 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         bool serviceEnabled = await location.serviceEnabled();
         PermissionStatus permission = await location.hasPermission();
 
+        final acceptedOrder = Map<String, dynamic>.from(order);
+        acceptedOrder['orderstatus'] = 'accepted';
+        acceptedOrder['status'] = 'accepted';
+        acceptedOrder['statusText'] = 'Accepted';
+        acceptedOrder['statusType'] = 'active';
+
         if (!serviceEnabled || permission != PermissionStatus.granted) {
           isLocationEnabled.value = false;
-          Get.toNamed(Routes.DEVICE_LOCATION, arguments: order);
+          Get.toNamed(Routes.DEVICE_LOCATION, arguments: acceptedOrder);
         } else {
           isLocationEnabled.value = true;
-          Get.toNamed(Routes.ORDER_DETAILS, arguments: order);
+          Get.toNamed(Routes.ORDER_DETAILS, arguments: acceptedOrder);
         }
       } else {
         final String errorMsg =

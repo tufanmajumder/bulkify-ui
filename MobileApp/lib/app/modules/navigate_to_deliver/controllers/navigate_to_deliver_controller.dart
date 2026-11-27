@@ -1,7 +1,8 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bulkify/app/data/utils/widget_manager.dart';
+import 'package:bulkify/app/modules/orders/controllers/orders_controller.dart';
 import 'package:bulkify/app/routes/app_pages.dart';
 
 class NavigateToDeliverController extends GetxController {
@@ -17,24 +18,86 @@ class NavigateToDeliverController extends GetxController {
     super.onInit();
     if (Get.arguments != null && Get.arguments is Map<String, dynamic>) {
       final data = Get.arguments as Map<String, dynamic>;
-      if (data['orderId'] != null) {
-        orderId.value = data['orderId'].toString();
+      final resolvedId = data['orderId'] ?? data['orderNumber'] ?? data['id'];
+      if (resolvedId != null && resolvedId.toString().trim().isNotEmpty) {
+        orderId.value = resolvedId.toString().replaceAll('#', '').trim();
       }
-      if (data['customerName'] != null) {
-        customerName.value = data['customerName'];
+
+      String resolvedCustomer = (data['customerName'] ?? '').toString().trim();
+      if (resolvedCustomer.isEmpty && data['raw'] != null && data['raw'] is Map) {
+        final raw = data['raw'] as Map;
+        resolvedCustomer = (raw['customerName'] ??
+                raw['customername'] ??
+                raw['clientname'] ??
+                (raw['customer'] is Map ? (raw['customer']['name'] ?? raw['customer']['fullname']) : '') ??
+                (raw['drop'] is Map ? (raw['drop']['name'] ?? raw['drop']['contactname']) : '') ??
+                '')
+            .toString()
+            .trim();
       }
-      if (data['dropOffAddress'] != null || data['address'] != null) {
-        deliveryAddress.value = (data['dropOffAddress'] ?? data['address'])
-            .toString();
+      if (resolvedCustomer.isNotEmpty) {
+        customerName.value = resolvedCustomer;
       }
+
+      String resolvedAddress = (data['dropOffAddress'] ??
+              data['address'] ??
+              data['deliveryAddress'] ??
+              '')
+          .toString()
+          .trim();
+      if (resolvedAddress.isEmpty && data['raw'] != null && data['raw'] is Map) {
+        final raw = data['raw'] as Map;
+        resolvedAddress = (raw['deliveryAddress'] ??
+                raw['deliveryaddress'] ??
+                raw['address'] ??
+                (raw['drop'] is Map ? (raw['drop']['address'] ?? raw['drop']['addressline']) : '') ??
+                '')
+            .toString()
+            .trim();
+      }
+      if (resolvedAddress.isNotEmpty) {
+        deliveryAddress.value = resolvedAddress;
+      }
+
       if (data['orderTotal'] != null && data['orderTotal'] is num) {
         orderValue.value = (data['orderTotal'] as num).toDouble();
       } else if (data['amount'] != null && data['amount'] is num) {
         orderValue.value = (data['amount'] as num).toDouble();
+      } else if (data['orderTotal'] != null || data['amount'] != null) {
+        final parsedVal = double.tryParse((data['orderTotal'] ?? data['amount'])
+            .toString()
+            .replaceAll('₹', '')
+            .replaceAll(',', '')
+            .trim());
+        if (parsedVal != null) {
+          orderValue.value = parsedVal;
+        }
       }
-      if (data['customerPhone'] != null) {
-        customerPhone.value = data['customerPhone'];
+
+      String resolvedPhone = (data['customerPhone'] ?? '').toString().trim();
+      if (resolvedPhone.isEmpty && data['raw'] != null && data['raw'] is Map) {
+        final raw = data['raw'] as Map;
+        resolvedPhone = (raw['customerPhone'] ??
+                raw['customerphone'] ??
+                raw['phone'] ??
+                (raw['customer'] is Map ? (raw['customer']['phone'] ?? raw['customer']['contactnumber']) : '') ??
+                (raw['drop'] is Map ? (raw['drop']['phone'] ?? raw['drop']['contactnumber']) : '') ??
+                '')
+            .toString()
+            .trim();
       }
+      if (resolvedPhone.isNotEmpty) {
+        customerPhone.value = resolvedPhone;
+      }
+    }
+  }
+
+  void onBackPressed({bool skipPop = false}) {
+    if (Get.isRegistered<OrdersController>()) {
+      Get.find<OrdersController>().refreshOrders();
+    }
+    if (!skipPop) {
+      Get.back();
     }
   }
 
