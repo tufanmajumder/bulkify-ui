@@ -1103,11 +1103,17 @@ class OrderDetailsScreen extends StatelessWidget {
                 controller.shipmentStatus.value,
                 customValueWidget: Obx(() {
                   final raw = controller.shipmentStatus.value.trim();
-                  final display = (raw.isEmpty || raw == 'null' || raw == '-')
-                      ? '-'
-                      : (raw.length == 1
-                            ? raw.toUpperCase()
-                            : raw[0].toUpperCase() + raw.substring(1));
+                  if (raw.isEmpty || raw == 'null' || raw == '-') {
+                    return const Text(
+                      '-',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFF97316),
+                      ),
+                    );
+                  }
+                  final display = controller.formatTitleCase(raw);
                   return Text(
                     display,
                     style: const TextStyle(
@@ -3320,64 +3326,7 @@ class OrderDetailsScreen extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Refresh Button (on left side)
-                        Tooltip(
-                          message: 'Refresh Order Details',
-                          child: InkWell(
-                            onTap: controller.isRefreshingPage.value
-                                ? null
-                                : () => controller.refreshOrderDetails(),
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              height: 34,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  controller.isRefreshingPage.value
-                                      ? const SizedBox(
-                                          width: 14,
-                                          height: 14,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              Color(0xFFCF4340),
-                                            ),
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.refresh_rounded,
-                                          size: 16,
-                                          color: Color(0xFF475569),
-                                        ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    'Refresh',
-                                    style: TextStyle(
-                                      fontFamily: 'Public-Sans',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF475569),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                         if (step == 5) ...[
-                          const SizedBox(width: 8),
                           InkWell(
                             onTap: () {},
                             borderRadius: BorderRadius.circular(6),
@@ -3433,34 +3382,94 @@ class OrderDetailsScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                        ] else if (step > 0 && step < 4) ...[
-                          const SizedBox(width: 8),
-                          InkWell(
-                            onTap: () => controller.setShippingStep(step + 1),
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              height: 34,
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFCF4340),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                step == 1
-                                    ? 'Mark as Picked Up'
-                                    : step == 2
-                                    ? 'Mark as In Transit'
-                                    : 'Mark as Out for Delivery',
-                                style: const TextStyle(
-                                  fontFamily: 'Public-Sans',
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w500,
+                        ] else ...[
+                          // Refresh Button (on left side)
+                          Tooltip(
+                            message: 'Refresh Order Details',
+                            child: InkWell(
+                              onTap: controller.isRefreshingPage.value
+                                  ? null
+                                  : () => controller.refreshOrderDetails(),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
                                   color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    controller.isRefreshingPage.value
+                                        ? const SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                Color(0xFFCF4340),
+                                              ),
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.refresh_rounded,
+                                            size: 16,
+                                            color: Color(0xFF475569),
+                                          ),
+                                    const SizedBox(width: 6),
+                                    const Text(
+                                      'Refresh',
+                                      style: TextStyle(
+                                        fontFamily: 'Public-Sans',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
+                          if (step >= 1 && step <= 4) ...[
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () => controller.setShippingStep(step + 1),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                height: 34,
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFCF4340),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  step == 1
+                                      ? 'Mark as Picked Up'
+                                      : step == 2
+                                      ? 'Mark as In Transit'
+                                      : step == 3
+                                      ? 'Mark as Out for Delivery'
+                                      : 'Mark as Delivered',
+                                  style: const TextStyle(
+                                    fontFamily: 'Public-Sans',
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ],
                     ),
@@ -4293,19 +4302,23 @@ class OrderDetailsScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
+                          text: TextSpan(
+                            style: const TextStyle(
                               fontFamily: 'Public-Sans',
                               fontSize: 12.5,
                             ),
                             children: [
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Received by  ',
                                 style: TextStyle(color: Color(0xFF64748B)),
                               ),
                               TextSpan(
-                                text: 'Christian Teigland',
-                                style: TextStyle(
+                                text: controller.customer.value.isNotEmpty
+                                    ? controller.customer.value
+                                    : (controller.shippingName.value.isNotEmpty
+                                        ? controller.shippingName.value
+                                        : 'Christian Teigland'),
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF1E293B),
                                 ),
@@ -4315,19 +4328,21 @@ class OrderDetailsScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
+                          text: TextSpan(
+                            style: const TextStyle(
                               fontFamily: 'Public-Sans',
                               fontSize: 12.5,
                             ),
                             children: [
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Delivered  ',
                                 style: TextStyle(color: Color(0xFF64748B)),
                               ),
                               TextSpan(
-                                text: 'Tue, 11:29 AM',
-                                style: TextStyle(
+                                text: controller.deliveredTime.value.isNotEmpty
+                                    ? controller.deliveredTime.value
+                                    : 'Tue, 11:29 AM',
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF1E293B),
                                 ),
@@ -4370,19 +4385,21 @@ class OrderDetailsScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
+                          text: TextSpan(
+                            style: const TextStyle(
                               fontFamily: 'Public-Sans',
                               fontSize: 12.5,
                             ),
                             children: [
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Driver  ',
                                 style: TextStyle(color: Color(0xFF64748B)),
                               ),
                               TextSpan(
-                                text: 'Jhon Doe',
-                                style: TextStyle(
+                                text: controller.assignedDriverName.value.isNotEmpty
+                                    ? controller.assignedDriverName.value
+                                    : 'Jhon Doe',
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF1E293B),
                                 ),
@@ -4547,34 +4564,107 @@ class OrderDetailsScreen extends StatelessWidget {
                 : 'Customer');
       final step = controller.currentShippingStep.value;
 
-      final activities = <Map<String, String>>[
-        if (controller.shippingActivities.isNotEmpty)
-          ...controller.shippingActivities.map((act) => {
-                'time': act.timestamp,
-                'title': act.title,
-                'subtitle': act.description,
-              })
-        else ...[
-          if (step >= 3)
-            {
-              'time': 'Today 14:40',
-              'title': 'In Transit',
-              'subtitle': 'Left pickup hub · Driver App',
-            },
-          if (step >= 2)
-            {
-              'time': 'Today 14:12',
-              'title': 'Picked up by $driverName',
-              'subtitle': '12 items scanned and verified · Driver App',
-            },
-          if (step >= 1)
-            {
-              'time': 'Today 13:50',
-              'title': 'Driver assigned: $driverName',
-              'subtitle': 'Assigned by Admin · Admin',
-            },
-        ],
-      ];
+      final activities = <Map<String, String>>[];
+
+      if (controller.shippingActivities.isNotEmpty) {
+        for (final act in controller.shippingActivities) {
+          String time = act.timestamp;
+          final titleLower = act.title.toLowerCase();
+          if (titleLower.contains('out') && controller.outForDeliveryTime.value.isNotEmpty) {
+            time = controller.outForDeliveryTime.value;
+          } else if (titleLower.contains('transit') && controller.inTransitTime.value.isNotEmpty) {
+            time = controller.inTransitTime.value;
+          } else if (titleLower.contains('pick') && controller.pickedUpTime.value.isNotEmpty) {
+            time = controller.pickedUpTime.value;
+          } else if (titleLower.contains('deliver') && controller.deliveredTime.value.isNotEmpty) {
+            time = controller.deliveredTime.value;
+          }
+          activities.add({
+            'time': time,
+            'title': act.title,
+            'subtitle': act.description,
+          });
+        }
+      } else {
+        if (step >= 1) {
+          activities.add({
+            'time': 'Today',
+            'title': 'Driver assigned: $driverName',
+            'subtitle': 'Assigned by Admin · Admin',
+          });
+        }
+      }
+
+      final hasPickup = activities.any((a) {
+        final t = (a['title'] ?? '').toLowerCase();
+        final s = (a['subtitle'] ?? '').toLowerCase();
+        return t.contains('pick') || s.contains('pick');
+      });
+
+      // When green dot in picked up track (step >= 2), display driver pickup in delivery activity
+      if (step >= 2 && !hasPickup) {
+        final pickupTimeStr = controller.pickedUpTime.value.isNotEmpty
+            ? controller.pickedUpTime.value
+            : (activities.isNotEmpty
+                ? (activities.first['time'] ?? 'Today')
+                : 'Today');
+        activities.insert(0, {
+          'time': pickupTimeStr,
+          'title': 'Driver picked up: $driverName',
+          'subtitle': 'Driver App · Picked up',
+        });
+      }
+
+      final hasInTransit = activities.any((a) {
+        final t = (a['title'] ?? '').toLowerCase();
+        return t.contains('transit');
+      });
+      if (step >= 3 && !hasInTransit) {
+        final inTransitTimeStr = controller.inTransitTime.value.isNotEmpty
+            ? controller.inTransitTime.value
+            : (activities.isNotEmpty
+                ? (activities.first['time'] ?? 'Today')
+                : 'Today');
+        activities.insert(0, {
+          'time': inTransitTimeStr,
+          'title': 'In Transit',
+          'subtitle': 'On the way to delivery location · Driver App',
+        });
+      }
+
+      final hasOutForDelivery = activities.any((a) {
+        final t = (a['title'] ?? '').toLowerCase();
+        return t.contains('out for delivery') || t.contains('out');
+      });
+      if (step >= 4 && !hasOutForDelivery) {
+        final outTimeStr = controller.outForDeliveryTime.value.isNotEmpty
+            ? controller.outForDeliveryTime.value
+            : (activities.isNotEmpty
+                ? (activities.first['time'] ?? 'Today')
+                : 'Today');
+        activities.insert(0, {
+          'time': outTimeStr,
+          'title': 'Out for Delivery',
+          'subtitle': 'Reaching customer location · Driver App',
+        });
+      }
+
+      final hasDelivered = activities.any((a) {
+        final t = (a['title'] ?? '').toLowerCase();
+        return t.contains('deliver');
+      });
+      if (step >= 5 && !hasDelivered) {
+        final delTimeStr = controller.deliveredTime.value.isNotEmpty
+            ? controller.deliveredTime.value
+            : (activities.isNotEmpty
+                ? (activities.first['time'] ?? 'Today')
+                : 'Today');
+        activities.insert(0, {
+          'time': delTimeStr,
+          'title': 'Delivered',
+          'subtitle': 'Order delivered successfully · Driver App',
+        });
+      }
 
       return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),

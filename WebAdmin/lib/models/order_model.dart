@@ -128,10 +128,29 @@ class OrderModel {
     }
 
     // Extract Shipping Status ("shippingstatus", "shipping_status", "shipped_status")
-    final shippingStatusRaw = json['shippingstatus'] ?? 'Pending';
-    String shippingStatusStr = shippingStatusRaw != null
-        ? shippingStatusRaw.toString().trim()
-        : 'Pending';
+    final shippingStatusRaw = json['shippingstatus'] ??
+        json['shipping_status'] ??
+        json['shipped_status'] ??
+        'Pending';
+    String shippingStatusStr = 'Pending';
+    if (shippingStatusRaw != null &&
+        shippingStatusRaw.toString().trim().isNotEmpty &&
+        shippingStatusRaw.toString().trim() != 'null') {
+      final rawClean = shippingStatusRaw
+          .toString()
+          .trim()
+          .replaceAll('_', ' ')
+          .replaceAll('-', ' ');
+      shippingStatusStr = rawClean
+          .split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty)
+          .map(
+            (w) => w.length == 1
+                ? w.toUpperCase()
+                : w[0].toUpperCase() + w.substring(1).toLowerCase(),
+          )
+          .join(' ');
+    }
 
     // Extract Amount ("finalamount", "final_amount", "grandtotal", "grand_total", "total", "amount")
     final amountRaw = json['finalamount'] ?? '0.00';

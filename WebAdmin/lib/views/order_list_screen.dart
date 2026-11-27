@@ -872,11 +872,19 @@ class OrderListScreen extends StatelessWidget {
                                               order.shippingStatus.trim() ==
                                                   '-')
                                           ? '-'
-                                          : order.shippingStatus[0]
-                                                    .toUpperCase() +
-                                                order.shippingStatus.substring(
-                                                  1,
-                                                ),
+                                          : order.shippingStatus
+                                              .trim()
+                                              .replaceAll('_', ' ')
+                                              .replaceAll('-', ' ')
+                                              .split(RegExp(r'\s+'))
+                                              .where((w) => w.isNotEmpty)
+                                              .map(
+                                                (w) => w.length == 1
+                                                    ? w.toUpperCase()
+                                                    : w[0].toUpperCase() +
+                                                        w.substring(1).toLowerCase(),
+                                              )
+                                              .join(' '),
                                     ),
                                   ),
 

@@ -458,6 +458,10 @@ class OrderDetailsController extends GetxController {
   final RxString assignedDriverName = ''.obs;
   final RxString assignedDriverPhone = ''.obs;
   final RxString assignedDriverVehicle = ''.obs;
+  final RxString pickedUpTime = ''.obs;
+  final RxString inTransitTime = ''.obs;
+  final RxString outForDeliveryTime = ''.obs;
+  final RxString deliveredTime = ''.obs;
   final RxString driverSearchQuery = ''.obs;
   final RxString selectedDriverAvailability = 'Online'.obs;
   final RxString selectedDriverSort = 'Nearest first'.obs;
@@ -658,6 +662,22 @@ class OrderDetailsController extends GetxController {
     );
   }
 
+  String formatIso(dynamic raw) {
+    if (raw == null) return '';
+    final s = raw.toString().trim();
+    if (s.isEmpty || s == 'null') return '';
+    try {
+      final dt = DateTime.parse(s).toLocal();
+      final day = dt.day.toString().padLeft(2, '0');
+      final mon = dt.month.toString().padLeft(2, '0');
+      final hour = dt.hour.toString().padLeft(2, '0');
+      final min = dt.minute.toString().padLeft(2, '0');
+      return '$day-$mon-${dt.year} $hour:$min';
+    } catch (_) {
+      return s;
+    }
+  }
+
   void _applyAssignmentData(dynamic res) {
     if (res == null) return;
     final dynamic data =
@@ -723,33 +743,30 @@ class OrderDetailsController extends GetxController {
       // Build shipping activities list
       final List<ShippingActivityModel> activities = [];
 
-      String formatIso(dynamic raw) {
-        if (raw == null) return '';
-        try {
-          final dt = DateTime.parse(raw.toString()).toLocal();
-          final now = DateTime.now();
-          final isToday =
-              dt.year == now.year && dt.month == now.month && dt.day == now.day;
-          final hour = dt.hour.toString().padLeft(2, '0');
-          final min = dt.minute.toString().padLeft(2, '0');
-          if (isToday) {
-            return 'Today $hour:$min';
-          } else {
-            final day = dt.day.toString().padLeft(2, '0');
-            final mon = dt.month.toString().padLeft(2, '0');
-            return '$day-$mon-${dt.year} $hour:$min';
-          }
-        } catch (_) {
-          return raw.toString();
-        }
-      }
-
       final dName = assignedDriverName.value.isNotEmpty
           ? assignedDriverName.value
           : 'Driver';
-      final respondedOn =
-          currentMap['respondedon'] ?? currentMap['responded_on'];
-      final assignedOn = currentMap['assignedon'] ?? currentMap['assigned_on'];
+
+      final assignedOn = currentMap['assignedtime'] ??
+          currentMap['assigned_time'] ??
+          currentMap['assignedon'] ??
+          currentMap['assigned_on'] ??
+          (data is Map
+              ? (data['assignedtime'] ??
+                  data['assigned_time'] ??
+                  data['assignedon'])
+              : null);
+
+      final respondedOn = currentMap['acceptedtime'] ??
+          currentMap['accepted_time'] ??
+          currentMap['respondedon'] ??
+          currentMap['responded_on'] ??
+          (data is Map
+              ? (data['acceptedtime'] ??
+                  data['accepted_time'] ??
+                  data['respondedon'])
+              : null);
+
       final assignedBy =
           (currentMap['assignedby'] ?? currentMap['assigned_by'] ?? 'Admin')
               .toString()
@@ -758,8 +775,229 @@ class OrderDetailsController extends GetxController {
           .toString()
           .toLowerCase();
 
-      // Most recent on top: Accepted by driver
-      if (state == 'accepted' && respondedOn != null) {
+      final pickedUpOn = currentMap['pickeduptime'] ??
+          currentMap['picked_up_time'] ??
+          currentMap['pickuptime'] ??
+          currentMap['pickup_time'] ??
+          currentMap['pickedon'] ??
+          currentMap['picked_on'] ??
+          currentMap['pickedup_on'] ??
+          currentMap['picked_up_on'] ??
+          currentMap['picked_up_at'] ??
+          currentMap['pickedup_at'] ??
+          (data is Map
+              ? (data['pickeduptime'] ??
+                  data['picked_up_time'] ??
+                  data['pickup_time'] ??
+                  data['pickuptime'])
+              : null) ??
+          currentMap['modifiedon'] ??
+          currentMap['modified_on'] ??
+          currentMap['updatedon'] ??
+          currentMap['updated_at'];
+
+      final inTransitOn = currentMap['intransittime'] ??
+          currentMap['in_transit_time'] ??
+          currentMap['transittime'] ??
+          currentMap['transit_time'] ??
+          currentMap['in_transittime'] ??
+          (data is Map
+              ? (data['intransittime'] ??
+                  data['in_transit_time'] ??
+                  data['transittime'])
+              : null);
+
+      final outForDeliveryOn = currentMap['outfordeliverytime'] ??
+          currentMap['out_for_delivery_time'] ??
+          currentMap['outdeliverytime'] ??
+          currentMap['out_delivery_time'] ??
+          (data is Map
+              ? (data['outfordeliverytime'] ??
+                  data['out_for_delivery_time'] ??
+                  data['outdeliverytime'])
+              : null);
+
+      final deliveredOn = currentMap['deliveredtime'] ??
+          currentMap['delivered_time'] ??
+          currentMap['deliveredon'] ??
+          currentMap['delivered_on'] ??
+          currentMap['closedon'] ??
+          currentMap['closed_on'] ??
+          (data is Map
+              ? (data['deliveredtime'] ??
+                  data['delivered_time'] ??
+                  data['closedon'])
+              : null);
+
+      if (pickedUpOn != null &&
+          pickedUpOn.toString().trim().isNotEmpty &&
+          pickedUpOn.toString().trim() != 'null') {
+        pickedUpTime.value = formatIso(pickedUpOn);
+      }
+      if (inTransitOn != null &&
+          inTransitOn.toString().trim().isNotEmpty &&
+          inTransitOn.toString().trim() != 'null') {
+        inTransitTime.value = formatIso(inTransitOn);
+      }
+      if (outForDeliveryOn != null &&
+          outForDeliveryOn.toString().trim().isNotEmpty &&
+          outForDeliveryOn.toString().trim() != 'null') {
+        outForDeliveryTime.value = formatIso(outForDeliveryOn);
+      }
+      if (deliveredOn != null &&
+          deliveredOn.toString().trim().isNotEmpty &&
+          deliveredOn.toString().trim() != 'null') {
+        deliveredTime.value = formatIso(deliveredOn);
+      }
+
+      final lowerShipStatus = shipmentStatus.value.toLowerCase().trim();
+      int calculatedStep = currentShippingStep.value;
+      if (deliveredOn != null ||
+          state == 'delivered' ||
+          lowerShipStatus == 'delivered') {
+        calculatedStep = 5;
+      } else if (outForDeliveryOn != null ||
+          state == 'out_for_delivery' ||
+          state.contains('out') ||
+          lowerShipStatus.contains('out')) {
+        calculatedStep = 4;
+      } else if (inTransitOn != null ||
+          state == 'in_transit' ||
+          state.contains('transit') ||
+          lowerShipStatus.contains('transit')) {
+        calculatedStep = 3;
+      } else if (pickedUpOn != null ||
+          state == 'picked_up' ||
+          state.contains('pick') ||
+          lowerShipStatus.contains('pick')) {
+        calculatedStep = 2;
+      } else if (state == 'accepted' ||
+          (state.contains('accept') && !state.contains('assign'))) {
+        calculatedStep = 1;
+      }
+      if (calculatedStep > currentShippingStep.value) {
+        currentShippingStep.value = calculatedStep;
+        shipmentStatus.value = shippingSteps[calculatedStep];
+      }
+
+      final isDelivered = currentShippingStep.value >= 5 ||
+          deliveredOn != null ||
+          state == 'delivered';
+
+      final isOutForDelivery = currentShippingStep.value >= 4 ||
+          outForDeliveryOn != null ||
+          state == 'out_for_delivery' ||
+          state.contains('out') ||
+          lowerShipStatus.contains('out') ||
+          isDelivered;
+
+      final isInTransit = currentShippingStep.value >= 3 ||
+          inTransitOn != null ||
+          state == 'in_transit' ||
+          state.contains('transit') ||
+          lowerShipStatus.contains('transit') ||
+          isOutForDelivery;
+
+      final isPickedUp = currentShippingStep.value >= 2 ||
+          pickedUpOn != null ||
+          state == 'picked_up' ||
+          state.contains('pick') ||
+          lowerShipStatus.contains('pick') ||
+          isInTransit;
+
+      final isAccepted = currentShippingStep.value >= 1 ||
+          respondedOn != null ||
+          state == 'accepted' ||
+          isPickedUp;
+
+      // Most recent on top:
+      // 1. Delivered
+      if (isDelivered) {
+        final delTimeStr = deliveredOn != null
+            ? formatIso(deliveredOn)
+            : (deliveredTime.value.isNotEmpty
+                ? deliveredTime.value
+                : (outForDeliveryOn != null
+                    ? formatIso(outForDeliveryOn)
+                    : formatIso(DateTime.now())));
+        activities.add(
+          ShippingActivityModel(
+            title: 'Delivered',
+            timestamp: delTimeStr,
+            description: 'Order delivered successfully · Driver App',
+          ),
+        );
+      }
+
+      // 2. Out for Delivery
+      if (isOutForDelivery) {
+        final outTimeStr = outForDeliveryOn != null
+            ? formatIso(outForDeliveryOn)
+            : (outForDeliveryTime.value.isNotEmpty
+                ? outForDeliveryTime.value
+                : (inTransitOn != null
+                    ? formatIso(inTransitOn)
+                    : (pickedUpOn != null
+                        ? formatIso(pickedUpOn)
+                        : (respondedOn != null
+                            ? formatIso(respondedOn)
+                            : (assignedOn != null
+                                ? formatIso(assignedOn)
+                                : formatIso(DateTime.now()))))));
+        activities.add(
+          ShippingActivityModel(
+            title: 'Out for Delivery',
+            timestamp: outTimeStr,
+            description: 'Reaching customer location · Driver App',
+          ),
+        );
+      }
+
+      // 3. In Transit
+      if (isInTransit) {
+        final inTransitTimeStr = inTransitOn != null
+            ? formatIso(inTransitOn)
+            : (inTransitTime.value.isNotEmpty
+                ? inTransitTime.value
+                : (pickedUpOn != null
+                    ? formatIso(pickedUpOn)
+                    : (respondedOn != null
+                        ? formatIso(respondedOn)
+                        : (assignedOn != null
+                            ? formatIso(assignedOn)
+                            : formatIso(DateTime.now())))));
+        activities.add(
+          ShippingActivityModel(
+            title: 'In Transit',
+            timestamp: inTransitTimeStr,
+            description: 'On the way to delivery location · Driver App',
+          ),
+        );
+      }
+
+      // 4. Driver picked up
+      if (isPickedUp) {
+        final pickupTimeStr = pickedUpOn != null
+            ? formatIso(pickedUpOn)
+            : (pickedUpTime.value.isNotEmpty
+                ? pickedUpTime.value
+                : (respondedOn != null
+                    ? formatIso(respondedOn)
+                    : (assignedOn != null
+                        ? formatIso(assignedOn)
+                        : formatIso(DateTime.now()))));
+
+        activities.add(
+          ShippingActivityModel(
+            title: 'Driver picked up: $dName',
+            timestamp: pickupTimeStr,
+            description: 'Driver App · Picked up',
+          ),
+        );
+      }
+
+      // 5. Accepted by driver
+      if (isAccepted && respondedOn != null) {
         activities.add(
           ShippingActivityModel(
             title: 'Accepted by driver: $dName',
@@ -769,7 +1007,7 @@ class OrderDetailsController extends GetxController {
         );
       }
 
-      // Driver assigned by admin
+      // 6. Driver assigned
       if (assignedOn != null) {
         activities.add(
           ShippingActivityModel(
@@ -784,8 +1022,31 @@ class OrderDetailsController extends GetxController {
       if (historyList is List && historyList.isNotEmpty) {
         for (final h in historyList) {
           if (h is Map) {
-            final hResp = h['respondedon'] ?? h['responded_on'];
-            final hAssigned = h['assignedon'] ?? h['assigned_on'];
+            final hResp = h['acceptedtime'] ??
+                h['accepted_time'] ??
+                h['respondedon'] ??
+                h['responded_on'];
+            final hAssigned = h['assignedtime'] ??
+                h['assigned_time'] ??
+                h['assignedon'] ??
+                h['assigned_on'];
+            final hPick = h['pickeduptime'] ??
+                h['picked_up_time'] ??
+                h['pickuptime'] ??
+                h['pickup_time'] ??
+                h['pickedon'] ??
+                h['picked_on'];
+            final hInTransit = h['intransittime'] ??
+                h['in_transit_time'] ??
+                h['transittime'] ??
+                h['transit_time'];
+            final hOutForDelivery = h['outfordeliverytime'] ??
+                h['out_for_delivery_time'] ??
+                h['outdeliverytime'];
+            final hDelivered = h['deliveredtime'] ??
+                h['delivered_time'] ??
+                h['deliveredon'] ??
+                h['closedon'];
             final hBy = (h['assignedby'] ?? h['assigned_by'] ?? 'Admin')
                 .toString()
                 .trim();
@@ -796,7 +1057,58 @@ class OrderDetailsController extends GetxController {
                 .toString()
                 .toLowerCase();
 
-            if (hState == 'accepted' && hResp != null && respondedOn == null) {
+            if ((hState == 'delivered' || hDelivered != null) &&
+                deliveredOn == null &&
+                !activities.any((a) => a.title.toLowerCase().contains('deliver'))) {
+              activities.add(
+                ShippingActivityModel(
+                  title: 'Delivered',
+                  timestamp: formatIso(hDelivered ?? hOutForDelivery ?? hPick ?? hResp ?? hAssigned),
+                  description: 'Order delivered successfully · Driver App',
+                ),
+              );
+            }
+
+            if ((hState == 'out_for_delivery' || hState.contains('out') || hOutForDelivery != null) &&
+                outForDeliveryOn == null &&
+                !activities.any((a) => a.title.toLowerCase().contains('out'))) {
+              activities.add(
+                ShippingActivityModel(
+                  title: 'Out for Delivery',
+                  timestamp: formatIso(hOutForDelivery ?? hInTransit ?? hPick ?? hResp ?? hAssigned),
+                  description: 'Reaching customer location · Driver App',
+                ),
+              );
+            }
+
+            if ((hState == 'in_transit' || hState.contains('transit') || hInTransit != null) &&
+                inTransitOn == null &&
+                !activities.any((a) => a.title.toLowerCase().contains('transit'))) {
+              activities.add(
+                ShippingActivityModel(
+                  title: 'In Transit',
+                  timestamp: formatIso(hInTransit ?? hPick ?? hResp ?? hAssigned),
+                  description: 'On the way to delivery location · Driver App',
+                ),
+              );
+            }
+
+            if ((hState == 'picked_up' || hState.contains('pick')) &&
+                hPick != null &&
+                pickedUpOn == null &&
+                !activities.any((a) => a.title.toLowerCase().contains('pick'))) {
+              activities.add(
+                ShippingActivityModel(
+                  title: 'Driver picked up: $hDriver',
+                  timestamp: formatIso(hPick),
+                  description: 'Driver App · Picked up',
+                ),
+              );
+            }
+            if (hState == 'accepted' &&
+                hResp != null &&
+                respondedOn == null &&
+                !activities.any((a) => a.title.toLowerCase().contains('accepted'))) {
               activities.add(
                 ShippingActivityModel(
                   title: 'Accepted by driver: $hDriver',
@@ -805,7 +1117,9 @@ class OrderDetailsController extends GetxController {
                 ),
               );
             }
-            if (hAssigned != null && assignedOn == null) {
+            if (hAssigned != null &&
+                assignedOn == null &&
+                !activities.any((a) => a.title.toLowerCase().contains('assigned'))) {
               activities.add(
                 ShippingActivityModel(
                   title: 'Driver assigned: $hDriver',
@@ -1283,6 +1597,78 @@ class OrderDetailsController extends GetxController {
             drivers.firstWhereOrNull((d) => d.isPrimary) ?? drivers.first;
         assignedDriverName.value = primary.name;
       }
+
+      final dName = assignedDriverName.value.isNotEmpty
+          ? assignedDriverName.value
+          : 'Driver';
+      final now = DateTime.now();
+      final hour = now.hour.toString().padLeft(2, '0');
+      final min = now.minute.toString().padLeft(2, '0');
+      final timeStr = 'Today $hour:$min';
+
+      if (index >= 2) {
+        final hasPickup = shippingActivities.any((a) =>
+            a.title.toLowerCase().contains('pick') ||
+            a.description.toLowerCase().contains('pick'));
+        if (!hasPickup) {
+          shippingActivities.insert(
+            0,
+            ShippingActivityModel(
+              title: 'Driver picked up: $dName',
+              timestamp: pickedUpTime.value.isNotEmpty ? pickedUpTime.value : timeStr,
+              description: 'Driver App · Picked up',
+            ),
+          );
+        }
+      }
+      if (index >= 3) {
+        final hasInTransit = shippingActivities.any((a) =>
+            a.title.toLowerCase().contains('transit'));
+        if (!hasInTransit) {
+          shippingActivities.insert(
+            0,
+            ShippingActivityModel(
+              title: 'In Transit',
+              timestamp: inTransitTime.value.isNotEmpty ? inTransitTime.value : timeStr,
+              description: 'On the way to delivery location · Driver App',
+            ),
+          );
+        }
+      }
+      if (index >= 4) {
+        final hasOutForDelivery = shippingActivities.any((a) =>
+            a.title.toLowerCase().contains('out for delivery') ||
+            a.title.toLowerCase().contains('out'));
+        if (!hasOutForDelivery) {
+          shippingActivities.insert(
+            0,
+            ShippingActivityModel(
+              title: 'Out for Delivery',
+              timestamp: outForDeliveryTime.value.isNotEmpty ? outForDeliveryTime.value : timeStr,
+              description: 'Reaching customer location · Driver App',
+            ),
+          );
+        }
+      }
+      if (index >= 5) {
+        if (deliveredTime.value.isEmpty) {
+          final day = now.day.toString().padLeft(2, '0');
+          final mon = now.month.toString().padLeft(2, '0');
+          deliveredTime.value = '$day-$mon-${now.year} $hour:$min';
+        }
+        final hasDelivered = shippingActivities.any((a) =>
+            a.title.toLowerCase().contains('deliver'));
+        if (!hasDelivered) {
+          shippingActivities.insert(
+            0,
+            ShippingActivityModel(
+              title: 'Delivered',
+              timestamp: deliveredTime.value.isNotEmpty ? deliveredTime.value : timeStr,
+              description: 'Order delivered successfully · Driver App',
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -1340,7 +1726,7 @@ class OrderDetailsController extends GetxController {
       final lowerOrderStatus = args.orderStatus.toLowerCase().trim();
       final lowerShippingStatus = args.shippingStatus.toLowerCase().trim();
       if (args.shippingStatus.isNotEmpty) {
-        shipmentStatus.value = args.shippingStatus;
+        shipmentStatus.value = formatTitleCase(args.shippingStatus);
         if (lowerShippingStatus.contains('deliver') &&
             !lowerShippingStatus.contains('out')) {
           currentShippingStep.value = 5;
@@ -1773,13 +2159,18 @@ class OrderDetailsController extends GetxController {
         ? rawOrderStat
         : 'Pending';
 
-    shipmentStatus.value =
-        (data['shippingstatus'] ??
-                data['shipping_status'] ??
-                data['shipped_status'])
-            ?.toString()
-            .trim() ??
-        'Pending';
+    final rawShipping = (data['shippingstatus'] ??
+            data['shipping_status'] ??
+            data['shipped_status'])
+        ?.toString()
+        .trim();
+    if (rawShipping != null &&
+        rawShipping.isNotEmpty &&
+        rawShipping != 'null') {
+      shipmentStatus.value = formatTitleCase(rawShipping);
+    } else {
+      shipmentStatus.value = 'Pending';
+    }
     final lowerShipStatus = shipmentStatus.value.toLowerCase().trim();
     final lowerOrderStatus = orderStatus.value.toLowerCase().trim();
     if (lowerShipStatus.contains('deliver') &&
@@ -1951,6 +2342,10 @@ class OrderDetailsController extends GetxController {
       assignedDriverName.value = '';
       assignedDriverPhone.value = '';
       assignedDriverVehicle.value = '';
+      pickedUpTime.value = '';
+      inTransitTime.value = '';
+      outForDeliveryTime.value = '';
+      deliveredTime.value = '';
       shippingActivities.clear();
     }
 
@@ -3448,16 +3843,15 @@ class OrderDetailsController extends GetxController {
   }
 
   String formatTitleCase(String input) {
-    final clean = input.trim();
+    final clean = input.trim().replaceAll('_', ' ').replaceAll('-', ' ');
     if (clean.isEmpty || clean == 'null' || clean == '-') return clean;
     return clean
         .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
         .map(
-          (w) => w.isEmpty
-              ? ''
-              : (w.length == 1
-                    ? w.toUpperCase()
-                    : w[0].toUpperCase() + w.substring(1).toLowerCase()),
+          (w) => w.length == 1
+              ? w.toUpperCase()
+              : w[0].toUpperCase() + w.substring(1).toLowerCase(),
         )
         .join(' ');
   }
